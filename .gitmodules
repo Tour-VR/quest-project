@@ -1,0 +1,9 @@
+[submodule "services/vr-app"]
+	path = services/vr-app
+	url = git@github.com:Tour-VR/vr-app.git
+[submodule "services/backend"]
+	path = services/backend
+	url = git@github.com:Tour-VR/backend.git
+[submodule "services/frontend"]
+	path = services/frontend
+	url = git@github.com:Tour-VR/frontend.git
