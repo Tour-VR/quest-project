@@ -1,0 +1,65 @@
+# -----------------------------
+# Ambientes e segredos locais
+# -----------------------------
+.env
+.env.
+!.env.example
+!.env.example
+
+# -----------------------------
+# Python
+# -----------------------------
+__pycache__
+.py[cod]
+.pyo
+.pyd
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+.coverage.
+htmlcov
+.venv
+venv
+
+# -----------------------------
+# Node  frontend
+# -----------------------------
+node_modules
+dist
+build
+coverage
+.vite
+.vite-temp
+
+# -----------------------------
+# Logs e arquivos temporarios
+# -----------------------------
+.log
+.tmp
+.temp
+.bak
+.swp
+.swo
+.orig
+.rej
+~
+
+# -----------------------------
+# Sistema e editor
+# -----------------------------
+.DS_Store
+Thumbs.db
+.idea
+.vscode
+.vs
+.suo
+.user
+.userossc
+.sln.docstates
+
+# -----------------------------
+# Exportacoes e artefatos locais
+# -----------------------------
+.zip
+_quarentena
