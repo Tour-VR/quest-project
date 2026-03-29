@@ -47,6 +47,6 @@ git remote -v | grep https://github.com > /dev/null 2>&1 &&
 
 echo ""
 echo "${GREEN}[SUC] setup was executed successfully"
-echo "${YELLOW}[INFO] you can now use SSH instead of HTTPS, enjoy your time with the best way to manage github"
+echo "${YELLOW}[INFO] you can now use SSH instead of HTTPS, enjoy your time with the correct way to manage github"
 echo "${NC}[INFO] Setup finished with exit code 0"
 exit 0
