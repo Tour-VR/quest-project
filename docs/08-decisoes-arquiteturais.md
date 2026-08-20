@@ -14,7 +14,7 @@ registrada aqui só é revertida por outra ADR que a supersede — nunca por edi
 | [0003](#adr-0003--autenticação-por-jwt-stateless) | Autenticação por JWT stateless | Aceita (retroativa) |
 | [0004](#adr-0004--base-de-conhecimento-centralizada-em-docs) | Base de conhecimento centralizada em `docs/` | Aceita |
 | [0005](#adr-0005--separação-entre-sessão-de-planejamento-e-sessão-de-execução) | Separação entre planejamento e execução | Aceita |
-| [0006](#adr-0006--stack-de-desenvolvimento-do-vr-app) | **Stack de desenvolvimento do `vr-app`** | **Em aberto** |
+| [0006](#adr-0006--stack-de-desenvolvimento-do-vr-app) | Stack do app do visitante — produto dividido por dispositivo | Aceita |
 | [0007](#adr-0007--modelo-de-domínio-de-turismo) | Modelo de domínio de turismo | Em aberto |
 | [0008](#adr-0008--estratégia-de-mídia-imersiva) | Estratégia de mídia imersiva | Em aberto |
 | [0009](#adr-0009--autenticação-do-dispositivo-quest) | Autenticação do dispositivo Quest | Em aberto |
@@ -157,25 +157,62 @@ outra sessão executa. O plano é versionado em `docs/tasks/NNN-slug.md`.
 
 ---
 
-## ADR-0006 — Stack de desenvolvimento do `vr-app`
+## ADR-0006 — Stack do app do visitante (produto dividido por dispositivo)
 
-**Estado:** 🔴 **Em aberto — decisão bloqueante**
+**Data:** 2026-08-20 · **Estado:** Aceita
 
-**Contexto.** O `vr-app` é o núcleo do produto e está vazio. Nenhum planejamento de
-implementação da aplicação Quest 3 pode avançar sem esta definição, que condiciona o
-pipeline de build, o formato e a entrega de mídia, a autenticação no dispositivo, o
-ferramental de CI, as competências que o grupo precisa desenvolver e o esforço total.
+**Contexto.** O produto foi esclarecido nesta data: trata-se de um **tour do campus
+acionado por QR Codes afixados nos locais**. O aluno chega à biblioteca, lê o código e
+recebe conteúdo sobre aquele lugar. Isso é realidade aumentada presencial, não turismo
+virtual remoto.
 
-**Alternativas em avaliação.** Unity + OpenXR/Meta XR SDK · Unreal Engine · Godot 4 +
-OpenXR · WebXR (Three.js / React Three Fiber / A-Frame). Comparação preliminar em
-[05-artefato-vr-app.md](05-artefato-vr-app.md).
+Ler um QR Code exige acesso aos pixels da câmera. O navegador do Quest 3 oferece
+`immersive-ar` com passthrough, mas **não expõe os frames da câmera ao JavaScript** — Meta
+bloqueia por privacidade. Apenas aplicativos nativos alcançam a Passthrough Camera API
+(Horizon OS v74+), o que exigiria Unity e C#.
 
-**Critérios de decisão a definir na sessão de planejamento.** Competências atuais do grupo
-· prazo acadêmico · necessidade real de AR/passthrough · exigência de distribuição via
-loja · peso do repositório e viabilidade de CI · disponibilidade de headsets para teste ·
-qualidade da documentação e do suporte da comunidade.
+O grupo domina JS/TS e React, não tem experiência com motor gráfico, e dispõe de um
+semestre. Um caminho Unity significaria aprender linguagem, motor e XR simultaneamente,
+com ciclo de build por APK de minutos por iteração.
 
-**Próximo passo.** Sessão de planejamento dedicada, com a decisão registrada nesta ADR.
+**Decisão.** Dividir o produto por dispositivo:
+
+| Experiência | Dispositivo | Stack |
+|---|---|---|
+| Tour AR presencial — escaneia o QR, vê o conteúdo | Celular | Web: React + Vite + TypeScript, leitura de QR no navegador |
+| Tour VR remoto — percorre o campus em 360° | Quest 3 | WebXR: React Three Fiber sobre Three.js |
+
+Ambos vivem em **um único submódulo** (`services/vr-app`), como dois modos sobre um núcleo
+compartilhado — cliente da API, tipos de domínio e componentes de conteúdo. O conteúdo do
+visitante é público, e o QR contém uma URL (`https://<host>/p/<slug>`) que funciona em
+qualquer leitor, mesmo sem o app instalado.
+
+**Justificativa.**
+
+- É a única forma de manter a leitura de QR sem migrar para Unity e C#.
+- Reaproveita integralmente a competência que o grupo já tem, e o mesmo ferramental do
+  `frontend` — nada novo de infraestrutura.
+- Ciclo de iteração de segundos, contra minutos no build de APK: decisivo em um semestre.
+- O celular é melhor que o headset para deslocamento pelo campus — luz solar degrada o
+  rastreamento, o guardian conflita com espaços abertos, a bateria dura cerca de duas
+  horas, e caminhar com o headset tem implicações de segurança.
+- O Quest 3 permanece central, cumprindo o papel em que é superior: a visita imersiva de
+  quem ainda não conhece o campus.
+
+**Consequências.**
+
+- ➕ Duas experiências entregues, AR e VR, com justificativa técnica por dispositivo.
+- ➕ Domínio, backend e conteúdo compartilhados; um cadastro alimenta as duas.
+- ➕ A ADR-0009 fica trivial: o navegador do Quest tem teclado e `localStorage`, e o
+  conteúdo do visitante nem exige autenticação.
+- ➕ A ADR-0008 simplifica: mídia é URL servida por HTTP, sem empacotamento em APK,
+  pipeline de assets de motor ou Git LFS.
+- ➖ Teto de desempenho do WebXR abaixo do nativo — adequado a vídeo 360° e cenas
+  moderadas, restritivo para fotogrametria densa.
+- ➖ Fecha a porta da Horizon Store: publicar na loja da Meta exigiria reescrita.
+- ➖ O nome `vr-app` fica impreciso, já que o submódulo abriga também o modo AR.
+
+**Desdobramento.** [`tasks/000-visao-macro-opcao-b.md`](tasks/000-visao-macro-opcao-b.md).
 
 ---
 

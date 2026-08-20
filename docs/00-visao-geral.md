@@ -4,13 +4,20 @@
 
 ## O produto
 
-O **TourVR** é um sistema de turismo virtual construído para os óculos **Meta Quest 3**,
-explorando tanto realidade virtual (imersão em ambientes reconstruídos) quanto realidade
-aumentada (sobreposição de informação via passthrough).
+O **TourVR** é um sistema de tour do campus, com duas formas de visita sobre o mesmo
+conteúdo curado e gerenciado por administradores através de um painel web.
 
-A proposta é permitir que uma pessoa visite remotamente um local turístico — com mídia
-imersiva, roteiro guiado e informação contextual — a partir de conteúdo curado e
-gerenciado por administradores através de um painel web.
+**Tour AR presencial (celular).** QR Codes são afixados nos pontos do campus. O aluno chega
+à biblioteca, lê o código, e recebe conteúdo sobre aquele lugar — a história do nome, fotos,
+explicação. O mesmo padrão se repete nos demais pontos.
+
+**Tour VR remoto (Meta Quest 3).** Para quem ainda não conhece o campus — calouro,
+candidato do vestibular, visitante de outra cidade —, uma visita imersiva em 360° pelos
+mesmos pontos.
+
+A divisão por dispositivo é deliberada e está justificada na
+[ADR-0006](08-decisoes-arquiteturais.md): leitura de QR exige acesso aos pixels da câmera,
+que o navegador do Quest 3 não expõe ao JavaScript.
 
 **Contexto:** projeto acadêmico desenvolvido por um grupo de alunos sob orientação
 docente. Organização GitHub: [`Tour-VR`](https://github.com/Tour-VR).
@@ -25,7 +32,7 @@ agrega os demais como submódulos:
 | `quest-project` | Orquestrador: build, setup, documentação | [02](02-artefato-orquestrador.md) |
 | `backend` | API REST — autenticação, dados, domínio | [03](03-artefato-backend.md) |
 | `frontend` | Painel administrativo web | [04](04-artefato-frontend.md) |
-| `vr-app` | Aplicação executada no Quest 3 | [05](05-artefato-vr-app.md) |
+| `vr-app` | App do visitante — modo AR (celular) e modo VR (Quest 3) | [05](05-artefato-vr-app.md) |
 
 ## Estado atual — leitura honesta
 
@@ -37,8 +44,8 @@ produto — a experiência de realidade virtual — ainda não foi iniciado.
 | Autenticação (registro, login, JWT, perfil) | ✅ Implementada e testada |
 | Painel administrativo web (login + dashboard) | ✅ Implementado (dashboard com dados fictícios) |
 | Health check e diagnóstico de banco | ✅ Implementado |
-| **Aplicação Quest 3** | 🔴 **Não iniciada** — repositório vazio |
-| **Modelo de domínio de turismo** | 🔴 **Não existe** — sem Tour, Ponto de Interesse, Mídia |
+| **App do visitante (AR e VR)** | 🔴 **Não iniciado** — repositório vazio; stack decidida na ADR-0006 |
+| **Modelo de domínio do campus** | 🔴 **Não existe** — sem Ponto de Interesse, Mídia, Visita |
 | Pipeline de mídia 360° / storage | 🔴 Não existe |
 | Orquestração de ambiente (compose, scripts) | 🔴 Não existe |
 | CI/CD | 🔴 Não existe |
@@ -57,13 +64,16 @@ código-fonte. Não há entidade de ambiente VR nem de sessão em lugar algum do
 | Testes automatizados | 24 (todos no backend) |
 | Endpoints REST expostos | 7 |
 
-## Decisões ainda em aberto
+## Direção definida
 
-Estas questões bloqueiam o avanço e precisam de decisão registrada em
-[08-decisoes-arquiteturais.md](08-decisoes-arquiteturais.md):
+A **ADR-0006 foi decidida em 2026-08-20**: produto dividido por dispositivo, com o app do
+visitante em React + Vite (modo AR no celular, modo VR em WebXR no Quest 3), num único
+submódulo com núcleo compartilhado. O desdobramento em fases está em
+[`tasks/000-visao-macro-opcao-b.md`](tasks/000-visao-macro-opcao-b.md).
 
-1. **Stack do `vr-app`** — Unity + OpenXR, Unreal, Godot XR ou WebXR? Condiciona todo o
-   resto do projeto (pipeline de build, formato de mídia, autenticação no dispositivo).
-2. **Modelo de domínio de turismo** — quais entidades, qual granularidade de roteiro.
-3. **Estratégia de mídia** — formato, storage, entrega e streaming para o headset.
-4. **Autenticação no dispositivo** — como o Quest se autentica contra o backend.
+Permanecem em aberto, agora desbloqueadas:
+
+1. **Modelo de domínio do campus** (ADR-0007) — entidades e granularidade. Fase 1.
+2. **Estratégia de mídia** (ADR-0008) — formato, storage e entrega. Fase 4.
+3. **Autenticação do visitante** (ADR-0009) — resolvida na prática pela decisão de manter o
+   conteúdo público; falta o registro formal.
