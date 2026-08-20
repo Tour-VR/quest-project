@@ -84,7 +84,7 @@ Formalizado na [ADR-0005](../08-decisoes-arquiteturais.md).
 
 | # | Plano | Dívidas | Status |
 |---|---|---|---|
-| — | *nenhum plano registrado ainda* | — | — |
+| [000](000-visao-macro-opcao-b.md) | Visão macro — Opção B *(porta de entrada, não executável)* | — | Validado |
 
 **Status possíveis:** `Rascunho` · `Aguardando validação` · `Validado` · `Em execução` ·
 `Concluído` · `Cancelado`
