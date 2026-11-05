@@ -2,13 +2,15 @@
 
 | | |
 |---|---|
-| **Status** | Rascunho \| Aguardando validação \| Validado \| Em execução \| Concluído \| Cancelado |
-| **Dívidas atendidas** | DT-NNN, DT-NNN |
+| **Status** | Rascunho \| Aguardando validação \| Validado \| Em execução — *nome* \| Em revisão — *nome* \| Concluído \| Cancelado |
+| **Fase** | N — nome da fase |
+| **Depende de** | NNN, NNN — ou "nenhum" |
+| **Dívidas atendidas** | DT-NNN, DT-NNN — ou "nenhuma" |
 | **ADRs relacionadas** | ADR-NNNN — ou "nenhuma" |
 | **Artefatos afetados** | Orquestrador \| Backend \| Frontend \| VR App |
 | **Planejado em** | AAAA-MM-DD |
 | **Validado em** | AAAA-MM-DD por *(nome)* |
-| **Executado em** | AAAA-MM-DD · commit `xxxxxxx` |
+| **Executado em** | AAAA-MM-DD · PRs: *links* |
 
 ---
 
@@ -16,98 +18,81 @@
 
 Uma ou duas frases: o que este plano entrega e por que agora.
 
-## 2. Contexto verificado
+## 2. Leia antes de começar
 
-O que foi confirmado por leitura direta do código durante o planejamento — não suposição.
-Citar `arquivo:linha`.
+Documentos de `docs/` que a sessão de execução precisa ler, além do protocolo.
 
-```
-services/backend/app/core/config.py:20
-```
+## 3. Estado esperado ao iniciar
 
-## 3. Escopo
+O que deve existir no código quando a execução começar — confirmado por leitura direta
+(`arquivo:linha`) ou produzido por planos anteriores. A sessão de execução confere isto e
+para se o código estiver diferente.
 
-**Está dentro:**
+## 4. Escopo
 
-- item concreto e verificável
-- item concreto e verificável
+**Dentro:** itens concretos e verificáveis.
 
-**Está fora** *(explicitar evita deriva de escopo durante a execução)*:
+**Fora** *(explicitar evita deriva de escopo)*: o que poderia parecer incluído mas não está,
+e por quê.
 
-- item que poderia parecer incluído mas não está — e por quê
+## 5. Decisões tomadas no planejamento
 
-## 4. Decisões tomadas no planejamento
-
-Tudo o que exigiu escolha, já resolvido aqui. A sessão de execução não decide nada.
+Tudo o que exigiu escolha, já resolvido. A sessão de execução não decide nada.
 
 | Questão | Decisão | Motivo |
 |---|---|---|
 | | | |
 
-## 5. Passos de implementação
+## 6. Passos de implementação
 
-Numerados, na ordem de execução, com arquivo e ação concretos.
+Numerados, na ordem de execução, com repositório, arquivo e ação concretos. Trechos
+ilustrativos quando ajudarem. Cada passo termina com uma **Verificação** quando possível.
 
 ### Passo 1 — título
 
 **Arquivo:** `services/backend/app/exemplo.py`
 
-O que fazer, com precisão suficiente para não exigir interpretação. Trecho ilustrativo se
-ajudar:
-
-```python
-# exemplo do resultado esperado
-```
-
-### Passo 2 — título
-
 ...
 
-## 6. Testes
-
-Quais testes criar ou alterar, e o que cada um verifica.
+## 7. Testes
 
 | Arquivo | Teste | Verifica |
 |---|---|---|
 | | | |
 
-Comando de verificação:
+Comandos de verificação.
 
-```bash
-cd services/backend && pytest -v
-```
-
-## 7. Documentação a atualizar
+## 8. Documentação a atualizar
 
 - [ ] `docs/0X-....md` — o que muda
 - [ ] `docs/implementacoes-futuras/DT-NNN-....md` — marcar como Resolvida
-- [ ] `docs/tasks/README.md` — atualizar o índice
 
-## 8. Critérios de aceite
+## 9. Critérios de aceite
 
-- [ ] Condição verificável 1
-- [ ] Condição verificável 2
-- [ ] Suíte de testes passando
-- [ ] Documentação atualizada no mesmo commit
-
-## 9. Riscos e pontos de atenção
-
-O que pode dar errado, e o que fazer se der.
+- [ ] Condição verificável
+- [ ] `bash scripts/validate.sh` passando (a partir do plano 005)
+- [ ] Documentação atualizada
 
 ## 10. Commits esperados
 
-```
-feat(escopo): descrição
-docs: atualiza <documento> e marca DT-NNN como resolvida
-```
+Por repositório, na branch `plano/NNN-slug`.
+
+## 11. Riscos e pontos de atenção
+
+O que pode dar errado, e o que fazer se der.
+
+## 12. Verificação pelo aluno
+
+Roteiro curto, sem programação, para o aluno conferir o resultado com os próprios olhos
+(navegador, terminal, arquivos).
 
 ---
 
 ## Prompt de delegação
 
-> Preencher apenas **após** a validação do plano. Copiar este bloco integralmente para
-> abrir a sessão de execução. Ver `_template-prompt-delegacao.md`.
-
 ```text
-(prompt aqui)
+Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/NNN-slug.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o "Prompt 1 — EXECUTAR" etapa por etapa.
+Meu nome, para registrar no plano: <SEU NOME>
 ```

@@ -29,7 +29,12 @@ Leia conforme a tarefa:
 | Alterar o frontend | `docs/04-artefato-frontend.md`, `docs/06-contrato-api.md` |
 | Escrever código | `docs/07-convencoes.md` |
 | Planejar | `docs/tasks/README.md` + `docs/implementacoes-futuras/README.md` |
-| Executar um plano | `docs/07-convencoes.md` + o plano em `docs/tasks/` |
+| Executar, corrigir ou fechar um plano | **`docs/tasks/protocolo-execucao.md`** (obrigatório) + o plano em `docs/tasks/` |
+
+**Sessão de execução aberta por aluno.** Se o prompt pede para executar, corrigir, retomar
+ou fechar um plano de `docs/tasks/`, siga `docs/tasks/protocolo-execucao.md` etapa por
+etapa. Quem conversa com você não programa: explique em português simples e nunca peça
+que edite código à mão.
 
 ## Regras de trabalho
 

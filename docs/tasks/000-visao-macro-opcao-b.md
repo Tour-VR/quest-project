@@ -173,9 +173,119 @@ O índice em [`README.md`](README.md) mantém a lista de planos e seus status.
 
 ### Planos filhos gerados
 
-| # | Plano | Fase | Status |
-|---|---|---|---|
-| — | *nenhum ainda* | — | — |
+Gerados em 2026-11-05. A execução segue o
+[protocolo de execução](protocolo-execucao.md): cada plano é executado por um aluno com
+um agente de IA, em branch própria, e integrado por Pull Request revisado pelo orientador.
+
+| # | Plano | Fase | Depende de | Status |
+|---|---|---|---|---|
+| 001 | [Higiene do orquestrador](001-higiene-orquestrador.md) | 0 | — | Validado |
+| 002 | [Ambiente Docker Compose](002-ambiente-docker-compose.md) | 0 | 001 | Validado |
+| 003 | [Qualidade do backend](003-qualidade-backend.md) | 0 | 002 | Validado |
+| 004 | [Qualidade do frontend](004-qualidade-frontend.md) | 0 | 002 | Validado |
+| 005 | [Validação única e primeiro E2E](005-validacao-e-e2e.md) | 0 | 003, 004 | Validado |
+| 006 | [Integração contínua](006-integracao-continua.md) | 0 | 005 | Validado |
+| 007 | [Segurança do backend](007-seguranca-backend.md) | 1 | 006 | Validado |
+| 008 | [Papéis e administrador](008-papeis-e-administrador.md) | 1 | 007 | Validado |
+| 009 | [Pontos de interesse no backend](009-pontos-de-interesse-backend.md) | 1 | 008 | Validado |
+| 010 | [Visitas e métricas no backend](010-visitas-e-metricas-backend.md) | 1 | 009 | Validado |
+| 011 | [Base do painel](011-base-do-painel.md) | 2 | 008 | Validado |
+| 012 | [Cadastro de pontos no painel](012-cadastro-de-pontos-painel.md) | 2 | 009, 011 | Validado |
+| 013 | [Upload de mídia](013-upload-de-midia.md) | 2 | 012 | Validado |
+| 014 | [QR Codes imprimíveis](014-qr-codes.md) | 2 | 012 | Validado |
+| 015 | [Métricas, perfil e usuários no painel](015-metricas-perfil-usuarios.md) | 2 | 010, 011 | Validado |
+| 016 | [Fundação do app do visitante](016-fundacao-app-visitante.md) | 3 | 006 | Validado |
+| 017 | [Página do ponto (modo AR)](017-pagina-do-ponto.md) | 3 | 010, 016 | Validado |
+| 018 | [Leitor de QR e golden path completo](018-leitor-qr-golden-path.md) | 3 | 014, 017 | Validado |
+| 019 | [Panoramas e conexões](019-panoramas-e-conexoes.md) | 4 | 013, 017 | Validado |
+| 020 | [Cena VR 360°](020-cena-vr-360.md) | 4 | 019 | Validado |
+| 021 | [Navegação VR e encerramento](021-navegacao-vr-e-encerramento.md) | 4 | 018, 020 | Validado |
+
+A coluna **Depende de** permite trabalho em paralelo: qualquer plano cujas dependências
+estejam `Concluído` pode ser reservado. Exemplo: concluído o 006, os planos 007 e 016 podem
+correr ao mesmo tempo.
+
+### Desvio em relação às fases acima
+
+O upload de mídia (ADR-0008) foi antecipado da Fase 4 para a Fase 2 (plano 013). Mídia só
+por URL externa exigiria que os alunos hospedassem imagens em outro serviço, e texturas
+WebGL carregadas de outra origem falham sem cabeçalhos CORS — o que inviabilizaria os
+panoramas da Fase 4.
+
+---
+
+## 6.1 Decisões transversais
+
+Valem para **todos** os planos filhos. O plano pode detalhá-las, nunca contrariá-las.
+
+**Ambiente**
+
+| Item | Decisão |
+|---|---|
+| Portas | MongoDB `27017` · backend `8000` · painel `3000` · app do visitante `3001` |
+| Orquestração | `docker-compose.yml` na raiz; serviços `mongo` (`mongo:7`), `backend`, `frontend`, `vr-app` (a partir do 016) |
+| Variáveis | `.env.example` na raiz, copiado para `.env` (nunca versionado) |
+| Python | 3.11 · `requirements.txt` (execução) + `requirements-dev.txt` (teste e lint) · configuração em `pyproject.toml` |
+| Node | 22 LTS · `npm ci` · `package-lock.json` sempre versionado |
+| Shell dos scripts | Bash (`scripts/*.sh`), executado pelo Git Bash no Windows |
+
+**Qualidade — limites que reprovam a validação**
+
+| Regra | Backend (Ruff/mypy/pytest) | Frontend e vr-app (ESLint/tsc/Vitest) |
+|---|---|---|
+| Lint | `ruff check` com `E,F,W,I,B,UP,C90,PL,ARG,ERA,SIM,RUF` | `typescript-eslint` `strictTypeChecked` + `react-hooks` |
+| Formatação | `ruff format --check` | `prettier --check` |
+| Tipagem | `mypy --strict` em `app/` | `tsc --noEmit` com `strict: true` |
+| Complexidade | `C901` máx. 10 · `PLR0915` máx. 50 comandos | `complexity` máx. 10 |
+| Tamanho | — | `max-lines` 200 por arquivo · `max-lines-per-function` 60 |
+| Números mágicos | `PLR2004` (desligado em `tests/`) | `no-magic-numbers` ignorando `-1, 0, 1, 2` (desligado em testes) |
+| Cobertura mínima | 80% de linhas (`pytest-cov`) | 80% de linhas, funções e ramos (Vitest v8) |
+| Duplicação | `jscpd` na raiz, limite 3%, mínimo de 50 tokens, sobre `services/*/src` e `services/backend/app` | idem |
+
+**Validação**
+
+- `bash scripts/validate.sh` roda tudo; `--skip-e2e` pula os testes ponta a ponta.
+- E2E com Playwright em `e2e/` (pacote próprio na raiz); cenários de caminho principal
+  levam a tag `@golden` no título.
+
+**API**
+
+| Prefixo | Quem acessa | Exemplo |
+|---|---|---|
+| `/auth`, `/users/me` | Já existentes | `POST /auth/login` |
+| `/admin/...` | Somente papel `admin` (plano 008) | `POST /admin/points` |
+| `/public/...` | Qualquer pessoa, sem token | `GET /public/points/{slug}` |
+| `/media/...` | Arquivos de mídia enviados (plano 013) | `GET /media/<uuid>.jpg` |
+
+`POST /auth/register` passa a exigir papel `admin` (plano 008). O primeiro administrador é
+criado por linha de comando: `docker compose exec backend python -m app.cli create-admin
+--email <email> --password <senha>`.
+
+**Domínio** (ADR-0007, registrada no plano 009)
+
+| Entidade (código) | Collection | Campos principais |
+|---|---|---|
+| `PointOfInterest` | `points` | `slug` (único), `name`, `summary`, `history`, `status` (`draft`/`published`), `media[]`, `connections[]` (plano 019), `created_at`, `updated_at`, `published_at` |
+| `MediaItem` (embutido) | — | `id`, `kind` (`photo`/`panorama`), `url`, `caption`, `alt_text` |
+| `Visit` | `visits` | `point_slug`, `mode` (`ar`/`vr`), `visited_at` — anônima |
+
+**App do visitante**
+
+- Rotas: `/` (lista de pontos), `/p/:slug` (ponto, modo AR), `/scan` (leitor de QR),
+  `/vr` e `/vr/:slug` (modo VR).
+- QR Code contém `${VITE_VISITOR_APP_URL}/p/<slug>`; a variável é configurada no painel.
+- O app chama a API por caminho relativo `/api/...` e `/media/...`, com *proxy* do Vite
+  para o backend. Isso elimina CORS e o bloqueio de conteúdo misto em HTTPS.
+- `npm run dev:https` (com `@vitejs/plugin-basic-ssl`) serve em HTTPS na rede local:
+  câmera no celular e WebXR no Quest só funcionam em contexto seguro.
+- Modo VR: `@react-three/fiber`, `@react-three/drei`, `@react-three/xr`; panorama
+  equirretangular 2:1; conexões entre pontos posicionadas por ângulo horizontal (`yaw`).
+
+**Git**
+
+- Branch `plano/NNN-slug`, a mesma em todos os repositórios tocados pelo plano.
+- Merge pelo orientador: primeiro os PRs dos submódulos, por último o do orquestrador.
+- Os ponteiros dos submódulos são atualizados no fechamento do plano (Prompt 3 do protocolo).
 
 ---
 
@@ -204,6 +314,5 @@ mídia, que fica para a ADR-0008 quando houver volume real · refresh token e co
 
 ## 9. Próximo passo
 
-Quebrar a Fase 0 em seu primeiro plano executável: `docs/tasks/001-higiene-orquestrador.md`,
-cobrindo DT-001, DT-004 e DT-017 — as correções de menor risco e maior retorno imediato,
-que também eliminam o risco de perda de trabalho nos submódulos.
+Executar o plano [001](001-higiene-orquestrador.md), seguindo o
+[protocolo de execução](protocolo-execucao.md).

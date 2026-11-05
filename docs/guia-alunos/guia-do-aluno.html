@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Gerado por gera-guia.py a partir de guia-do-aluno.template.html. Nao editar a mao. -->
+<title>Guia do Aluno — TourVR</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --if-green: #2f9e41; --if-red: #c8191e; --green: #1d5c38; --green-dark: #133d25;
+    --ink: #1a1a1a; --muted: #555; --line: #c9c9c9; --soft: #f4f6f4; --tint: #e7f0ea;
+  }
+  @page { size: A4; margin: 1.4cm 1.5cm 1.8cm; }
+  html, body {
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    color: var(--ink); font-size: 10.5pt; line-height: 1.5; background: #fff;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .page { max-width: 19cm; margin: 0 auto; }
+  .doc-head {
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 2.5px solid var(--if-green); padding-bottom: 8px; position: relative;
+  }
+  .doc-head::after {
+    content: ""; position: absolute; left: 0; bottom: -5px; width: 64px; height: 2.5px; background: var(--if-red);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-logo { height: 52px; width: auto; display: block; }
+  .brand-txt { font-size: 8.5pt; color: var(--muted); line-height: 1.3; }
+  .brand-txt span { font-size: 10pt; color: var(--green); font-weight: 700; }
+  .head-meta { font-size: 9pt; color: var(--muted); text-align: right; }
+  h1 { font-size: 21pt; color: var(--green-dark); margin-top: 18px; text-align: center; }
+  .doc-sub { text-align: center; font-size: 10pt; color: var(--muted); margin-top: 3px; }
+  .doc-by { text-align: center; font-size: 9pt; color: var(--muted); margin-top: 6px; }
+  .doc-by b { color: var(--green-dark); }
+  h2 { font-size: 12.5pt; color: var(--green-dark); margin-bottom: 6px; }
+  h4 { font-size: 10pt; color: var(--green-dark); margin: 8px 0 2px; break-after: avoid; }
+  p { margin: 5px 0; text-align: justify; }
+  b { color: var(--green-dark); }
+  a { color: var(--green); }
+  code { font-family: Consolas, 'Courier New', monospace; background: #eef0ee; padding: 0 3px; border-radius: 3px; font-size: 9pt; }
+  ul, ol { margin: 4px 0 4px 18px; }
+  li { margin: 3px 0; }
+  .intro { margin-top: 18px; background: var(--soft); border-left: 3px solid var(--if-green); border-radius: 4px; padding: 10px 14px; }
+  .block { margin-top: 16px; }
+  .eixo { margin-top: 20px; }
+  .eixo-band {
+    background: var(--green-dark); color: #fff; font-weight: 700; font-size: 12pt; break-after: avoid;
+    border-radius: 5px; padding: 6px 12px; border-left: 6px solid var(--if-red);
+  }
+  .eixo > p { margin-top: 8px; }
+  .tema { margin-top: 10px; border: 1px solid #d8dcd8; border-radius: 6px; padding: 10px 12px; break-inside: avoid; }
+  .t-head { display: flex; gap: 10px; align-items: center; }
+  .t-num {
+    background: var(--if-green); color: #fff; font-weight: 800; font-size: 10.5pt;
+    min-width: 26px; height: 26px; border-radius: 13px; flex-shrink: 0; padding: 0 6px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .t-num.wide { font-size: 9pt; }
+  .tema h3 { font-size: 11.5pt; color: var(--green-dark); line-height: 1.25; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 2px 36px; }
+  .chip { font-size: 7.5pt; background: var(--tint); color: var(--green-dark); border-radius: 10px; padding: 1px 8px; }
+  .chip em { font-style: normal; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; margin-right: 2px; }
+  .t-body { margin-left: 36px; font-size: 10pt; }
+  .ask { margin-top: 7px; background: var(--tint); border-left: 3px solid var(--if-green); border-radius: 4px; padding: 6px 10px; font-size: 9.8pt; }
+  .ask span { display: block; font-size: 7.8pt; font-weight: 800; color: var(--if-green); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 1px; }
+  .warn { margin-top: 7px; background: #fbeeee; border-left: 3px solid var(--if-red); border-radius: 4px; padding: 6px 10px; font-size: 9.8pt; }
+  .warn span { display: block; font-size: 7.8pt; font-weight: 800; color: var(--if-red); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 1px; }
+  pre.cmd, pre.prompt {
+    font-family: Consolas, 'Courier New', monospace; font-size: 8.6pt; line-height: 1.4;
+    white-space: pre-wrap; word-break: break-word; border-radius: 4px; padding: 7px 10px; margin: 6px 0;
+  }
+  pre.cmd { background: #1e2a22; color: #e8f2ea; }
+  pre.prompt { background: #fff; border: 1.5px dashed var(--if-green); color: var(--ink); }
+  .plabel { display: inline-block; font-size: 7.6pt; font-weight: 800; color: #fff; background: var(--if-green);
+    text-transform: uppercase; letter-spacing: .4px; border-radius: 3px; padding: 0 6px; margin-top: 6px; }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0; font-size: 9.4pt; }
+  th { background: var(--tint); color: var(--green-dark); text-align: left; padding: 4px 6px; border-bottom: 1.5px solid var(--if-green); }
+  td { padding: 4px 6px; border-bottom: 1px solid #e0e3e0; vertical-align: top; }
+  tr { break-inside: avoid; }
+  .flow { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin: 8px 0; font-size: 8.8pt; }
+  .flow .st { background: var(--tint); color: var(--green-dark); font-weight: 700; border-radius: 4px; padding: 3px 8px; }
+  .flow .ar { color: var(--if-green); font-weight: 800; }
+  .fase-plan { margin-top: 8px; border: 1px solid #d8dcd8; border-radius: 6px; padding: 8px 12px; break-inside: avoid; }
+  .fase-plan .t-head h3 { font-size: 10.5pt; }
+  .fase-plan .desc { margin: 2px 0 0 36px; font-size: 9.4pt; color: var(--muted); }
+  .fase-plan pre.prompt { margin-left: 36px; }
+  .closing { margin-top: 18px; border: 1.5px solid var(--if-green); border-radius: 6px; padding: 10px 14px; break-inside: avoid; }
+  .pb { break-before: page; }
+  .foot { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 5px; font-size: 8pt; color: var(--muted); display: flex; justify-content: space-between; }
+  @media screen {
+    body { background: #eceeec; padding: 18px 0; }
+    .page { background: #fff; box-shadow: 0 2px 14px rgba(0,0,0,0.14); padding: 1.4cm 1.5cm 1.7cm; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="doc-head">
+    <div class="brand">
+      <img class="brand-logo" src="data:image/png;base64,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" alt="Instituto Federal de Goiás">
+      <div class="brand-txt"><span>Projeto TourVR</span><br>Instituto Federal de Goiás</div>
+    </div>
+    <div class="head-meta">Guia do aluno<br>Execução dos planos com IA</div>
+  </div>
+  <h1>Construindo o TourVR com agentes de IA</h1>
+  <div class="doc-sub">Como executar os 21 planos de trabalho com o Claude Code, do zero ao tour no Meta Quest 3</div>
+  <div class="doc-by">Orientação: <b>Dr. Ciro J. A. Macedo</b></div>
+
+  <section class="intro">
+    <h2>Para começar</h2>
+    <p>O <b>TourVR</b> é um tour do campus em duas formas. No <b>celular</b>, o visitante lê um QR Code afixado num local (a biblioteca, por exemplo) e vê a história, as fotos e a explicação daquele lugar. No <b>Meta Quest 3</b>, quem ainda não conhece o campus faz uma visita em 360°, passando de um ponto para outro. Tudo é gerenciado por um <b>painel administrativo</b> na web.</p>
+    <p>Vocês não vão escrever código à mão. O trabalho foi dividido em <b>21 planos</b>, arquivos de instrução que um agente de IA (o <b>Claude Code</b>) lê e executa. O seu papel é <b>orquestrar</b>: escolher o plano, entregar o prompt ao agente, acompanhar, conferir o resultado com os próprios olhos e avisar o grupo.</p>
+    <p>Os planos ficam em <code>docs/tasks/</code>, numerados na ordem de execução (<code>001</code>, <code>002</code>, …). As regras que o agente segue estão em <code>docs/tasks/protocolo-execucao.md</code>. Você não precisa decorar esse arquivo: o agente lê sozinho.</p>
+  </section>
+
+  <section class="eixo">
+    <div class="eixo-band">Parte 1 · Preparar o computador (uma vez só)</div>
+
+    <article class="tema">
+      <div class="t-head"><span class="t-num">1</span><div><h3>Conta no GitHub e acesso ao projeto</h3></div></div>
+      <div class="t-body">
+        <p>Crie uma conta em <b>github.com</b>, se ainda não tiver. Envie o seu <b>nome de usuário</b> no grupo para ser adicionado à organização <code>Tour-VR</code>. Sem esse acesso o agente não consegue enviar o trabalho.</p>
+      </div>
+    </article>
+
+    <article class="tema">
+      <div class="t-head"><span class="t-num">2</span><div><h3>Instalar os programas</h3></div></div>
+      <div class="t-body">
+        <p>Instale pelo site oficial de cada um ou, no Windows, abra o <b>PowerShell</b> e rode os comandos abaixo, um por linha:</p>
+<pre class="cmd">winget install Git.Git
+winget install Microsoft.VisualStudioCode
+winget install GitHub.cli
+winget install OpenJS.NodeJS.LTS
+winget install Python.Python.3.12
+winget install Docker.DockerDesktop</pre>
+        <p>Depois de instalar, <b>reinicie o computador</b>. Abra o <b>Docker Desktop</b> uma vez e aceite os termos. Ele precisa estar aberto sempre que for trabalhar a partir do plano 002.</p>
+      </div>
+    </article>
+
+    <article class="tema">
+      <div class="t-head"><span class="t-num">3</span><div><h3>Instalar o Claude Code no VS Code</h3></div></div>
+      <div class="t-body">
+        <ol>
+          <li>Abra o VS Code e clique em <b>Extensões</b> (ícone de quadradinhos na barra lateral, ou <code>Ctrl+Shift+X</code>).</li>
+          <li>Pesquise <b>Claude Code</b>, escolha a extensão publicada pela <b>Anthropic</b> e clique em <b>Install</b>.</li>
+          <li>Clique no ícone do Claude que aparece no canto superior direito do editor e entre com a sua conta Claude.</li>
+        </ol>
+      </div>
+    </article>
+
+    <article class="tema">
+      <div class="t-head"><span class="t-num">4</span><div><h3>Ligar o Git à sua conta</h3></div></div>
+      <div class="t-body">
+        <p>No VS Code, abra um terminal (<b>Terminal → New Terminal</b>). Na setinha ao lado do <b>+</b>, escolha <b>Git Bash</b>. Rode:</p>
+<pre class="cmd">git config --global user.name "Seu Nome Completo"
+git config --global user.email "seu-email@exemplo.com"
+gh auth login
+gh auth setup-git</pre>
+        <p>No <code>gh auth login</code>, responda: <b>GitHub.com</b> → <b>HTTPS</b> → <b>Yes</b> (autenticar o Git) → <b>Login with a web browser</b>. Copie o código que aparecer, cole na página que abrir no navegador e autorize.</p>
+      </div>
+    </article>
+  </section>
+
+  <section class="eixo">
+    <div class="eixo-band">Parte 2 · Baixar o projeto e abrir no VS Code (uma vez só)</div>
+
+    <article class="tema">
+      <div class="t-head"><span class="t-num">5</span><div><h3>Clonar o repositório</h3></div></div>
+      <div class="t-body">
+        <p>Escolha uma pasta sem espaços nem acentos no caminho, por exemplo <code>C:\projetos</code>. No terminal <b>Git Bash</b>:</p>
+<pre class="cmd">mkdir -p /c/projetos
+cd /c/projetos
+git clone --recurse-submodules https://github.com/Tour-VR/quest-project.git
+cd quest-project
+git submodule foreach "git checkout main &amp;&amp; git pull"</pre>
+        <p>O projeto tem quatro repositórios: o principal (<code>quest-project</code>) e três <b>submódulos</b> dentro de <code>services/</code> (<code>backend</code>, <code>frontend</code> e <code>vr-app</code>). A última linha deixa os três na versão mais recente. Depois que o plano 001 estiver concluído, use <code>bash scripts/setup.sh</code> no lugar dela.</p>
+      </div>
+    </article>
+
+    <article class="tema">
+      <div class="t-head"><span class="t-num">6</span><div><h3>Abrir o projeto no VS Code</h3></div></div>
+      <div class="t-body">
+        <ol>
+          <li>No VS Code: <b>File → Open Folder…</b> e escolha <code>C:\projetos\quest-project</code> (a pasta principal, não uma das de <code>services/</code>).</li>
+          <li>Se o VS Code perguntar se confia nos autores, responda <b>Yes, I trust the authors</b>.</li>
+          <li>Abra o terminal e deixe o <b>Git Bash</b> como padrão: <code>Ctrl+Shift+P</code> → <i>Terminal: Select Default Profile</i> → <b>Git Bash</b>.</li>
+        </ol>
+      </div>
+    </article>
+
+    <article class="tema">
+      <div class="t-head"><span class="t-num">7</span><div><h3>Abrir o Claude Code e testar</h3></div></div>
+      <div class="t-body">
+        <p>Clique no ícone do Claude (canto superior direito) para abrir uma conversa. Confira se ele está trabalhando na pasta <code>quest-project</code> e faça o teste:</p>
+<pre class="prompt">Leia docs/tasks/README.md e me diga, em uma frase, qual é o próximo plano disponível para executar, segundo a regra de docs/tasks/protocolo-execucao.md. Não altere nenhum arquivo.</pre>
+        <p>Se ele responder com um número de plano, está tudo pronto.</p>
+        <div class="ask"><span>Pedidos de permissão</span>O agente pede autorização antes de rodar comandos e editar arquivos. Leia o que ele quer fazer. Pode aceitar comandos dentro do projeto (<code>git</code>, <code>npm</code>, <code>pytest</code>, <code>docker compose</code>). <b>Recuse</b> e avise o grupo se ele pedir para apagar arquivos fora do projeto ou usar <code>push --force</code>.</div>
+      </div>
+    </article>
+  </section>
+
+  <section class="eixo pb">
+    <div class="eixo-band">Parte 3 · O ciclo de um plano</div>
+    <p>Todo plano passa pelos mesmos estados. O status de cada um aparece no índice <code>docs/tasks/README.md</code>, que você pode ver no GitHub a qualquer momento.</p>
+    <div class="flow">
+      <span class="st">Validado</span><span class="ar">→</span>
+      <span class="st">Em execução</span><span class="ar">→</span>
+      <span class="st">Em revisão</span><span class="ar">→</span>
+      <span class="st">Concluído</span>
+    </div>
+    <p><b>Regra de escolha:</b> pegue o <b>menor número</b> com status <code>Validado</code> cujas dependências (coluna <i>Depende de</i>) estejam todas <code>Concluído</code>. Dois alunos podem trabalhar ao mesmo tempo em planos diferentes que já estejam liberados. O agente <b>reserva</b> o plano com o seu nome antes de começar; se outro colega reservou primeiro, ele avisa e sugere outro.</p>
+
+    <article class="tema">
+      <div class="t-head"><span class="t-num">A</span><div><h3>Executar — o primeiro prompt</h3></div></div>
+      <div class="t-body">
+        <p>Abra uma <b>conversa nova</b> no Claude Code (uma por plano) e cole o prompt do plano escolhido (Parte 4), trocando <code>&lt;SEU NOME&gt;</code>. O agente vai reservar o plano, ler a documentação, implementar passo a passo, testar e abrir os <b>Pull Requests</b> (PRs) no GitHub. Isso pode levar de 30 minutos a algumas horas: acompanhe e responda aos pedidos de permissão.</p>
+        <p>No fim, ele entrega um relatório com os links dos PRs, um roteiro de <b>verificação pelo aluno</b> e uma mensagem pronta para o grupo. Faça a verificação e cole a mensagem no grupo.</p>
+      </div>
+    </article>
+
+    <article class="tema">
+      <div class="t-head"><span class="t-num">B</span><div><h3>Corrigir — se o orientador pedir ajustes</h3></div></div>
+      <div class="t-body">
+        <p>O orientador revisa os PRs. Se ele comentar pedindo mudanças, abra o Claude Code e cole:</p>
+<pre class="prompt">O orientador pediu ajustes nos PRs do plano NNN. Siga o "Prompt 2 — CORRIGIR" de docs/tasks/protocolo-execucao.md para o plano docs/tasks/NNN-slug.md.</pre>
+      </div>
+    </article>
+
+    <article class="tema">
+      <div class="t-head"><span class="t-num">C</span><div><h3>Fechar — depois que o orientador fizer o merge</h3></div></div>
+      <div class="t-body">
+        <p>Quando o orientador avisar que fez o merge de todos os PRs do plano, cole:</p>
+<pre class="prompt">O orientador fez o merge de todos os PRs do plano NNN. Siga o "Prompt 3 — FECHAR" de docs/tasks/protocolo-execucao.md para o plano docs/tasks/NNN-slug.md.</pre>
+        <p>O agente marca o plano como <code>Concluído</code> e diz qual é o próximo disponível. Avise no grupo. <b>Sem o fechamento, o próximo plano não fica liberado.</b></p>
+      </div>
+    </article>
+
+    <article class="tema">
+      <div class="t-head"><span class="t-num">D</span><div><h3>Retomar — se a sessão cair no meio</h3></div></div>
+      <div class="t-body">
+        <p>Fechou o VS Code, caiu a internet ou o computador desligou? Não comece de novo. Cole:</p>
+<pre class="prompt">A execução do plano docs/tasks/NNN-slug.md foi interrompida. Siga o "Prompt 4 — RETOMAR" de docs/tasks/protocolo-execucao.md e continue de onde parou. Meu nome: &lt;SEU NOME&gt;</pre>
+      </div>
+    </article>
+    <p style="margin-top:8px">Em todos os prompts, troque <code>NNN-slug</code> pelo nome do arquivo do plano, que aparece na Parte 4 (por exemplo, <code>001-higiene-orquestrador</code>).</p>
+  </section>
+
+  <section class="eixo pb">
+    <div class="eixo-band">Parte 4 · Os 21 planos e o primeiro prompt de cada um</div>
+    <p>Cole o prompt do plano numa conversa nova do Claude Code, com o VS Code aberto na pasta <code>quest-project</code>. Troque <code>&lt;SEU NOME&gt;</code> pelo seu nome.</p>
+    <h4 style="margin-top:14px">Fase 0 · Fundação de qualidade</h4>
+<article class="fase-plan"><div class="t-head"><span class="t-num wide">001</span><div><h3>Higiene do orquestrador</h3></div></div><div class="chips"><span class="chip"><em>Depende de</em> —</span><span class="chip"><em>Arquivo</em> 001-higiene-orquestrador.md</span></div><p class="desc">Corrige o .gitignore, faz os submódulos abrirem na main e cria o scripts/setup.sh.</p><pre class="prompt">Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/001-higiene-orquestrador.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o &quot;Prompt 1 — EXECUTAR&quot; etapa por etapa.
+Meu nome, para registrar no plano: &lt;SEU NOME&gt;</pre></article>
+<article class="fase-plan"><div class="t-head"><span class="t-num wide">002</span><div><h3>Ambiente Docker Compose</h3></div></div><div class="chips"><span class="chip"><em>Depende de</em> 001</span><span class="chip"><em>Arquivo</em> 002-ambiente-docker-compose.md</span></div><p class="desc">Banco, backend e painel sobem com um único comando.</p><pre class="prompt">Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/002-ambiente-docker-compose.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o &quot;Prompt 1 — EXECUTAR&quot; etapa por etapa.
+Meu nome, para registrar no plano: &lt;SEU NOME&gt;</pre></article>
+<article class="fase-plan"><div class="t-head"><span class="t-num wide">003</span><div><h3>Qualidade do backend</h3></div></div><div class="chips"><span class="chip"><em>Depende de</em> 002</span><span class="chip"><em>Arquivo</em> 003-qualidade-backend.md</span></div><p class="desc">Lint, tipagem estrita e cobertura mínima de 80% nos testes do backend.</p><pre class="prompt">Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/003-qualidade-backend.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o &quot;Prompt 1 — EXECUTAR&quot; etapa por etapa.
+Meu nome, para registrar no plano: &lt;SEU NOME&gt;</pre></article>
+<article class="fase-plan"><div class="t-head"><span class="t-num wide">004</span><div><h3>Qualidade do frontend</h3></div></div><div class="chips"><span class="chip"><em>Depende de</em> 002</span><span class="chip"><em>Arquivo</em> 004-qualidade-frontend.md</span></div><p class="desc">Lint, testes automatizados e componentes menores no painel.</p><pre class="prompt">Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/004-qualidade-frontend.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o &quot;Prompt 1 — EXECUTAR&quot; etapa por etapa.
+Meu nome, para registrar no plano: &lt;SEU NOME&gt;</pre></article>
+<article class="fase-plan"><div class="t-head"><span class="t-num wide">005</span><div><h3>Validação única e primeiro E2E</h3></div></div><div class="chips"><span class="chip"><em>Depende de</em> 003, 004</span><span class="chip"><em>Arquivo</em> 005-validacao-e-e2e.md</span></div><p class="desc">Um comando que verifica tudo e o primeiro teste ponta a ponta (login).</p><pre class="prompt">Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/005-validacao-e-e2e.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o &quot;Prompt 1 — EXECUTAR&quot; etapa por etapa.
+Meu nome, para registrar no plano: &lt;SEU NOME&gt;</pre></article>
+<article class="fase-plan"><div class="t-head"><span class="t-num wide">006</span><div><h3>Integração contínua</h3></div></div><div class="chips"><span class="chip"><em>Depende de</em> 005</span><span class="chip"><em>Arquivo</em> 006-integracao-continua.md</span></div><p class="desc">O GitHub roda as verificações automaticamente em todo Pull Request.</p><pre class="prompt">Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/006-integracao-continua.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o &quot;Prompt 1 — EXECUTAR&quot; etapa por etapa.
+Meu nome, para registrar no plano: &lt;SEU NOME&gt;</pre></article>
+<h4 style="margin-top:14px">Fase 1 · Domínio do campus no backend</h4>
+<article class="fase-plan"><div class="t-head"><span class="t-num wide">007</span><div><h3>Segurança do backend</h3></div></div><div class="chips"><span class="chip"><em>Depende de</em> 006</span><span class="chip"><em>Arquivo</em> 007-seguranca-backend.md</span></div><p class="desc">Chave secreta obrigatória, e-mail único no banco e limite de tentativas de login.</p><pre class="prompt">Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/007-seguranca-backend.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o &quot;Prompt 1 — EXECUTAR&quot; etapa por etapa.
+Meu nome, para registrar no plano: &lt;SEU NOME&gt;</pre></article>
+<article class="fase-plan"><div class="t-head"><span class="t-num wide">008</span><div><h3>Papéis e administrador</h3></div></div><div class="chips"><span class="chip"><em>Depende de</em> 007</span><span class="chip"><em>Arquivo</em> 008-papeis-e-administrador.md</span></div><p class="desc">Só administradores usam o painel; um comando cria o primeiro administrador.</p><pre class="prompt">Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/008-papeis-e-administrador.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o &quot;Prompt 1 — EXECUTAR&quot; etapa por etapa.
+Meu nome, para registrar no plano: &lt;SEU NOME&gt;</pre></article>
+<article class="fase-plan"><div class="t-head"><span class="t-num wide">009</span><div><h3>Pontos de interesse no backend</h3></div></div><div class="chips"><span class="chip"><em>Depende de</em> 008</span><span class="chip"><em>Arquivo</em> 009-pontos-de-interesse-backend.md</span></div><p class="desc">A API passa a cadastrar os locais do campus, com rascunho e publicação.</p><pre class="prompt">Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/009-pontos-de-interesse-backend.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o &quot;Prompt 1 — EXECUTAR&quot; etapa por etapa.
+Meu nome, para registrar no plano: &lt;SEU NOME&gt;</pre></article>
+<article class="fase-plan"><div class="t-head"><span class="t-num wide">010</span><div><h3>Visitas e métricas no backend</h3></div></div><div class="chips"><span class="chip"><em>Depende de</em> 009</span><span class="chip"><em>Arquivo</em> 010-visitas-e-metricas-backend.md</span></div><p class="desc">Registra visitas anônimas e calcula os números do painel.</p><pre class="prompt">Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/010-visitas-e-metricas-backend.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o &quot;Prompt 1 — EXECUTAR&quot; etapa por etapa.
+Meu nome, para registrar no plano: &lt;SEU NOME&gt;</pre></article>
+<h4 style="margin-top:14px">Fase 2 · Painel administrativo</h4>
+<article class="fase-plan"><div class="t-head"><span class="t-num wide">011</span><div><h3>Base do painel</h3></div></div><div class="chips"><span class="chip"><em>Depende de</em> 008</span><span class="chip"><em>Arquivo</em> 011-base-do-painel.md</span></div><p class="desc">Menu de navegação, aviso de sessão expirada e tipos gerados da API.</p><pre class="prompt">Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/011-base-do-painel.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o &quot;Prompt 1 — EXECUTAR&quot; etapa por etapa.
+Meu nome, para registrar no plano: &lt;SEU NOME&gt;</pre></article>
+<article class="fase-plan"><div class="t-head"><span class="t-num wide">012</span><div><h3>Cadastro de pontos no painel</h3></div></div><div class="chips"><span class="chip"><em>Depende de</em> 009, 011</span><span class="chip"><em>Arquivo</em> 012-cadastro-de-pontos-painel.md</span></div><p class="desc">Criar, editar, publicar e excluir pontos pelo painel.</p><pre class="prompt">Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/012-cadastro-de-pontos-painel.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o &quot;Prompt 1 — EXECUTAR&quot; etapa por etapa.
+Meu nome, para registrar no plano: &lt;SEU NOME&gt;</pre></article>
+<article class="fase-plan"><div class="t-head"><span class="t-num wide">013</span><div><h3>Upload de mídia</h3></div></div><div class="chips"><span class="chip"><em>Depende de</em> 012</span><span class="chip"><em>Arquivo</em> 013-upload-de-midia.md</span></div><p class="desc">Enviar as fotos de cada ponto pelo painel.</p><pre class="prompt">Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/013-upload-de-midia.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o &quot;Prompt 1 — EXECUTAR&quot; etapa por etapa.
+Meu nome, para registrar no plano: &lt;SEU NOME&gt;</pre></article>
+<article class="fase-plan"><div class="t-head"><span class="t-num wide">014</span><div><h3>QR Codes imprimíveis</h3></div></div><div class="chips"><span class="chip"><em>Depende de</em> 012</span><span class="chip"><em>Arquivo</em> 014-qr-codes.md</span></div><p class="desc">Folha A4 com o QR Code de cada ponto, pronta para imprimir e afixar.</p><pre class="prompt">Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/014-qr-codes.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o &quot;Prompt 1 — EXECUTAR&quot; etapa por etapa.
+Meu nome, para registrar no plano: &lt;SEU NOME&gt;</pre></article>
+<article class="fase-plan"><div class="t-head"><span class="t-num wide">015</span><div><h3>Métricas, perfil e usuários no painel</h3></div></div><div class="chips"><span class="chip"><em>Depende de</em> 010, 011</span><span class="chip"><em>Arquivo</em> 015-metricas-perfil-usuarios.md</span></div><p class="desc">Números reais no painel, tela de perfil e gestão de usuários.</p><pre class="prompt">Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/015-metricas-perfil-usuarios.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o &quot;Prompt 1 — EXECUTAR&quot; etapa por etapa.
+Meu nome, para registrar no plano: &lt;SEU NOME&gt;</pre></article>
+<h4 style="margin-top:14px">Fase 3 · App do visitante, modo AR (celular)</h4>
+<article class="fase-plan"><div class="t-head"><span class="t-num wide">016</span><div><h3>Fundação do app do visitante</h3></div></div><div class="chips"><span class="chip"><em>Depende de</em> 006</span><span class="chip"><em>Arquivo</em> 016-fundacao-app-visitante.md</span></div><p class="desc">Cria o app que roda no celular e no Quest, com as mesmas regras de qualidade.</p><pre class="prompt">Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/016-fundacao-app-visitante.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o &quot;Prompt 1 — EXECUTAR&quot; etapa por etapa.
+Meu nome, para registrar no plano: &lt;SEU NOME&gt;</pre></article>
+<article class="fase-plan"><div class="t-head"><span class="t-num wide">017</span><div><h3>Página do ponto (modo AR)</h3></div></div><div class="chips"><span class="chip"><em>Depende de</em> 010, 016</span><span class="chip"><em>Arquivo</em> 017-pagina-do-ponto.md</span></div><p class="desc">O que o visitante vê ao ler o QR: nome, história e fotos do local.</p><pre class="prompt">Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/017-pagina-do-ponto.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o &quot;Prompt 1 — EXECUTAR&quot; etapa por etapa.
+Meu nome, para registrar no plano: &lt;SEU NOME&gt;</pre></article>
+<article class="fase-plan"><div class="t-head"><span class="t-num wide">018</span><div><h3>Leitor de QR e golden path completo</h3></div></div><div class="chips"><span class="chip"><em>Depende de</em> 014, 017</span><span class="chip"><em>Arquivo</em> 018-leitor-qr-golden-path.md</span></div><p class="desc">Leitor de QR dentro do app e teste do caminho completo, do cadastro à visita.</p><pre class="prompt">Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/018-leitor-qr-golden-path.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o &quot;Prompt 1 — EXECUTAR&quot; etapa por etapa.
+Meu nome, para registrar no plano: &lt;SEU NOME&gt;</pre></article>
+<h4 style="margin-top:14px">Fase 4 · App do visitante, modo VR (Quest 3)</h4>
+<article class="fase-plan"><div class="t-head"><span class="t-num wide">019</span><div><h3>Panoramas e conexões</h3></div></div><div class="chips"><span class="chip"><em>Depende de</em> 013, 017</span><span class="chip"><em>Arquivo</em> 019-panoramas-e-conexoes.md</span></div><p class="desc">Foto 360° de cada ponto e as ligações entre pontos vizinhos.</p><pre class="prompt">Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/019-panoramas-e-conexoes.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o &quot;Prompt 1 — EXECUTAR&quot; etapa por etapa.
+Meu nome, para registrar no plano: &lt;SEU NOME&gt;</pre></article>
+<article class="fase-plan"><div class="t-head"><span class="t-num wide">020</span><div><h3>Cena VR 360°</h3></div></div><div class="chips"><span class="chip"><em>Depende de</em> 019</span><span class="chip"><em>Arquivo</em> 020-cena-vr-360.md</span></div><p class="desc">Visita imersiva em 360° no navegador do Meta Quest 3.</p><pre class="prompt">Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/020-cena-vr-360.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o &quot;Prompt 1 — EXECUTAR&quot; etapa por etapa.
+Meu nome, para registrar no plano: &lt;SEU NOME&gt;</pre></article>
+<article class="fase-plan"><div class="t-head"><span class="t-num wide">021</span><div><h3>Navegação VR e encerramento</h3></div></div><div class="chips"><span class="chip"><em>Depende de</em> 018, 020</span><span class="chip"><em>Arquivo</em> 021-navegacao-vr-e-encerramento.md</span></div><p class="desc">Passar de um ponto a outro em VR, roteiro de teste no Quest e documentação final.</p><pre class="prompt">Você é a sessão de EXECUÇÃO do projeto TourVR.
+Execute o plano docs/tasks/021-navegacao-vr-e-encerramento.md.
+Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o &quot;Prompt 1 — EXECUTAR&quot; etapa por etapa.
+Meu nome, para registrar no plano: &lt;SEU NOME&gt;</pre></article>
+  </section>
+
+  <section class="eixo pb">
+    <div class="eixo-band">Parte 5 · Regras de ouro e problemas comuns</div>
+    <article class="tema">
+      <div class="t-head"><span class="t-num">!</span><div><h3>Regras de ouro</h3></div></div>
+      <div class="t-body">
+        <ul>
+          <li><b>Não edite código à mão.</b> Se algo estiver errado, peça ao agente ou avise o grupo.</li>
+          <li><b>Um plano por conversa.</b> Comece cada plano numa conversa nova do Claude Code.</li>
+          <li><b>Não faça merge</b> de PR. Quem faz é o orientador.</li>
+          <li><b>Não pule o fechamento</b> (prompt C). É ele que libera o próximo plano para a turma.</li>
+          <li><b>Se o agente parar e pedir para avisar o grupo, avise.</b> Ele para quando o plano não bate com o código, e isso precisa de decisão humana.</li>
+          <li><b>Docker Desktop aberto</b> sempre que for trabalhar, a partir do plano 002.</li>
+          <li><b>Nunca cole senhas</b> nem chaves no chat do agente, nos commits ou no grupo.</li>
+        </ul>
+      </div>
+    </article>
+    <table>
+      <tr><th style="width:42%">O que aconteceu</th><th>O que fazer</th></tr>
+      <tr><td>O agente diz que <code>gh</code> não está autenticado</td><td>No terminal: <code>gh auth login</code> e depois <code>gh auth setup-git</code> (passo 4)</td></tr>
+      <tr><td>Erro <b>403</b> ou <i>permission denied</i> ao enviar</td><td>Sua conta ainda não tem acesso à organização <code>Tour-VR</code>. Avise o orientador</td></tr>
+      <tr><td>"Plano não disponível"</td><td>Normal: outro colega reservou, ou falta concluir uma dependência. Use o plano que o agente sugerir</td></tr>
+      <tr><td>Erro dizendo que o Docker não está rodando</td><td>Abra o Docker Desktop, espere aparecer <i>Engine running</i> e peça ao agente para continuar</td></tr>
+      <tr><td>O agente diz que há arquivos alterados que não são do plano</td><td>Não deixe descartar sem entender. Pergunte ao agente o que são e, na dúvida, avise o grupo</td></tr>
+      <tr><td>A sessão terminou por limite de uso</td><td>Espere o limite renovar e use o prompt D (Retomar)</td></tr>
+    </table>
+  </section>
+
+  <section class="closing">
+    <h2>Como acompanhar o projeto</h2>
+    <ol>
+      <li><b>Índice de planos</b> no GitHub: <code>docs/tasks/README.md</code> no repositório <code>Tour-VR/quest-project</code>. Mostra o status de cada plano e quem está executando.</li>
+      <li><b>Grupo do WhatsApp:</b> toda reserva, revisão e conclusão é anunciada com a mensagem que o agente prepara.</li>
+      <li><b>O sistema funcionando:</b> a partir do plano 002, o projeto sobe no seu computador com <code>docker compose up</code>. O painel fica em <code>http://localhost:3000</code> e o app do visitante em <code>http://localhost:3001</code> (a partir do plano 016).</li>
+    </ol>
+    <p>Dúvida que o agente não resolve vai para o grupo. Ninguém precisa travar sozinho.</p>
+  </section>
+
+  <div class="foot"><span>Instituto Federal de Goiás · Projeto TourVR</span><span>Guia do aluno · versão de 05/11/2026</span></div>
+</div>
+</body>
+</html>
