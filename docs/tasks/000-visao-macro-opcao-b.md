@@ -179,7 +179,7 @@ um agente de IA, em branch própria, e integrado por Pull Request revisado pelo 
 
 | # | Plano | Fase | Depende de | Status |
 |---|---|---|---|---|
-| 001 | [Higiene do orquestrador](001-higiene-orquestrador.md) | 0 | — | Validado |
+| 001 | [Higiene do orquestrador](001-higiene-orquestrador.md) | 0 | — | Concluído |
 | 002 | [Ambiente Docker Compose](002-ambiente-docker-compose.md) | 0 | 001 | Validado |
 | 003 | [Qualidade do backend](003-qualidade-backend.md) | 0 | 002 | Validado |
 | 004 | [Qualidade do frontend](004-qualidade-frontend.md) | 0 | 002 | Validado |
