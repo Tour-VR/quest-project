@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Aberta |
+| **Status** | Resolvida — 2026-11-09 — [plano 001](../tasks/001-higiene-orquestrador.md), commit `fb3c021` |
 | **Prioridade** | P1 |
 | **Esforço** | Baixo |
 | **Artefato** | Orquestrador |
@@ -65,3 +65,10 @@ Comparação: os `.gitignore` dos submódulos `backend` e `frontend` estão corr
 ## Notas
 
 Correção de baixo risco e alto retorno — bom primeiro item de qualquer fase de fundação.
+
+## Resolução
+
+Resolvida pelo [plano 001](../tasks/001-higiene-orquestrador.md): `.gitignore` reescrito
+com wildcards, sem linhas truncadas nem duplicadas, com `*.apk`, `*.egg-info/` e
+`.claude/settings.local.json`. Os padrões de build de VR (`*.pdb`, `*.mdb`) ficaram para
+quando o `vr-app` tiver motor definido. Nenhum `.log`, `.zip` ou `.pyc` estava rastreado.

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Aberta |
+| **Status** | Resolvida — 2026-11-09 — [plano 001](../tasks/001-higiene-orquestrador.md), commit `5414c7a` |
 | **Prioridade** | P3 |
 | **Esforço** | Baixo |
 | **Artefato** | Orquestrador |
@@ -61,3 +61,10 @@ Há também três erros de grafia repetidos em mensagens exibidas ao usuário: `
 
 Prioridade baixa em impacto técnico, mas custo de correção próximo de zero. Executar junto
 com DT-004, que altera os mesmos arquivos.
+
+## Resolução
+
+Resolvida pelo [plano 001](../tasks/001-higiene-orquestrador.md): comentários opinativos
+trocados por explicações técnicas, grafia corrigida, mensagens padronizadas em português
+sem acentos, `exit 1` nos erros do PowerShell, e o teste de SSH passou a vir **antes** do
+`insteadOf` global — sem chave válida, o script sai sem alterar nada.

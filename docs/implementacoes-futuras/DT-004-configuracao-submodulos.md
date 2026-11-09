@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Aberta |
+| **Status** | Resolvida — 2026-11-09 — [plano 001](../tasks/001-higiene-orquestrador.md), commits `d8b1332`, `cf2d8c5` |
 | **Prioridade** | P1 |
 | **Esforço** | Baixo |
 | **Artefato** | Orquestrador |
@@ -62,3 +62,10 @@ vazio, indicando detached HEAD.
 
 Avaliar também um hook `post-checkout` que avise quando um submódulo estiver em detached
 HEAD. Barato de implementar e evita o erro na origem.
+
+## Resolução
+
+Resolvida pelo [plano 001](../tasks/001-higiene-orquestrador.md): `.gitmodules` declara
+`branch = main` nos três submódulos, e o novo `scripts/setup.sh` deixa todos em `main` ao
+final (também chamado pelo `ssh-setup`). O plano decidiu **não** aplicar
+`submodule.recurse true` global nem hook `post-checkout`.
