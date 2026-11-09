@@ -34,6 +34,8 @@ services:
       dockerfile: Dockerfile.dev
     command: sh -c "npm ci && npm run dev"
     env_file: .env
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
     ports:
       - "3000:3000"
     volumes:
