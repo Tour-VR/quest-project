@@ -1,7 +1,7 @@
 # 04 — Artefato: Frontend (`services/frontend`)
 
 > Repositório: `github.com/Tour-VR/frontend` · Commit fixado: `c3d6d53`
-> Última verificação contra o código: 2026-08-20
+> Última verificação contra o código: 2026-11-09
 
 ## Responsabilidade
 
@@ -102,6 +102,24 @@ consumidas** — não existe tela de perfil.
 
 ## Execução
 
+**Caminho principal: Docker**, a partir da raiz do orquestrador:
+
+```bash
+bash scripts/up.sh   # painel em http://localhost:3000
+```
+
+O serviço `frontend` usa `services/frontend/Dockerfile.dev` (`node:22-slim`, `npm ci`,
+`npm run dev`). O código fica montado em `/app` e `node_modules` num volume próprio, porque
+os pacotes instalados no Windows não funcionam no Linux do container. Editar um arquivo
+em `src/` atualiza o navegador sem rebuild (`CHOKIDAR_USEPOLLING=true` no compose).
+`VITE_API_URL` vem do `.env` da raiz. O `.dockerignore` exclui `node_modules`, `dist`,
+`coverage`, `.git` e qualquer `.env`.
+
+Não há imagem de produção (build servido por Nginx) — pendência da
+[DT-014](implementacoes-futuras/DT-014-containerizacao-completa.md).
+
+**Alternativa sem Docker** (exige o backend rodando):
+
 ```bash
 cd services/frontend
 npm install
@@ -119,6 +137,15 @@ npm run dev        # http://localhost:3000
 
 Não há testes automatizados nem linter de estilo. Ver
 [DT-013](implementacoes-futuras/DT-013-qualidade-codigo-frontend.md).
+
+### Problemas comuns
+
+| Sintoma | Causa provável |
+|---|---|
+| `Network Error` ao fazer login | Backend fora do ar ou `VITE_API_URL` apontando para outro endereço |
+| Erro de CORS | A origem do painel não está em `APP_CORS_ORIGINS` do backend |
+| "Credenciais inválidas" com usuário novo | Usuário ainda não cadastrado; usar `POST /auth/register` no Swagger |
+| `useAuth deve ser usado dentro de AuthProvider` | Componente renderizado fora da árvore de `<App>` |
 
 ## O que é fachada e o que é real
 
@@ -145,7 +172,8 @@ está fora de sincronia e não há mecanismo que force o alinhamento. Ver
 
 ## Nota sobre o README do submódulo
 
-O `README.md` de `services/frontend` tem 524 linhas e é notavelmente honesto sobre as
-limitações do projeto — a seção de limitações foi aproveitada e consolidada nas dívidas
-técnicas deste repositório. Contém, porém, instruções de instalação que apontam para
-scripts inexistentes. **Este documento é a fonte de verdade.**
+Desde o plano 002, o `README.md` de `services/frontend` é curto (menos de 50 linhas) e
+correto: diz como rodar e testar e aponta para este documento. A antiga seção de
+limitações está consolidada em [O que é fachada e o que é real](#o-que-é-fachada-e-o-que-é-real)
+e nas dívidas técnicas; os problemas comuns foram trazidos para a seção
+[Execução](#execução). **Este documento é a fonte de verdade.**

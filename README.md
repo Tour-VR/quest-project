@@ -20,9 +20,10 @@ base de conhecimento do projeto e centraliza a automação de ambiente.
 
 ## Primeiros passos
 
-Pré-requisitos: [Git](https://git-scm.com/) (no Windows, use o Git Bash) e o
+Pré-requisitos: [Git](https://git-scm.com/) (no Windows, use o Git Bash), o
 [GitHub CLI](https://cli.github.com/) (`gh`), com uma conta que tenha acesso à
-organização `Tour-VR`.
+organização `Tour-VR`, e o [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+em execução.
 
 ```bash
 gh auth login          # uma vez por computador
@@ -30,6 +31,7 @@ gh auth setup-git
 git clone https://github.com/Tour-VR/quest-project.git
 cd quest-project
 bash scripts/setup.sh
+bash scripts/up.sh
 ```
 
 O `setup.sh` baixa os três submódulos e deixa cada um na branch `main`. A última linha
@@ -55,13 +57,26 @@ O script exige uma chave SSH registrada na sua conta GitHub (para criar uma:
 alterar nada. Se funcionar, configura o Git para trocar HTTPS por SSH e prepara os
 submódulos como o `setup.sh`.
 
-Em seguida, siga as instruções de execução de cada serviço:
+### Subir o ambiente
 
-- Backend — [`docs/03-artefato-backend.md`](docs/03-artefato-backend.md)
-- Frontend — [`docs/04-artefato-frontend.md`](docs/04-artefato-frontend.md)
+O `up.sh` sobe MongoDB, backend e painel com Docker Compose. Na primeira vez ele cria o
+`.env` a partir do `.env.example` e avisa para trocar a `JWT_SECRET_KEY`. Quando terminar:
 
-> Ainda não há orquestração de ambiente com um comando único. Registrado como
-> [DT-002](docs/implementacoes-futuras/DT-002-orquestracao-ambiente-local.md).
+| O quê | Endereço |
+|---|---|
+| Painel administrativo | http://localhost:3000 |
+| Documentação da API (Swagger) | http://localhost:8000/docs |
+
+Para entrar no painel, cadastre um usuário pelo Swagger (`POST /auth/register`).
+
+| Comando | Faz |
+|---|---|
+| `bash scripts/up.sh` | Sobe (ou atualiza) o ambiente |
+| `bash scripts/down.sh` | Para o ambiente; os dados do banco ficam guardados |
+| `bash scripts/logs.sh [servico]` | Mostra os logs (`backend`, `frontend` ou `mongo`) |
+| `bash scripts/reset-db.sh` | Apaga todos os dados do banco local (pede confirmação) |
+
+Detalhes em [`docs/02-artefato-orquestrador.md`](docs/02-artefato-orquestrador.md#ambiente-local).
 
 ---
 

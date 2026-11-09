@@ -1,7 +1,7 @@
 # 03 — Artefato: Backend (`services/backend`)
 
 > Repositório: `github.com/Tour-VR/backend` · Commit fixado: `9fc06ef`
-> Última verificação contra o código: 2026-08-20
+> Última verificação contra o código: 2026-11-09
 
 ## Responsabilidade
 
@@ -107,7 +107,10 @@ e [app/core/security.py](../services/backend/app/core/security.py):
 
 ## Configuração
 
-Todas as variáveis são lidas por `Settings` a partir do `.env` no diretório do backend.
+Todas as variáveis são lidas por `Settings` a partir do `.env` no diretório do backend
+ou do ambiente do processo. No ambiente Docker, elas vêm do `.env` da raiz do
+orquestrador, e `MONGODB_URL` e `APP_CORS_ORIGINS` são fixadas no `docker-compose.yml`
+(ver [Ambiente local](02-artefato-orquestrador.md#ambiente-local)).
 
 | Variável | Padrão no código | Observação |
 |---|---|---|
@@ -123,6 +126,25 @@ Todas as variáveis são lidas por `Settings` a partir do `.env` no diretório d
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | `60` | |
 
 ## Execução
+
+**Caminho principal: Docker**, a partir da raiz do orquestrador:
+
+```bash
+bash scripts/up.sh
+```
+
+O serviço `backend` usa a imagem de `services/backend/Dockerfile`, com o código montado
+em `/app` e `uvicorn --reload`: editar um `.py` recarrega a API sem rebuild. A imagem:
+
+- instala `requirements.txt` antes de copiar o código, para reaproveitar o cache de
+  camadas (`Dockerfile:8-12`);
+- ignora `.venv`, `.git`, caches, `tests/`, `*.md` e qualquer `.env` via
+  `.dockerignore` — segredos locais nunca entram na imagem;
+- roda como o usuário sem privilégios `appuser`, uid 1000 (`Dockerfile:14-16`);
+- declara `HEALTHCHECK` contra `GET /health/` (`Dockerfile:20-21`), usado pelo compose
+  para só subir o painel quando a API responde.
+
+**Alternativa sem Docker** (exige um MongoDB acessível):
 
 ```bash
 cd services/backend
@@ -141,6 +163,23 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 | Health | http://127.0.0.1:8000/health/ |
 
 Requer MongoDB acessível. A API sobe sem ele, mas as rotas de domínio respondem `503`.
+
+### Problemas comuns
+
+| Sintoma | Causa provável |
+|---|---|
+| `503` em todas as rotas de domínio | MongoDB não conectou no `lifespan`; conferir `MONGODB_URL` e `GET /health/` |
+| Erro de credencial placeholder | A URI contém `<db_password>` ou similar; o `MongoManager` aborta sem tentar a rede |
+| Erro de CORS no painel | A origem do painel não está em `APP_CORS_ORIGINS` |
+| `ModuleNotFoundError` fora do Docker | Virtualenv não ativado ou `pip install -r requirements.txt` não executado |
+
+### Guia de leitura do código
+
+Ordem sugerida para entender o backend: `app/core/config.py` → `app/core/database.py` →
+`app/core/security.py` → `app/models/user.py` e `app/schemas/user.py` →
+`app/repositories/user_repository.py` → `app/services/user_service.py` →
+`app/api/deps.py` → `app/api/v1/routes/` → `tests/` (documentação executável dos
+comportamentos esperados).
 
 ## Testes
 
@@ -161,9 +200,7 @@ Fixtures em `conftest.py`: `mongo_up`, `mongo_down`, `client`.
 
 ## Nota sobre o README do submódulo
 
-O `README.md` dentro de `services/backend` tem 605 linhas e é bem escrito, mas **descreve
-uma versão anterior do código**. Divergências verificadas (classe `MongoDBManager`
-inexistente, contagem de testes errada, rotas `PUT` não documentadas, códigos HTTP
-incorretos, scripts inexistentes). **Este documento é a fonte de verdade**, não aquele.
-Reconciliação registrada em
-[DT-005](implementacoes-futuras/DT-005-sincronizacao-documentacao-codigo.md).
+Desde o plano 002, o `README.md` de `services/backend` é curto (menos de 50 linhas) e
+correto: diz como rodar e testar e aponta para este documento. Arquitetura e
+comportamento ficam aqui, em `docs/`. O conteúdo útil do README antigo (problemas comuns
+e guia de leitura) foi trazido para a seção [Execução](#execução).
