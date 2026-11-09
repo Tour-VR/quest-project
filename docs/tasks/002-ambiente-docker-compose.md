@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em execução — Heitor Aquino — 2026-11-09 |
+| **Status** | Em revisão — Heitor Aquino |
 | **Fase** | 0 — Fundação de qualidade |
 | **Depende de** | 001 |
 | **Dívidas atendidas** | DT-002, DT-005, DT-014 |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Orquestrador · Backend · Frontend |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | — |
+| **Executado em** | 2026-11-09 por Heitor Aquino (PRs na seção Registro de execução) |
 
 ---
 
@@ -319,25 +319,25 @@ Este plano não altera código; a verificação é operacional.
 
 ## 8. Documentação a atualizar
 
-- [ ] `README.md` (raiz) — passo 8
-- [ ] `docs/02-artefato-orquestrador.md` — passo 8
-- [ ] `docs/03-artefato-backend.md` — passo 8
-- [ ] `docs/04-artefato-frontend.md` — passo 8
-- [ ] `docs/implementacoes-futuras/DT-002-...md` e `DT-005-...md` — `Resolvida` (plano 002)
-- [ ] `docs/implementacoes-futuras/DT-014-...md` — `Parcialmente resolvida`: falta a imagem
+- [x] `README.md` (raiz) — passo 8
+- [x] `docs/02-artefato-orquestrador.md` — passo 8
+- [x] `docs/03-artefato-backend.md` — passo 8
+- [x] `docs/04-artefato-frontend.md` — passo 8
+- [x] `docs/implementacoes-futuras/DT-002-...md` e `DT-005-...md` — `Resolvida` (plano 002)
+- [x] `docs/implementacoes-futuras/DT-014-...md` — `Parcialmente resolvida`: falta a imagem
       de produção do frontend
-- [ ] `docs/implementacoes-futuras/README.md` — índice
+- [x] `docs/implementacoes-futuras/README.md` — índice
 
 ## 9. Critérios de aceite
 
-- [ ] `bash scripts/up.sh` em clone novo (após `setup.sh`) sobe MongoDB, backend e painel,
+- [x] `bash scripts/up.sh` em clone novo (após `setup.sh`) sobe MongoDB, backend e painel,
       e o login no painel funciona
-- [ ] Editar código do backend ou do frontend recarrega sem rebuild
-- [ ] Dados do MongoDB persistem entre `down.sh` e `up.sh`
-- [ ] Imagem do backend sem `.env`, como usuário não-root, com `HEALTHCHECK`
-- [ ] READMEs dos submódulos com até 50 linhas e sem citação de script inexistente
-- [ ] Testes do backend e lint do frontend continuam passando
-- [ ] Documentação da seção 8 atualizada
+- [x] Editar código do backend ou do frontend recarrega sem rebuild
+- [x] Dados do MongoDB persistem entre `down.sh` e `up.sh`
+- [x] Imagem do backend sem `.env`, como usuário não-root, com `HEALTHCHECK`
+- [x] READMEs dos submódulos com até 50 linhas e sem citação de script inexistente
+- [x] Testes do backend e lint do frontend continuam passando
+- [x] Documentação da seção 8 atualizada
 
 ## 10. Commits esperados
 
@@ -397,3 +397,60 @@ Execute o plano docs/tasks/002-ambiente-docker-compose.md.
 Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o "Prompt 1 — EXECUTAR" etapa por etapa.
 Meu nome, para registrar no plano: <SEU NOME>
 ```
+
+---
+
+## Registro de execução
+
+**Executado em 2026-11-09 por Heitor Aquino, com Claude Code.** Branch
+`plano/002-ambiente-docker-compose` no orquestrador, no `backend` e no `frontend`.
+
+### O que foi feito
+
+- Passo 1 — `.dockerignore` e `Dockerfile` do backend exatamente como no plano. Imagem de
+  teste: `whoami` → `appuser`; com um `.env` falso na pasta, `ls -a` não listou `.env`.
+  Imagem de teste removida.
+- Passo 2 — `Dockerfile.dev` e `.dockerignore` do frontend como no plano.
+- Passos 3 e 4 — `.env.example` e `docker-compose.yml` como no plano;
+  `docker compose config -q` sem erro.
+- Passo 5 — `up.sh`, `down.sh`, `logs.sh`, `reset-db.sh`, executáveis (`100755`), no
+  padrão `[INFO]/[OK]/[ERRO]` do `setup.sh`.
+- Passo 6 — os três serviços subiram (`backend` e `mongo` `healthy`); `/health/` com
+  `"status":"ok"` e `"connected":true`; usuário `teste@tourvr.dev` cadastrado e login feito
+  no painel; edição em `Login.tsx` apareceu no navegador sem rebuild (desfeita depois);
+  edição em `main.py` recarregou o backend (desfeita depois); após `down.sh` + `up.sh` o
+  mesmo usuário fez login (dados persistiram).
+- Passo 7 — READMEs com 45 (backend) e 41 (frontend) linhas. Guia de leitura do backend e
+  problemas comuns dos READMEs antigos levados para `docs/03` e `docs/04`.
+- Passo 8 — README da raiz, `docs/02`, `03`, `04`, DT-002/005/014 e índice das dívidas.
+
+### Testes
+
+| Comando | Resultado |
+|---|---|
+| `docker compose config -q` | Sem erro |
+| `bash scripts/up.sh` | Três serviços em execução, backend `healthy` |
+| `curl -s localhost:8000/health/` | `"status":"ok"`, `"connected":true` |
+| `docker compose exec backend whoami` | `appuser` |
+| `pytest -q` (dentro do container `backend`) | 25 passed |
+| `npm run lint` (dentro do container `frontend`) | Sem erros |
+| `wc -l services/*/README.md` | 45 e 41 |
+
+### Desvios do plano
+
+- **`CHOKIDAR_USEPOLLING: "true"` no `frontend`.** Sem ele, a edição no Windows não
+  recarregou o painel. Alteração prevista no próprio passo 4.
+- **Testes rodados dentro dos containers.** A máquina não tinha `pytest` nem
+  `node_modules` instalados fora do Docker; o código testado é o mesmo (bind mount).
+- **25 testes, não 24.** A suíte atual tem um teste a mais do que o plano previa; todos
+  passam. `docs/03-artefato-backend.md`, seção Testes, ainda diz 24 — fora do escopo
+  deste plano; cabe ao plano 003 (qualidade do backend), que revisa os testes.
+- **Clone novo.** O critério "em clone novo" foi verificado na cópia de trabalho; num clone
+  novo os submódulos só terão os Dockerfiles depois do merge e da atualização dos ponteiros
+  (Prompt 3 do protocolo).
+- **Identidade Git nos submódulos.** Os submódulos não tinham `user.name`/`user.email`
+  locais; foram configurados iguais aos do orquestrador.
+
+### Dívidas novas
+
+Nenhuma.

@@ -8,9 +8,10 @@
 Agregar os três submódulos, hospedar a base de conhecimento e centralizar a automação de
 setup, build e execução do ambiente completo.
 
-**Hoje cumpre apenas duas dessas funções** (agregação e documentação). A automação
-existente cobre somente a preparação dos submódulos e do acesso — não há build, execução nem teste
-orquestrados. Registrado como [DT-002](implementacoes-futuras/DT-002-orquestracao-ambiente-local.md).
+Agregação, documentação e execução do ambiente local já existem: `scripts/setup.sh`
+prepara os submódulos e `scripts/up.sh` sobe o sistema inteiro com Docker Compose (ver
+[Ambiente local](#ambiente-local)). Ainda não há teste orquestrado nem CI — ver
+[DT-003](implementacoes-futuras/DT-003-pipeline-ci-cd.md).
 
 ## Conteúdo versionado
 
@@ -22,9 +23,15 @@ quest-project/
 ├── LICENSE                MIT, "Copyright (c) 2026 Tour VR"
 ├── README.md              porta de entrada do projeto
 ├── CLAUDE.md              instruções de carga de contexto para agentes de IA
+├── docker-compose.yml     ambiente local: mongo + backend + frontend
+├── .env.example           variáveis do ambiente local (copiar para .env)
 ├── docs/                  base de conhecimento (este diretório)
 ├── scripts/
 │   ├── setup.sh               (54 linhas) — preparação principal
+│   ├── up.sh                  (35 linhas) — sobe o ambiente local
+│   ├── down.sh                (19 linhas) — para o ambiente, preserva os dados
+│   ├── logs.sh                (19 linhas) — acompanha os logs
+│   ├── reset-db.sh            (26 linhas) — apaga o banco local, com confirmação
 │   ├── bash/ssh-setup.sh      (58 linhas) — alternativa SSH
 │   └── posh/ssh-setup.ps1     (80 linhas) — alternativa SSH no PowerShell
 └── services/
@@ -87,6 +94,41 @@ organização `Tour-VR`.
 O `.gitattributes` força LF nos arquivos `.sh`. Sem isso, um Git no Windows com
 `core.autocrlf=true` grava os scripts com CRLF e o Bash falha ao executá-los.
 
+## Ambiente local
+
+`docker-compose.yml` (projeto `tourvr`) descreve o ambiente de desenvolvimento. Só existe
+este ambiente; não há `docker-compose.override.yml`.
+
+| Serviço | Imagem | Porta | Detalhes |
+|---|---|---|---|
+| `mongo` | `mongo:7` | 27017 | Volume `mongo-data`; healthcheck com `mongosh` ping (`docker-compose.yml:4-14`) |
+| `backend` | `services/backend/Dockerfile` | 8000 | Bind mount `./services/backend:/app` e `uvicorn --reload`; espera o `mongo` ficar saudável; usa o `HEALTHCHECK` da imagem (`docker-compose.yml:16-29`) |
+| `frontend` | `services/frontend/Dockerfile.dev` | 3000 | Bind mount do código + volume `frontend-node-modules` em `/app/node_modules`; `npm ci && npm run dev`; espera o `backend` ficar saudável (`docker-compose.yml:31-46`) |
+
+**Variáveis.** Um único `.env` na raiz, criado a partir do `.env.example`, é lido pelo
+`backend` e pelo `frontend` (`env_file`). Duas variáveis são fixadas no próprio compose e
+não dependem do `.env`: `MONGODB_URL=mongodb://mongo:27017` (endereço interno do Docker) e
+`APP_CORS_ORIGINS`, que já inclui a porta 3001 do futuro app do visitante.
+`VITE_API_URL` usa `localhost`, porque quem chama a API é o navegador, fora do Docker.
+
+**Recarga automática.** Editar código em `services/backend` ou `services/frontend`
+recarrega o serviço sem rebuild. No frontend, `CHOKIDAR_USEPOLLING=true` faz o Vite
+perceber alterações vindas do Windows pelo bind mount.
+
+**`node_modules` em volume nomeado.** Os pacotes instalados no Windows não funcionam no
+Linux do container; por isso `/app/node_modules` fica num volume próprio. Uma pasta
+`node_modules` vazia pode aparecer em `services/frontend` — é o ponto de montagem.
+
+| Comando | Faz |
+|---|---|
+| `bash scripts/up.sh` | Sai com erro se o Docker não estiver rodando; cria `.env` se faltar; `docker compose up -d --build --wait`; mostra os endereços |
+| `bash scripts/down.sh` | `docker compose down` — os volumes (dados) são preservados |
+| `bash scripts/logs.sh [servico]` | `docker compose logs -f`, opcionalmente de um serviço |
+| `bash scripts/reset-db.sh` | Pede que se digite `APAGAR`; então `docker compose down` e remove o volume `tourvr_mongo-data` |
+
+Portas 27017, 8000 e 3000 precisam estar livres: um MongoDB ou backend rodando fora do
+Docker impede a subida.
+
 ## Configuração dos submódulos
 
 O `.gitmodules` declara `path`, `url` (HTTPS) e `branch = main` para os três submódulos
@@ -120,7 +162,7 @@ Felipe, lorenz.
 
 | Item | Situação |
 |---|---|
-| `docker-compose.yml` | 🔴 Não existe — ver DT-002 |
-| Scripts de install/run/test | 🔴 Não existem, mas são citados pelos READMEs dos submódulos — ver DT-005 |
+| `docker-compose.yml` e scripts `up`/`down`/`logs`/`reset-db` | ✅ Existem desde o plano 002 — ver [Ambiente local](#ambiente-local) |
+| Script único de testes/validação | 🔴 Não existe — previsto no plano 005 |
 | CI/CD (`.github/workflows/`) | 🔴 Não existe — ver DT-003 |
 | Versionamento/release do conjunto | 🔴 Não definido |

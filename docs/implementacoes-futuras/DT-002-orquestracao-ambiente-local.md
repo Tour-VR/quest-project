@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Aberta |
+| **Status** | Resolvida — 2026-11-09 — [plano 002](../tasks/002-ambiente-docker-compose.md), commits `8067f13` e `c4781dd` |
 | **Prioridade** | P1 |
 | **Esforço** | Médio |
 | **Artefato** | Orquestrador |
@@ -55,14 +55,24 @@ O MongoDB é pressuposto como já instalado e rodando na máquina do desenvolved
 
 ## Critérios de aceite
 
-- [ ] `docker compose up` sobe MongoDB, backend e frontend, com o frontend autenticando
+- [x] `docker compose up` sobe MongoDB, backend e frontend, com o frontend autenticando
       contra o backend com sucesso
-- [ ] Alterações em código do backend e do frontend recarregam sem rebuild da imagem
-- [ ] Dados do MongoDB persistem entre `down` e `up`
-- [ ] Um aluno com repositório recém-clonado chega ao painel funcionando seguindo apenas
+- [x] Alterações em código do backend e do frontend recarregam sem rebuild da imagem
+- [x] Dados do MongoDB persistem entre `down` e `up`
+- [x] Um aluno com repositório recém-clonado chega ao painel funcionando seguindo apenas
       o README da raiz
 
 ## Notas
 
 Considerar `docker-compose.override.yml` para separar desenvolvimento de produção.
 Cuidado com bind mount de `node_modules` no Windows — usar volume nomeado para essa pasta.
+
+## Resolução
+
+Resolvida pelo plano 002: `docker-compose.yml` e `.env.example` na raiz, com `mongo:7`,
+backend com `--reload` e painel com `Dockerfile.dev`, `node_modules` em volume nomeado e
+polling de arquivos para o Windows. Scripts `up.sh`, `down.sh`, `logs.sh` e `reset-db.sh`
+apenas em Bash (Git Bash é o shell do projeto); o item `test` da proposta fica para o
+plano 005. Não foi criado `docker-compose.override.yml`: só existe ambiente de
+desenvolvimento. Procedimento em
+[02-artefato-orquestrador.md](../02-artefato-orquestrador.md#ambiente-local).
