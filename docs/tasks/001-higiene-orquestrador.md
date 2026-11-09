@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em execução — Heitor Aquino — 2026-11-09 |
+| **Status** | Em revisão — Heitor Aquino |
 | **Fase** | 0 — Fundação de qualidade |
 | **Depende de** | nenhum |
 | **Dívidas atendidas** | DT-001, DT-004, DT-017 |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Orquestrador |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | — |
+| **Executado em** | 2026-11-09 por Heitor Aquino (com Claude Code) |
 
 ---
 
@@ -290,22 +290,22 @@ comando:
 
 ## 8. Documentação a atualizar
 
-- [ ] `README.md` — passo 6
-- [ ] `docs/02-artefato-orquestrador.md` — passo 7
-- [ ] `docs/07-convencoes.md` — seção "Setup inicial em máquina nova": trocar pelo
+- [x] `README.md` — passo 6
+- [x] `docs/02-artefato-orquestrador.md` — passo 7
+- [x] `docs/07-convencoes.md` — seção "Setup inicial em máquina nova": trocar pelo
       caminho do `setup.sh` (com `gh auth login`)
-- [ ] `docs/implementacoes-futuras/DT-001-...md`, `DT-004-...md`, `DT-017-...md` — Status
+- [x] `docs/implementacoes-futuras/DT-001-...md`, `DT-004-...md`, `DT-017-...md` — Status
       `Resolvida`, com referência ao plano 001
-- [ ] `docs/implementacoes-futuras/README.md` — atualizar o status das três dívidas no índice
+- [x] `docs/implementacoes-futuras/README.md` — atualizar o status das três dívidas no índice
 
 ## 9. Critérios de aceite
 
-- [ ] Todos os comandos da seção 7 com o resultado esperado
-- [ ] Nenhum comentário depreciativo e nenhum erro de grafia nos scripts
-- [ ] `ssh-setup` não altera a configuração global do Git quando a chave SSH não funciona
-- [ ] Um aluno com repositório recém-clonado chega aos três submódulos em `main` seguindo
+- [x] Todos os comandos da seção 7 com o resultado esperado
+- [x] Nenhum comentário depreciativo e nenhum erro de grafia nos scripts
+- [x] `ssh-setup` não altera a configuração global do Git quando a chave SSH não funciona
+- [x] Um aluno com repositório recém-clonado chega aos três submódulos em `main` seguindo
       apenas o README
-- [ ] Documentação da seção 8 atualizada
+- [x] Documentação da seção 8 atualizada
 
 ## 10. Commits esperados
 
@@ -352,3 +352,51 @@ Execute o plano docs/tasks/001-higiene-orquestrador.md.
 Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o "Prompt 1 — EXECUTAR" etapa por etapa.
 Meu nome, para registrar no plano: <SEU NOME>
 ```
+
+---
+
+## Registro de execução
+
+**Executado em 2026-11-09 por Heitor Aquino, com Claude Code.** Branch
+`plano/001-higiene-orquestrador`, somente no orquestrador.
+
+### O que foi feito
+
+- Passo 1 — `.gitignore` reescrito exatamente como no plano.
+- Passo 2 — `branch = main` nas três entradas do `.gitmodules`; `git submodule sync`.
+- Passo 3 — `scripts/setup.sh` criado e marcado como executável (`100755`). Testado em
+  clone novo numa pasta temporária: os três submódulos terminaram em `main`, saída 0. A
+  pasta foi apagada depois.
+- Passo 4 — `ssh-setup.sh` reescrito: teste de SSH antes do `insteadOf`, comentários
+  técnicos, mensagens em português, `echo -e` nas cores, chama `scripts/setup.sh` no fim.
+- Passo 5 — `ssh-setup.ps1` com as mesmas correções e `exit 1`; prepara os submódulos com
+  os próprios comandos `git`, sem chamar o `.sh`.
+- Passos 6 e 7 — `README.md`, `docs/02-artefato-orquestrador.md` e
+  `docs/07-convencoes.md` atualizados. No README, o aviso sobre *detached HEAD* também foi
+  ajustado, porque o `setup.sh` agora deixa os submódulos em `main`.
+- DT-001, DT-004 e DT-017 marcadas como `Resolvida`, inclusive no índice.
+
+### Verificação
+
+- Todos os comandos da seção 7 deram o resultado esperado.
+- Caminho de falha do `ssh-setup` testado nas duas versões com a configuração global
+  isolada: sem chave válida, os scripts saem com código 1, sem criar ou alterar a
+  configuração global e sem mudar o `origin`.
+- Caminho de sucesso do `ssh-setup` **não** foi testado: exigiria alterar a configuração
+  global do Git deste computador, e não há chave SSH configurada aqui.
+
+### Desvios do plano
+
+- **`.gitattributes` criado** com `*.sh text eol=lf`, como previsto na seção 11: este
+  computador usa `core.autocrlf=true`, que gravava os `.sh` com CRLF.
+- **Verificação do passo 1:** `git check-ignore -v .env.example` devolve saída 0 porque o
+  `-v` também mostra a regra de exceção (`!.env.example`). O comando da seção 7, sem `-v`,
+  devolve 1, como esperado. O arquivo **não** é ignorado.
+- **Grep da seção 7:** o padrão `hell` casa com a palavra "shell". Os comentários novos
+  foram escritos sem essa palavra para o critério passar sem exceção.
+- **`setup.sh`:** a última linha é o `[OK]` e o lembrete do `docker compose up` vem antes,
+  para casar com a seção 12 ("a última linha deve ser `[OK]`").
+
+### Dívidas novas registradas
+
+Nenhuma.
