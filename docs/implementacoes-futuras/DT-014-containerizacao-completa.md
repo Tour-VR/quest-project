@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Aberta |
+| **Status** | Parcialmente resolvida — 2026-11-09 — [plano 002](../tasks/002-ambiente-docker-compose.md), commits `df8b4ba` (backend) e `509fc92` (frontend) |
 | **Prioridade** | P2 |
 | **Esforço** | Baixo |
 | **Artefato** | Todos |
@@ -59,13 +59,21 @@ Não existe `.dockerignore` em `services/backend`. Não existe `Dockerfile` em
 
 ## Critérios de aceite
 
-- [ ] `.dockerignore` presente em ambos os submódulos, incluindo `.env`
-- [ ] Alteração apenas no código não reinstala dependências no build
-- [ ] Container do backend executa como usuário não-root
-- [ ] `HEALTHCHECK` configurado e reportando corretamente
+- [x] `.dockerignore` presente em ambos os submódulos, incluindo `.env`
+- [x] Alteração apenas no código não reinstala dependências no build
+- [x] Container do backend executa como usuário não-root
+- [x] `HEALTHCHECK` configurado e reportando corretamente
 - [ ] Imagem do frontend serve o build de produção
 
 ## Notas
 
 O item 1 é urgente e independente do resto: hoje, qualquer `docker build` executado por um
 aluno que tenha `.env` local embute credenciais reais na imagem.
+
+## Resolução
+
+Parcialmente resolvida pelo plano 002. Feito: `.dockerignore` nos dois submódulos
+(incluindo `.env`), `Dockerfile` do backend com dependências antes do código, usuário
+`appuser` e `HEALTHCHECK` em `/health/`; `Dockerfile.dev` do frontend integrado ao
+`docker-compose.yml`. **Pendente:** item 5 — imagem de produção do frontend (build com
+Node servido por Nginx). Fica para quando houver deploy previsto.
