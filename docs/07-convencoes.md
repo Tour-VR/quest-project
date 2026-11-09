@@ -116,6 +116,9 @@ git push --recurse-submodules=on-demand
   não possui campo de senha — manter essa herança para novos schemas de usuário.
 - **Tipagem.** `from __future__ import annotations` no topo; anotar parâmetros e retornos.
 - **Nomes.** `snake_case` para funções e variáveis, `PascalCase` para classes.
+- **Verificação mínima antes do commit:** `ruff check .`, `ruff format --check .`,
+  `mypy app`, `pytest --cov=app --cov-fail-under=80` (em `services/backend`, com
+  `requirements-dev.txt` instalado).
 - **Testes.** Toda rota nova precisa de teste de caminho feliz, de erro de validação e de
   banco indisponível. MongoDB sempre mockado — testes não dependem de banco real.
 

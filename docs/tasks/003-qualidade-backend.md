@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em execução — Heitor Aquino — 2026-11-09 |
+| **Status** | Em revisão — Heitor Aquino |
 | **Fase** | 0 — Fundação de qualidade |
 | **Depende de** | 002 |
 | **Dívidas atendidas** | nenhuma (implementa as diretrizes de engenharia do plano 000 §4 no backend) |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Backend |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | — |
+| **Executado em** | 2026-11-09 por Heitor Aquino |
 
 ---
 
@@ -272,18 +272,18 @@ pytest --cov=app --cov-fail-under=80
 
 ## 8. Documentação a atualizar
 
-- [ ] `docs/03-artefato-backend.md` — passo 6
-- [ ] `docs/07-convencoes.md` — passo 6
-- [ ] `services/backend/README.md` — passo 6
+- [x] `docs/03-artefato-backend.md` — passo 6
+- [x] `docs/07-convencoes.md` — passo 6
+- [x] `services/backend/README.md` — passo 6
 
 ## 9. Critérios de aceite
 
-- [ ] Os quatro comandos da seção 7 terminam com código 0
-- [ ] Nenhuma regra desligada além das listadas na seção 5
-- [ ] Nenhum `# type: ignore` sem código de erro específico e comentário do motivo
-- [ ] `pytest` não está mais em `requirements.txt`
-- [ ] Respostas da API idênticas (os 24 testes originais passam sem alteração de asserção)
-- [ ] Documentação atualizada
+- [x] Os quatro comandos da seção 7 terminam com código 0
+- [x] Nenhuma regra desligada além das listadas na seção 5
+- [x] Nenhum `# type: ignore` sem código de erro específico e comentário do motivo
+- [x] `pytest` não está mais em `requirements.txt`
+- [x] Respostas da API idênticas (os 24 testes originais passam sem alteração de asserção)
+- [x] Documentação atualizada
 
 ## 10. Commits esperados
 
@@ -336,3 +336,37 @@ Execute o plano docs/tasks/003-qualidade-backend.md.
 Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o "Prompt 1 — EXECUTAR" etapa por etapa.
 Meu nome, para registrar no plano: <SEU NOME>
 ```
+
+---
+
+## Registro de execução
+
+**Executado por** Heitor Aquino, com Claude Code, em 2026-11-09. Python local 3.12.10
+(aceito pelo §11: 3.11 ou mais novo).
+
+**O que foi feito**
+
+- `requirements-dev.txt` criado com as versões exatas do plano (todas existiam no PyPI);
+  `pytest` removido de `requirements.txt`; `pyproject.toml` criado conforme o passo 2.
+- `ruff format` reformatou 5 arquivos; `ruff check --fix` corrigiu 23 avisos (imports,
+  `UTC`, etc.).
+- Correções manuais do Ruff: restaurada a reexportação de `app` em `main.py` com
+  `__all__` (o `--fix` a removera como import não usado — risco previsto no §11); em
+  `tests/`, argumentos `self` não usados de lambdas renomeados para `_self` (`ARG005`) e
+  `import asyncio` levado ao topo de `test_health.py` (`PLC0415`).
+- Tipagem estrita: `lifespan` anotado; `from __future__ import annotations` e retornos
+  `dict[str, Any]` nas rotas `auth.py`/`users.py`; docstring e `__future__` em
+  `router.py`; variáveis locais anotadas em `create_access_token`, `decode_access_token`
+  e nos quatro métodos de leitura de `UserRepository`. Nenhum `# type: ignore`.
+- Resultado: `ruff check .` e `ruff format --check .` limpos; `mypy app` →
+  `Success: no issues found in 22 source files`; `pytest --cov` → 25 passando, cobertura
+  83%. Testes novos não foram necessários.
+
+**Desvios do plano**
+
+- O código tinha **25** testes, não 24 (`tests/test_auth_flow.py` tem 19). Nenhuma
+  asserção foi alterada; os números foram corrigidos em `docs/03-artefato-backend.md`.
+- `ARG005` e `PLC0415` em `tests/` não estavam entre os casos previstos; foram corrigidos
+  no código, sem desligar regra.
+
+**Dívidas novas registradas:** nenhuma.

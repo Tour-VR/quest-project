@@ -21,7 +21,9 @@ e diagnóstico de saúde. É a única camada com acesso ao banco de dados.
 | JWT | python-jose | 3.5.0 |
 | Hash de senha | passlib + bcrypt | 1.7.4 / 4.0.1 |
 | Validação/config | Pydantic v2 + pydantic-settings | 2.13.1 |
-| Testes | pytest + httpx | 9.0.2 / 0.28.1 |
+| Testes | pytest + httpx + pytest-cov | 9.0.2 / 0.28.1 / 7.0.0 |
+| Lint e formatação | Ruff | 0.14.3 |
+| Tipagem estática | mypy (`strict`) | 1.18.2 |
 
 > `bcrypt` está fixado em `4.0.1` deliberadamente: versões 4.1+ quebram a integração com
 > o `passlib` 1.7.4. Não atualizar sem antes migrar o `passlib`.
@@ -31,7 +33,9 @@ e diagnóstico de saúde. É a única camada com acesso ao banco de dados.
 ```
 services/backend/
 ├── main.py                     entrypoint ASGI (só reexporta app/main.py:app)
-├── requirements.txt
+├── requirements.txt        dependências de execução
+├── requirements-dev.txt    + pytest, pytest-cov, ruff, mypy (desenvolvimento)
+├── pyproject.toml          configuração de Ruff, mypy, pytest e coverage
 ├── Dockerfile                  python:3.11-slim, expõe uvicorn na 8000
 ├── .env.example
 └── app/
@@ -49,7 +53,7 @@ services/backend/
     ├── schemas/user.py         9 schemas Pydantic
     ├── repositories/user_repository.py   5 métodos de acesso à collection `users`
     └── services/user_service.py          regras de negócio + 4 exceções de domínio
-└── tests/                      conftest.py + 24 testes
+└── tests/                      conftest.py + 25 testes
 ```
 
 ## Endpoints
@@ -181,17 +185,40 @@ Ordem sugerida para entender o backend: `app/core/config.py` → `app/core/datab
 `app/api/deps.py` → `app/api/v1/routes/` → `tests/` (documentação executável dos
 comportamentos esperados).
 
-## Testes
+## Ambiente de desenvolvimento
+
+Ferramentas de teste e qualidade ficam fora da imagem de execução, em
+`requirements-dev.txt` (que inclui `requirements.txt`). Configuração em `pyproject.toml`.
 
 ```bash
-cd services/backend && pytest -v
+cd services/backend
+python -m venv .venv
+source .venv/Scripts/activate    # Git Bash no Windows; Linux/macOS: .venv/bin/activate
+pip install -r requirements-dev.txt
 ```
 
-**24 testes**, todos com MongoDB mockado (sem dependência de banco real):
+## Testes
+
+Verificação mínima antes do commit — os quatro comandos precisam terminar com código 0:
+
+```bash
+cd services/backend
+ruff check .                              # lint: E,F,W,I,B,UP,C90,PL,ARG,ERA,SIM,RUF
+ruff format --check .                     # formatação
+mypy app                                  # tipagem estrita
+pytest --cov=app --cov-fail-under=80      # testes + cobertura mínima de 80%
+```
+
+Regras e limites em `pyproject.toml`: linha de 100 colunas, complexidade máx. 10, máx. 50
+comandos por função; `PLR2004`, `ARG001` e `PLR0913` desligadas só em `tests/`. O `B008`
+aceita `Depends`/`Query`/etc. do FastAPI como valor padrão. `jose` e `passlib` não têm
+tipos: o mypy ignora só os imports delas. Cobertura atual: 83%.
+
+**25 testes**, todos com MongoDB mockado (sem dependência de banco real):
 
 - `tests/test_health.py` — 6 testes: import do app, rota raiz, preflight CORS,
   health com banco up/down, detecção de placeholder de senha sem chamada de rede.
-- `tests/test_auth_flow.py` — 18 testes: registro (sucesso, e-mail duplicado, username
+- `tests/test_auth_flow.py` — 19 testes: registro (sucesso, e-mail duplicado, username
   duplicado, senha fraca), login (sucesso, por username, senha errada, usuário inativo),
   `/users/me` (leitura, atualização, username duplicado, troca de senha, senha atual
   errada, sem token, token inválido, usuário inativo), e falha de banco em 3 rotas.
