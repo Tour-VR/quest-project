@@ -1,9 +1,12 @@
 [submodule "services/vr-app"]
 	path = services/vr-app
 	url = https://github.com/Tour-VR/vr-app.git
+	branch = main
 [submodule "services/backend"]
 	path = services/backend
 	url = https://github.com/Tour-VR/backend.git
+	branch = main
 [submodule "services/frontend"]
 	path = services/frontend
 	url = https://github.com/Tour-VR/frontend.git
+	branch = main
