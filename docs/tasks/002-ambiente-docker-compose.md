@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em revisão — Heitor Aquino |
+| **Status** | Concluído |
 | **Fase** | 0 — Fundação de qualidade |
 | **Depende de** | 001 |
 | **Dívidas atendidas** | DT-002, DT-005, DT-014 |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Orquestrador · Backend · Frontend |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | 2026-11-09 por Heitor Aquino (PRs na seção Registro de execução) |
+| **Executado em** | 2026-11-09 por Heitor Aquino — PRs: [backend#1](https://github.com/Tour-VR/backend/pull/1), [frontend#1](https://github.com/Tour-VR/frontend/pull/1), [quest-project#2](https://github.com/Tour-VR/quest-project/pull/2) |
 
 ---
 
