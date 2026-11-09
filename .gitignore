@@ -2,64 +2,73 @@
 # Ambientes e segredos locais
 # -----------------------------
 .env
-.env.
-!.env.example
+.env.*
 !.env.example
 
 # -----------------------------
 # Python
 # -----------------------------
-__pycache__
-.py[cod]
-.pyo
-.pyd
-.pytest_cache
-.mypy_cache
-.ruff_cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 .coverage
-.coverage.
-htmlcov
-.venv
-venv
+.coverage.*
+htmlcov/
+.venv/
+venv/
+*.egg-info/
 
 # -----------------------------
-# Node  frontend
+# Node
 # -----------------------------
-node_modules
-dist
-build
-coverage
-.vite
-.vite-temp
+node_modules/
+dist/
+build/
+coverage/
+.vite/
+.vite-temp/
 
 # -----------------------------
-# Logs e arquivos temporarios
+# Testes ponta a ponta (Playwright)
 # -----------------------------
-.log
-.tmp
-.temp
-.bak
-.swp
-.swo
-.orig
-.rej
-~
+e2e/test-results/
+e2e/playwright-report/
+e2e/.auth/
+
+# -----------------------------
+# Logs e temporários
+# -----------------------------
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*.orig
+*.rej
+*~
 
 # -----------------------------
 # Sistema e editor
 # -----------------------------
 .DS_Store
 Thumbs.db
-.idea
-.vscode
-.vs
-.suo
-.user
-.userossc
-.sln.docstates
+.idea/
+.vscode/
+.vs/
+*.suo
+*.user
 
 # -----------------------------
-# Exportacoes e artefatos locais
+# Exportações e artefatos locais
 # -----------------------------
-.zip
-_quarentena
+*.zip
+*.apk
+_quarentena/
+
+# -----------------------------
+# Agentes de IA (configuração local)
+# -----------------------------
+.claude/settings.local.json

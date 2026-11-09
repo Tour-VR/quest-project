@@ -1,7 +1,7 @@
 # 07 — Convenções do Projeto
 
 > Aplicam-se a todos os repositórios do TourVR.
-> Última atualização: 2026-08-20
+> Última atualização: 2026-11-09
 
 ## Idioma
 
@@ -81,10 +81,16 @@ git push
 **Setup inicial em máquina nova:**
 
 ```bash
+gh auth login          # uma vez por computador (GitHub.com → HTTPS → navegador)
+gh auth setup-git
 git clone https://github.com/Tour-VR/quest-project.git
 cd quest-project
-bash scripts/bash/ssh-setup.sh      # ou .\scripts\posh\ssh-setup.ps1 no Windows
+bash scripts/setup.sh  # baixa os submódulos e deixa todos em main
 ```
+
+Quem prefere SSH usa `bash scripts/bash/ssh-setup.sh` (ou `.\scripts\posh\ssh-setup.ps1`
+no PowerShell) no lugar do `setup.sh`. Detalhes em
+[02-artefato-orquestrador.md](02-artefato-orquestrador.md#scripts-de-automação).
 
 **Atalho útil** para propagar tudo de uma vez (usar com atenção, não substitui commitar
 no submódulo):

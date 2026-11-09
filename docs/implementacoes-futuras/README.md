@@ -11,10 +11,10 @@ escolhe uma ou mais dívidas, e produz um plano em [`../tasks/`](../tasks/README
 
 | ID | Título | Prioridade | Esforço | Artefato |
 |---|---|---|---|---|
-| [DT-001](DT-001-gitignore-padroes-quebrados.md) | Padrões do `.gitignore` sem wildcard | P1 | Baixo | Orquestrador |
+| [DT-001](DT-001-gitignore-padroes-quebrados.md) | ~~Padrões do `.gitignore` sem wildcard~~ ✅ Resolvida (plano 001) | P1 | Baixo | Orquestrador |
 | [DT-002](DT-002-orquestracao-ambiente-local.md) | Ambiente local não é orquestrado | P1 | Médio | Orquestrador |
 | [DT-003](DT-003-pipeline-ci-cd.md) | Ausência de CI em todos os repositórios | P1 | Médio | Todos |
-| [DT-004](DT-004-configuracao-submodulos.md) | Submódulos sem branch declarada | P1 | Baixo | Orquestrador |
+| [DT-004](DT-004-configuracao-submodulos.md) | ~~Submódulos sem branch declarada~~ ✅ Resolvida (plano 001) | P1 | Baixo | Orquestrador |
 | [DT-005](DT-005-sincronizacao-documentacao-codigo.md) | READMEs dos submódulos divergem do código | P2 | Baixo | Backend, Frontend |
 | [DT-006](DT-006-integridade-dados-mongodb.md) | Sem índices únicos no MongoDB | P0 | Baixo | Backend |
 | [DT-007](DT-007-hardening-autenticacao.md) | Fragilidades na autenticação | P0 | Médio | Backend, Frontend |
@@ -27,7 +27,7 @@ escolhe uma ou mais dívidas, e produz um plano em [`../tasks/`](../tasks/README
 | [DT-014](DT-014-containerizacao-completa.md) | Containerização parcial e sem `.dockerignore` | P2 | Baixo | Todos |
 | [DT-015](DT-015-gestao-usuarios-no-painel.md) | Cadastro de usuários só via Swagger | P2 | Médio | Frontend, Backend |
 | [DT-016](DT-016-modelagem-dominio-turismo.md) | **Domínio de turismo não modelado** | **P0** | **Alto** | Backend, Frontend, VR |
-| [DT-017](DT-017-revisao-scripts-ssh.md) | Comentários inadequados nos scripts | P3 | Baixo | Orquestrador |
+| [DT-017](DT-017-revisao-scripts-ssh.md) | ~~Comentários inadequados nos scripts~~ ✅ Resolvida (plano 001) | P3 | Baixo | Orquestrador |
 
 **Prioridades:** `P0` bloqueia o avanço ou representa risco real · `P1` alta, resolver na
 fase corrente · `P2` média, planejar · `P3` baixa, oportunidade.
