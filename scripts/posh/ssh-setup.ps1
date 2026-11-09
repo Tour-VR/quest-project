@@ -1,65 +1,80 @@
-# PowerShell doesn't have trap for line numbers natively, Microsoft fix your shell
+# Alternativa ao setup.sh para quem prefere acessar o GitHub por SSH em vez de HTTPS.
+# Testa a chave SSH, faz o Git trocar HTTPS por SSH e prepara os submodulos.
+# Uso: .\scripts\posh\ssh-setup.ps1
+
+# Faz erros de cmdlets interromperem o script e cairem no catch final.
+# Comandos externos (git, ssh) nao lancam excecao: o codigo de saida e conferido a mao.
 $ErrorActionPreference = "Stop"
 
-function Write-Info   { param($msg) Write-Host "[INFO] $msg" -ForegroundColor Yellow }
-function Write-Proc   { param($msg) Write-Host "[PROC] $msg" -ForegroundColor White }
-function Write-Suc    { param($msg) Write-Host "[SUC] $msg"  -ForegroundColor Green }
-function Write-Err    { param($msg) Write-Host "[ERR] $msg"  -ForegroundColor Red }
-function Write-Panic  { param($msg) Write-Host "[PANIC] $msg" -ForegroundColor Red }
+function Write-Info { param($msg) Write-Host "[INFO] $msg" -ForegroundColor Yellow }
+function Write-Ok   { param($msg) Write-Host "[OK] $msg"   -ForegroundColor Green }
+function Write-Erro { param($msg) Write-Host "[ERRO] $msg" -ForegroundColor Red }
 
-# PowerShell's version of bash's trap 'ERR', again Microsoft, fix your shell
+# Executa um comando git e interrompe o script se ele falhar.
+function Invoke-Git {
+    git @args
+    if ($LASTEXITCODE -ne 0) { throw "git $($args -join ' ') terminou com codigo $LASTEXITCODE" }
+}
+
 try {
+    $raiz = git rev-parse --show-toplevel
+    if ($LASTEXITCODE -ne 0) { throw "esta pasta nao esta dentro de um repositorio Git" }
+    Set-Location $raiz
 
-    Write-Info "starting the configuration of the enviroment for SSH"
+    Write-Info "Iniciando a configuracao do ambiente para SSH"
 
-    Write-Proc "changing global config to SSH instead of HTTPS"
-    try {
-        git config --global url."git@github.com:".insteadOf "https://github.com/"
-        if ($LASTEXITCODE -ne 0) { throw "git config returned exit code $LASTEXITCODE" }
-        Write-Suc "Successfully changed the global configuration"
-    } catch {
-        Write-Err "Failed in modyfing your configuration"
-        Write-Host "[INFO] Program exited with exit code 1" -ForegroundColor White
-        exit -1 # Atleast allows negative return errors, finally something good this shell gives you
-    }
-
-    Write-Proc "testing SSH connection..."
-    # Already told you about this nonsense on bash version, won't say again
-    $sshOutput = ssh -T git@github.com 2>&1
-    if ($sshOutput -match "successfully authenticated") {
-        Write-Suc "SSH connection working successfully!"
+    # O teste vem antes de qualquer alteracao: se a chave nao funcionar, o script sai sem
+    # mexer na configuracao global do Git, e o acesso por HTTPS continua funcionando.
+    # O GitHub responde ao 'ssh -T' com codigo de saida 1 (nao abre terminal interativo) e escreve a
+    # mensagem de sucesso no fluxo de erro. Por isso a saida e redirecionada com 2>&1, o
+    # codigo de saida e ignorado e o script procura o texto 'successfully authenticated'.
+    # O ErrorActionPreference e relaxado aqui para o texto no fluxo de erro nao virar excecao.
+    Write-Info "Testando a conexao SSH com o GitHub..."
+    $ErrorActionPreference = "Continue"
+    $respostaSsh = (ssh -T git@github.com 2>&1 | Out-String)
+    $ErrorActionPreference = "Stop"
+    if ($respostaSsh -match "successfully authenticated") {
+        Write-Ok "Conexao SSH funcionando"
     } else {
-        Write-Err "SSH connection failed, this could happen to wrong configuration"
-        Write-Info "Try to check your SSH key or generate one if you still don't have with: ssh-keygen -t ed25519"
-        Write-Info "Also check your SSH key status on Github"
-        Write-Host "[INFO] Program exited with exit code 1" -ForegroundColor White
-        exit -1
+        Write-Erro "A conexao SSH falhou. Nenhuma configuracao foi alterada."
+        Write-Info "Verifique se voce tem uma chave SSH; para criar uma: ssh-keygen -t ed25519"
+        Write-Info "Depois registre a chave publica na sua conta do GitHub (Settings > SSH and GPG keys)"
+        exit 1
     }
 
-    Write-Proc "syncronizing submodules..." # If you use submodules, please stop, just make organized folders, Dennis Ritchie would be ashamed of you
-    git submodule sync --recursive
+    # Faz o Git reescrever automaticamente toda URL https://github.com/ para SSH,
+    # inclusive as URLs dos submodulos declaradas no .gitmodules.
+    Write-Info "Configurando o Git para usar SSH no lugar de HTTPS..."
+    Invoke-Git config --global url."git@github.com:".insteadOf "https://github.com/"
+    Write-Ok "Configuracao global alterada"
 
-    Write-Proc "updating submodules..."
-    git submodule update --init --recursive
-
-    Write-Proc "cleaning remote HTTPS URLs..."
-    $remotes = git remote -v
-    if ($remotes -match "https://github.com") {
-        $currentUrl = git remote get-url origin
-        # PowerShell's -replace operator uses regex, I already told Microsoft to fix this shell? Bring batch again, atleast it does things right
-        $sshUrl = $currentUrl -replace "https://github.com/", "git@github.com:"
-        git remote set-url origin $sshUrl
-        Write-Suc "origin updated to SSH"
+    # O insteadOf ja cobre o origin, mas gravar a URL SSH deixa explicito o protocolo em uso.
+    # O -replace usa expressao regular; [regex]::Escape evita que o '.' de github.com
+    # case com qualquer caractere.
+    $originAtual = git remote get-url origin
+    if ($originAtual -like "https://github.com/*") {
+        $originSsh = $originAtual -replace "^$([regex]::Escape('https://github.com/'))", "git@github.com:"
+        Invoke-Git remote set-url origin $originSsh
+        Write-Ok "URL do origin trocada para SSH"
     }
+
+    # Mesma preparacao do scripts/setup.sh, repetida aqui para nao exigir Git Bash.
+    # O submodule update deixa o submodulo em detached HEAD; commits feitos nesse estado
+    # se perdem. O checkout de main evita essa perda.
+    Write-Info "Sincronizando as URLs dos submodulos..."
+    Invoke-Git submodule sync --recursive
+
+    Write-Info "Baixando os submodulos..."
+    Invoke-Git submodule update --init --recursive
+
+    Write-Info "Colocando cada submodulo na branch main..."
+    Invoke-Git submodule foreach "git checkout main && git pull --ff-only origin main"
 
     Write-Host ""
-    Write-Suc "setup was executed successfully"
-    Write-Info "you can now use SSH instead of HTTPS, enjoy your time with the correct way to manage github"
-    Write-Host "[INFO] Setup finished with exit code 0" -ForegroundColor White
+    Write-Ok "Configuracao SSH concluida: submodulos na branch main"
     exit 0
-
 } catch {
-    # Closest we can get to bash's trap 'ERR' - no $LINENO in PowerShell, unfortunately, that is why you should use Linux
-    Write-Panic "Script aborted abnormally: $_"
-    exit -1
+    # Aqui nao ha equivalente ao $LINENO do Bash; a mensagem do erro e o que resta.
+    Write-Erro "Script interrompido inesperadamente: $_"
+    exit 1
 }
