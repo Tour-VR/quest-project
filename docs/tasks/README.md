@@ -94,7 +94,7 @@ reserva o plano com o seu nome antes de começar.
 | [000](000-visao-macro-opcao-b.md) | Visão macro — Opção B *(porta de entrada, não executável)* | — | — | — | Validado |
 | [001](001-higiene-orquestrador.md) | Higiene do orquestrador | 0 | — | DT-001, DT-004, DT-017 | Concluído |
 | [002](002-ambiente-docker-compose.md) | Ambiente Docker Compose | 0 | 001 | DT-002, DT-005, DT-014 | Concluído |
-| [003](003-qualidade-backend.md) | Qualidade do backend | 0 | 002 | — | Validado |
+| [003](003-qualidade-backend.md) | Qualidade do backend | 0 | 002 | — | Em execução — Heitor Aquino |
 | [004](004-qualidade-frontend.md) | Qualidade do frontend | 0 | 002 | DT-013 | Validado |
 | [005](005-validacao-e-e2e.md) | Validação única e primeiro E2E | 0 | 003, 004 | — | Validado |
 | [006](006-integracao-continua.md) | Integração contínua | 0 | 005 | DT-003 | Validado |

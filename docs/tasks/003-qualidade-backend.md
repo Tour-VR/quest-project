@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Validado |
+| **Status** | Em execução — Heitor Aquino — 2026-11-09 |
 | **Fase** | 0 — Fundação de qualidade |
 | **Depende de** | 002 |
 | **Dívidas atendidas** | nenhuma (implementa as diretrizes de engenharia do plano 000 §4 no backend) |
