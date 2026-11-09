@@ -92,7 +92,7 @@ reserva o plano com o seu nome antes de começar.
 | # | Plano | Fase | Depende de | Dívidas | Status |
 |---|---|---|---|---|---|
 | [000](000-visao-macro-opcao-b.md) | Visão macro — Opção B *(porta de entrada, não executável)* | — | — | — | Validado |
-| [001](001-higiene-orquestrador.md) | Higiene do orquestrador | 0 | — | DT-001, DT-004, DT-017 | Validado |
+| [001](001-higiene-orquestrador.md) | Higiene do orquestrador | 0 | — | DT-001, DT-004, DT-017 | Em execução — Heitor Aquino |
 | [002](002-ambiente-docker-compose.md) | Ambiente Docker Compose | 0 | 001 | DT-002, DT-005, DT-014 | Validado |
 | [003](003-qualidade-backend.md) | Qualidade do backend | 0 | 002 | — | Validado |
 | [004](004-qualidade-frontend.md) | Qualidade do frontend | 0 | 002 | DT-013 | Validado |
