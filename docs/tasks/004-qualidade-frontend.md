@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Frontend |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | 2026-11-10 por Heitor Aquino — PRs: [frontend#2](https://github.com/Tour-VR/frontend/pull/2), quest-project (link no PR do frontend) |
+| **Executado em** | 2026-11-10 por Heitor Aquino — PRs: [frontend#2](https://github.com/Tour-VR/frontend/pull/2), [quest-project#4](https://github.com/Tour-VR/quest-project/pull/4) |
 
 ---
 
