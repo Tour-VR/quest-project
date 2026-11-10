@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em execução — Heitor Aquino — 2026-11-10 |
+| **Status** | Em revisão — Heitor Aquino |
 | **Fase** | 0 — Fundação de qualidade |
 | **Depende de** | 002 |
 | **Dívidas atendidas** | DT-013 |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Frontend |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | — |
+| **Executado em** | 2026-11-10 por Heitor Aquino — PRs: [frontend#2](https://github.com/Tour-VR/frontend/pull/2), quest-project (link no PR do frontend) |
 
 ---
 
@@ -315,12 +315,12 @@ npm run build
 
 ## 8. Documentação a atualizar
 
-- [ ] `docs/04-artefato-frontend.md` — passo 10
-- [ ] `docs/07-convencoes.md` — passo 10
-- [ ] `services/frontend/README.md` — passo 10
-- [ ] `docs/implementacoes-futuras/DT-013-...md` — `Resolvida` (o item "lint e testes em
+- [x] `docs/04-artefato-frontend.md` — passo 10
+- [x] `docs/07-convencoes.md` — passo 10
+- [x] `services/frontend/README.md` — passo 10
+- [x] `docs/implementacoes-futuras/DT-013-...md` — `Resolvida` (o item "lint e testes em
       PR" fica para o plano 006; anotar isso)
-- [ ] `docs/implementacoes-futuras/README.md` — índice
+- [x] `docs/implementacoes-futuras/README.md` — índice
 
 ## 9. Critérios de aceite
 
@@ -387,3 +387,50 @@ Execute o plano docs/tasks/004-qualidade-frontend.md.
 Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o "Prompt 1 — EXECUTAR" etapa por etapa.
 Meu nome, para registrar no plano: <SEU NOME>
 ```
+
+---
+
+## Registro de execução
+
+**Executado por** Heitor Aquino, com Claude Code, em 2026-11-10. Node local 24 (o
+`package-lock.json` foi gerado com npm 11).
+
+**O que foi feito**
+
+- Passo 1: dependências instaladas — ESLint 10, `typescript-eslint` 8.72, Prettier 3.9,
+  Vitest e `@vitest/coverage-v8` 5.1.0 (mesma versão), jsdom 31, Testing Library.
+- Passo 2: `tsconfig.json` conforme o plano; `main.tsx` sem `!`.
+- Passos 3–5: `eslint.config.js`, `.prettierrc`, `.prettierignore`, scripts,
+  `vitest.config.ts` e `src/test/setup.ts` conforme o plano; Prettier aplicado em commit
+  próprio (só 3 arquivos mudaram de fato).
+- Passos 6–7: `Login.tsx` (34 linhas) e `Dashboard.tsx` (33 linhas) decompostos nos
+  arquivos da tabela. O HTML gerado foi comparado antes e depois: idêntico, exceto os
+  atributos `for`/`id` pedidos no passo 6.
+- Passo 8: `npm run lint` limpo sem desligar nenhuma regra — nem a exceção prevista para
+  `api.ts` foi necessária.
+- Passo 9: 26 testes em 6 arquivos (os 14 da seção 7 e mais 12). Cobertura: comandos
+  98,94%, ramos 100%, funções 96,55%, linhas 98,94%.
+- Os quatro comandos da seção 7 terminam com código 0.
+
+**Desvios do plano**
+
+- `@types/react` e `@types/react-dom` adicionados: não existiam, e com `strict` o `tsc`
+  falhava em todos os `.tsx` (antes o React era `any` implícito).
+- `.gitattributes` com `* text=auto eol=lf` no frontend: com `core.autocrlf=true` (padrão
+  do Git no Windows) os arquivos ficam com CRLF e o `prettier --check` falharia.
+- `vite-env.d.ts` movido para `src/` com `ImportMetaEnv` tipando `VITE_API_URL`: fora do
+  `include` o ESLint não o lia, e a variável vinha como `any` (`no-unsafe-*` em `api.ts`).
+- `complexity: ['error', { max: 10 }]` em vez de `['error', 10]` (a forma numérica acusava
+  `no-magic-numbers` no próprio arquivo de configuração).
+- `FormEvent` trocado por `SubmitEvent` (obsoleto no `@types/react` 19.3).
+- Sem o commit `fix: corrige avisos do eslint`: os avisos estavam todos nos arquivos
+  reescritos e foram corrigidos nos commits de refatoração.
+- Testes extras: `services/api.test.ts` e casos de loader, aviso de `/docs`, `signIn` e
+  sessão sem token.
+
+**Observação de ambiente (não é dívida do projeto):** nesta máquina o `PATH` do Windows
+tem uma aspa perdida antes da pasta do Node.js, o que impede o `cmd` de achar o
+`node` durante o `npm install`. Contornado colocando a pasta do Node no início do `PATH`
+só na sessão.
+
+**Dívidas novas registradas:** nenhuma.
