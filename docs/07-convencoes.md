@@ -1,7 +1,7 @@
 # 07 — Convenções do Projeto
 
 > Aplicam-se a todos os repositórios do TourVR.
-> Última atualização: 2026-11-09
+> Última atualização: 2026-11-10
 
 ## Idioma
 
@@ -136,7 +136,14 @@ git push --recurse-submodules=on-demand
   por componente.
 - **Estado.** `useState` local e Context para estado global. Não introduzir Redux,
   Zustand ou similar sem ADR.
-- **Verificação mínima antes do commit:** `npm run lint` (`tsc --noEmit`) deve passar.
+- **Organização.** Páginas (`src/pages/`) só compõem componentes. Componentes de uma
+  página ficam em `src/components/<pagina>/`, lógica de formulário em `src/hooks/`,
+  constantes em `src/constants/`.
+- **Testes.** Vitest + Testing Library, em `Arquivo.test.tsx` ao lado do componente. API
+  sempre mockada com `vi.mock('../services/api')`; rotas dentro de `MemoryRouter`.
+- **Verificação mínima antes do commit:** `npm run lint`, `npm run format:check`,
+  `npm run test:coverage` (em `services/frontend`). Limites de tamanho, complexidade e
+  cobertura em [04-artefato-frontend.md](04-artefato-frontend.md#regras-de-qualidade).
 
 ---
 
