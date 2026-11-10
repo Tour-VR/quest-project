@@ -1,6 +1,6 @@
 # 03 — Artefato: Backend (`services/backend`)
 
-> Repositório: `github.com/Tour-VR/backend` · Commit fixado: `9fc06ef`
+> Repositório: `github.com/Tour-VR/backend` · Commit fixado: `d3f1449`
 > Última verificação contra o código: 2026-11-09
 
 ## Responsabilidade
