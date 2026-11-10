@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Validado |
+| **Status** | Em execução — Heitor Aquino — 2026-11-10 |
 | **Fase** | 0 — Fundação de qualidade |
 | **Depende de** | 002 |
 | **Dívidas atendidas** | DT-013 |
