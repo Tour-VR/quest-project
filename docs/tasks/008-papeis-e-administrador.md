@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Validado |
+| **Status** | Em execução — Heitor Aquino — 2026-11-11 |
 | **Fase** | 1 — Domínio do campus (backend) |
 | **Depende de** | 007 |
 | **Dívidas atendidas** | DT-008 |
