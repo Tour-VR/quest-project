@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Aberta |
+| **Status** | Resolvida — 2026-11-11 — [plano 006](../tasks/006-integracao-continua.md) |
 | **Prioridade** | P1 |
 | **Esforço** | Médio |
 | **Artefato** | Todos |
@@ -54,3 +54,15 @@ ls -a services/frontend | grep github    → nenhum resultado
 
 Começar simples: um único job por repositório. Matriz de versões, cobertura e deploy
 automático podem vir depois — o valor está em existir, não em ser sofisticado.
+
+## Resolução
+
+Resolvida pelo [plano 006](../tasks/006-integracao-continua.md): `.github/workflows/ci.yml`
+com o job `validacao` em `Tour-VR/backend` (Ruff, mypy, pytest com cobertura), em
+`Tour-VR/frontend` (lint, tipagem, Prettier, Vitest com cobertura, build) e no
+orquestrador (ponteiros dos submódulos na `main`, links internos com `lychee --offline` e
+`bash scripts/validate.sh` completo, com E2E). Cache de `pip` e `npm` nos submódulos.
+A proteção da branch `main` (item 4 da proposta) é **ação manual do orientador**,
+descrita no PR do orquestrador e em
+[02-artefato-orquestrador.md](../02-artefato-orquestrador.md#integração-contínua).
+O workflow do `vr-app` vem no plano 016.

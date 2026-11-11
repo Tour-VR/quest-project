@@ -13,7 +13,7 @@ escolhe uma ou mais dívidas, e produz um plano em [`../tasks/`](../tasks/README
 |---|---|---|---|---|
 | [DT-001](DT-001-gitignore-padroes-quebrados.md) | ~~Padrões do `.gitignore` sem wildcard~~ ✅ Resolvida (plano 001) | P1 | Baixo | Orquestrador |
 | [DT-002](DT-002-orquestracao-ambiente-local.md) | ~~Ambiente local não é orquestrado~~ ✅ Resolvida (plano 002) | P1 | Médio | Orquestrador |
-| [DT-003](DT-003-pipeline-ci-cd.md) | Ausência de CI em todos os repositórios | P1 | Médio | Todos |
+| [DT-003](DT-003-pipeline-ci-cd.md) | ~~Ausência de CI em todos os repositórios~~ ✅ Resolvida (plano 006) | P1 | Médio | Todos |
 | [DT-004](DT-004-configuracao-submodulos.md) | ~~Submódulos sem branch declarada~~ ✅ Resolvida (plano 001) | P1 | Baixo | Orquestrador |
 | [DT-005](DT-005-sincronizacao-documentacao-codigo.md) | ~~READMEs dos submódulos divergem do código~~ ✅ Resolvida (plano 002) | P2 | Baixo | Backend, Frontend |
 | [DT-006](DT-006-integridade-dados-mongodb.md) | Sem índices únicos no MongoDB | P0 | Baixo | Backend |
