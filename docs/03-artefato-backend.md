@@ -225,6 +225,10 @@ tipos: o mypy ignora só os imports delas. Cobertura atual: 83%.
 
 Fixtures em `conftest.py`: `mongo_up`, `mongo_down`, `client`.
 
+**Integração contínua.** Os mesmos quatro comandos rodam no GitHub em todo PR e push na
+`main`, pelo workflow `.github/workflows/ci.yml` (check `CI / validacao`) — ver
+[02-artefato-orquestrador.md](02-artefato-orquestrador.md#integração-contínua).
+
 ## Nota sobre o README do submódulo
 
 Desde o plano 002, o `README.md` de `services/backend` é curto (menos de 50 linhas) e

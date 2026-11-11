@@ -1,5 +1,9 @@
 # TourVR — Repositório Orquestrador
 
+![CI backend](https://github.com/Tour-VR/backend/actions/workflows/ci.yml/badge.svg)
+![CI frontend](https://github.com/Tour-VR/frontend/actions/workflows/ci.yml/badge.svg)
+![CI quest-project](https://github.com/Tour-VR/quest-project/actions/workflows/ci.yml/badge.svg)
+
 Tour do campus em duas formas: presencial, lendo QR Codes com o celular, e remota, numa
 visita imersiva em 360° no **Meta Quest 3**. Projeto acadêmico desenvolvido por um grupo de alunos sob orientação docente.
 
