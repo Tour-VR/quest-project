@@ -23,7 +23,7 @@ escolhe uma ou mais dívidas, e produz um plano em [`../tasks/`](../tasks/README
 | [DT-010](DT-010-tratamento-global-erros-frontend.md) | Sem interceptor de resposta 401 | P1 | Baixo | Frontend |
 | [DT-011](DT-011-dashboard-dados-reais.md) | Dashboard com métricas fictícias | P2 | Médio | Frontend, Backend |
 | [DT-012](DT-012-contrato-api-tipado.md) | Contrato da API duplicado manualmente | P2 | Médio | Frontend, Backend |
-| [DT-013](DT-013-qualidade-codigo-frontend.md) | Frontend sem testes, linter ou modo estrito | P2 | Médio | Frontend |
+| [DT-013](DT-013-qualidade-codigo-frontend.md) | ~~Frontend sem testes, linter ou modo estrito~~ ✅ Resolvida (plano 004) | P2 | Médio | Frontend |
 | [DT-014](DT-014-containerizacao-completa.md) | Containerização parcial e sem `.dockerignore` — ⚠️ parcial (plano 002): falta imagem de produção do frontend | P2 | Baixo | Todos |
 | [DT-015](DT-015-gestao-usuarios-no-painel.md) | Cadastro de usuários só via Swagger | P2 | Médio | Frontend, Backend |
 | [DT-016](DT-016-modelagem-dominio-turismo.md) | **Domínio de turismo não modelado** | **P0** | **Alto** | Backend, Frontend, VR |

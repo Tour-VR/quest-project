@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Aberta |
+| **Status** | Resolvida — 2026-11-10 — [plano 004](../tasks/004-qualidade-frontend.md) |
 | **Prioridade** | P2 |
 | **Esforço** | Médio |
 | **Artefato** | Frontend |
@@ -53,12 +53,23 @@ Sem `.eslintrc`, `eslint.config.js` ou `.prettierrc` no repositório.
 
 ## Critérios de aceite
 
-- [ ] `strict: true` ativo e `npm run lint` passando sem erros
-- [ ] ESLint e Prettier configurados e executando via script
-- [ ] Ao menos 6 testes cobrindo autenticação, guard de rota e login
-- [ ] Lint e testes executados automaticamente em pull request
+- [x] `strict: true` ativo e `npm run lint` passando sem erros
+- [x] ESLint e Prettier configurados e executando via script
+- [x] Ao menos 6 testes cobrindo autenticação, guard de rota e login
+- [ ] Lint e testes executados automaticamente em pull request — fica para o
+      [plano 006](../tasks/006-integracao-continua.md) (CI)
 
 ## Notas
 
 Ativar `strict` em um projeto pequeno é questão de uma tarde. O custo cresce
 proporcionalmente ao código — esta dívida encarece sozinha com o tempo.
+
+## Resolução
+
+Resolvida pelo [plano 004](../tasks/004-qualidade-frontend.md): `tsconfig.json` em modo
+`strict` (com `@types/react` e `@types/react-dom`, que faltavam), ESLint em *flat config*
+com `strictTypeChecked`, `react-hooks` e limites de tamanho e complexidade, Prettier, e
+Vitest + Testing Library com cobertura mínima de 80%. `Login.tsx` e `Dashboard.tsx`
+decompostos em componentes menores sem mudar a tela. 26 testes, cobertura de ~99% das
+linhas. O item "lint e testes em pull request" fica para o plano 006 (CI). Detalhes em
+[04-artefato-frontend.md](../04-artefato-frontend.md#regras-de-qualidade).
