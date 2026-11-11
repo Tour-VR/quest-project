@@ -1,0 +1,14 @@
+{
+  "name": "tourvr-e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:golden": "playwright test --grep @golden"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@types/node": "^22.20.5",
+    "typescript": "~5.8.2"
+  }
+}

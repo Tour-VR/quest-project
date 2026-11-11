@@ -35,6 +35,9 @@ sessões de planejamento e de execução.
 | **Prompt de delegação** | Bloco final de um plano validado, copiado para iniciar a sessão de execução. |
 | **Sessão de planejamento** | Sessão que analisa, decide e escreve o plano. Não escreve código de produção. |
 | **Sessão de execução** | Sessão que recebe um plano validado e o implementa. Não redecide arquitetura. |
+| **Portão de qualidade** | `bash scripts/validate.sh`: o comando que precisa passar antes de todo PR. Ver [02-artefato-orquestrador.md](02-artefato-orquestrador.md#validação). |
+| **E2E** | *End-to-end* (ponta a ponta) — teste que usa o sistema inteiro como o usuário usaria: um navegador robô (Playwright) abre o painel, preenche campos e clica, contra a pilha real em Docker. Fica em `e2e/`. |
+| **Golden path** | Caminho principal — o fluxo mais importante do produto, que nunca pode quebrar. Os testes E2E desse fluxo levam `@golden` no título. |
 
 ## Stack — backend
 
