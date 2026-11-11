@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em execução — Heitor Aquino — 2026-11-11 |
+| **Status** | Em revisão — Heitor Aquino |
 | **Fase** | 0 — Fundação de qualidade |
 | **Depende de** | 005 |
 | **Dívidas atendidas** | DT-003 |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Orquestrador · Backend · Frontend |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | — |
+| **Executado em** | 2026-11-11 por Heitor Aquino — PRs: https://github.com/Tour-VR/backend/pull/3 · https://github.com/Tour-VR/frontend/pull/3 · https://github.com/Tour-VR/quest-project/pull/6 |
 
 ---
 
@@ -239,24 +239,24 @@ o check vermelho, e reverta com `git revert HEAD` (não use `push --force`).
 
 ## 8. Documentação a atualizar
 
-- [ ] `README.md` — selos
-- [ ] `docs/02-artefato-orquestrador.md` — passo 6
-- [ ] `docs/03-artefato-backend.md`, `docs/04-artefato-frontend.md` — passo 6
-- [ ] `docs/07-convencoes.md` — passo 6
-- [ ] `docs/tasks/protocolo-execucao.md` — passo 6 (somente o item indicado)
-- [ ] `docs/implementacoes-futuras/DT-003-...md` — `Resolvida` (proteção de branch
+- [x] `README.md` — selos
+- [x] `docs/02-artefato-orquestrador.md` — passo 6
+- [x] `docs/03-artefato-backend.md`, `docs/04-artefato-frontend.md` — passo 6
+- [x] `docs/07-convencoes.md` — passo 6
+- [x] `docs/tasks/protocolo-execucao.md` — passo 6 (somente o item indicado)
+- [x] `docs/implementacoes-futuras/DT-003-...md` — `Resolvida` (proteção de branch
       registrada como ação do orientador)
-- [ ] `docs/implementacoes-futuras/README.md` — índice
+- [x] `docs/implementacoes-futuras/README.md` — índice
 
 ## 9. Critérios de aceite
 
-- [ ] Os três workflows rodam em PR e em push na `main`
-- [ ] Check `validacao` verde nos três PRs deste plano
-- [ ] Check vermelho comprovado com erro proposital (e revertido)
-- [ ] Backend e frontend abaixo de 3 minutos
-- [ ] Orquestrador reprova ponteiro fora da `main` e link interno quebrado
-- [ ] Instruções de proteção de branch no corpo do PR do orquestrador
-- [ ] Documentação atualizada
+- [x] Os três workflows rodam em PR e em push na `main`
+- [x] Check `validacao` verde nos três PRs deste plano
+- [x] Check vermelho comprovado com erro proposital (e revertido)
+- [x] Backend e frontend abaixo de 3 minutos
+- [x] Orquestrador reprova ponteiro fora da `main` e link interno quebrado
+- [x] Instruções de proteção de branch no corpo do PR do orquestrador
+- [x] Documentação atualizada
 
 ## 10. Commits esperados
 
@@ -294,6 +294,54 @@ docs: marca DT-003 como resolvida
    verdes "passing".
 4. Avise o orientador no grupo que a proteção de branch (passo 5) está pronta para ser
    configurada.
+
+## Registro de execução
+
+Executado em 2026-11-11 por Heitor Aquino, com Claude Code.
+
+**O que foi feito**
+
+- `.github/workflows/ci.yml` (job `validacao`) em `Tour-VR/backend`, `Tour-VR/frontend` e
+  no orquestrador, conforme os passos 1 a 3.
+- CI verde nos três PRs. Tempos: backend **35 s**; frontend **1 min 6 s** (34 s na
+  execução seguinte, com cache); orquestrador **6 min 17 s** (validate completo, com E2E).
+- Prova de falha no frontend: commit com variável não usada → `CI / validacao` vermelho no
+  passo "Lint e tipagem" (`@typescript-eslint/no-unused-vars`); revertido com `git revert`.
+- Prova de falha no orquestrador, em dois commits temporários, ambos revertidos com
+  `git revert`: link para `arquivo-que-nao-existe.md` em `docs/README.md` → vermelho no
+  passo "Links internos da documentacao" (`File not found`); ponteiro de
+  `services/frontend` para um commit da branch do plano → vermelho no passo "Ponteiros dos
+  submodulos pertencem a main" (`[ERRO] services/frontend aponta para commit fora da main`).
+- `bash scripts/validate.sh` local: `[OK]` backend, frontend, duplicação e e2e (2 testes);
+  vr-app `[PULADO]`.
+- Nenhum link interno quebrado existia em `docs/`; o commit `docs: corrige links internos
+  quebrados` não foi necessário.
+- Documentação do passo 6 e DT-003 marcada como `Resolvida`.
+
+**Desvios do plano**
+
+1. **Repositórios eram privados.** A seção 3 supunha os quatro repositórios `Tour-VR`
+   públicos; estavam privados, e a primeira execução da CI do orquestrador falhou ao clonar
+   os submódulos (`Repository not found`). A execução parou e foi levada ao orientador.
+   Com a aprovação dele, informada pelo aluno, os quatro repositórios foram tornados
+   **públicos** em 2026-11-11 (antes, o histórico foi varrido em busca de segredos: só
+   havia valores de exemplo). Nenhuma alteração de workflow foi necessária.
+2. **Aspas no workflow do frontend.** `node-version: '22'` com aspas simples, em vez de
+   `"22"`: o `prettier --check .` do frontend também confere o YAML e o projeto usa aspas
+   simples. O valor é idêntico para o YAML.
+3. **`docs/04-artefato-frontend.md` não tem seção "Testes".** A linha da CI foi posta logo
+   após a tabela de scripts, na seção Execução, ao lado de `npm run test:coverage`.
+4. **Falha transitória do GitHub.** Uma execução do orquestrador falhou na instalação das
+   dependências do Chromium (`apt`: `Temporary failure resolving 'archive.ubuntu.com'`),
+   sem relação com o código; a reexecução passou.
+
+**Dívidas novas:** nenhuma.
+
+**Pendente (ação do orientador):** proteção da branch `main` nos três repositórios —
+passo 5, listado no corpo do PR do orquestrador.
+
+**Observação de ambiente.** Como no plano 005, o PATH do Windows da máquina de execução
+tinha uma entrada com aspas soltas que impede o `npx`; corrigido apenas na sessão.
 
 ---
 
