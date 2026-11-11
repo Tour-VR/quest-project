@@ -135,11 +135,11 @@ antes de qualquer tentativa de rede, com mensagem explícita.
 | Aspecto | Implementação |
 |---|---|
 | Hash de senha | bcrypt via passlib (`CryptContext`) |
-| Token | JWT HS256, claims `sub` (email) + `role`, expiração configurável (60 min) |
+| Token | JWT HS256, claims `sub` (email) + `role` (`admin`/`user`), expiração configurável (60 min) |
 | Transporte do token | Header `Authorization: Bearer` |
 | Armazenamento no cliente | `localStorage`, chave `@OculosVR:token` |
 | CORS | Lista explícita de origens via `APP_CORS_ORIGINS` |
-| Autorização | 🔴 Inexistente — `role` viaja no token mas nenhuma rota o verifica |
+| Autorização | Papéis `admin` e `user`; `require_admin` lê o papel do banco a cada requisição; `POST /auth/register` exige admin; primeiro admin pelo comando `create-admin` (plano 008) |
 | Refresh token | 🔴 Inexistente |
 | Rate limiting | `POST /auth/login`: 5 falhas por IP + identificador em 15 min → `429`, em memória (plano 007) |
 

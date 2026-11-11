@@ -47,10 +47,11 @@ services/backend/
     │   ├── indexes.py          ensure_indexes: índices únicos de `users`
     │   ├── logging.py          configure_logging (biblioteca padrão, nível por LOG_LEVEL)
     │   ├── rate_limit.py       LoginRateLimiter (janela deslizante em memória)
+    │   ├── roles.py            ROLE_ADMIN, ROLE_USER, VALID_ROLES
     │   └── security.py         hash/verify senha, create/decode JWT, força de senha
     ├── api/
-    │   ├── deps.py             get_user_service, get_current_user, get_login_rate_limiter,
-    │                           erro 503 padrão
+    │   ├── deps.py             get_user_service, get_current_user, require_admin,
+    │                           get_login_rate_limiter, erro 503 padrão
     │   └── v1/
     │       ├── router.py       agrega health + auth + users
     │       └── routes/         auth.py · users.py · health.py
@@ -59,8 +60,9 @@ services/backend/
     ├── repositories/
     │   ├── errors.py           UniqueConstraintError + duplicated_field (chave duplicada)
     │   └── user_repository.py  5 métodos de acesso à collection `users`
-    └── services/user_service.py          regras de negócio + 4 exceções de domínio
-└── tests/                      conftest.py + 43 testes
+    ├── services/user_service.py          regras de negócio + 4 exceções de domínio
+    └── cli.py                  comando `create-admin` (python -m app.cli)
+└── tests/                      conftest.py + 57 testes
 ```
 
 ## Endpoints
@@ -72,7 +74,7 @@ Contrato completo, com payloads e códigos de erro, em
 |---|---|---|
 | `GET` | `/` | — |
 | `GET` | `/health/` | — |
-| `POST` | `/auth/register` | — |
+| `POST` | `/auth/register` | Bearer (admin) |
 | `POST` | `/auth/login` | — |
 | `GET` | `/users/me` | Bearer |
 | `PUT` | `/users/me` | Bearer |
@@ -89,7 +91,7 @@ collection `users`:
 | `hashed_password` | `str` | — |
 | `username` | `str \| None` | `None` |
 | `full_name` | `str \| None` | `None` |
-| `role` | `str` | `"user"` |
+| `role` | `str` | `"user"` (`ROLE_USER`) — ver [Papéis](#papéis) |
 | `is_active` | `bool` | `True` |
 | `is_verified` | `bool` | `False` |
 | `created_at` | `datetime` | `now(utc)` |
@@ -108,7 +110,7 @@ As verificações prévias do `UserService` (`find_by_email`, `find_by_username`
 e dão a mensagem amigável no caso comum; o índice é a garantia contra cadastros
 simultâneos. Quando o MongoDB recusa por chave duplicada, o repository levanta
 `UniqueConstraintError(campo)` (`app/repositories/user_repository.py:66-67` e `83-84`) e o
-service traduz para `UserConflictError` (`app/services/user_service.py:79-84` e `136-142`),
+service traduz para `UserConflictError` (`app/services/user_service.py:106-114` e `165-171`),
 que vira `400`.
 
 Se a criação falhar (por exemplo, base local já com e-mails repetidos), o backend registra
@@ -139,6 +141,46 @@ e [app/core/security.py](../services/backend/app/core/security.py):
   em `create_app()` e guardado em `app.state`: **zera quando o backend reinicia**
   (inclusive no `--reload`) e só vale para uma instância. É preocupação HTTP, por isso
   fica na rota e não no service.
+
+## Papéis
+
+Dois papéis, definidos em `app/core/roles.py`: `admin` (`ROLE_ADMIN`) e `user`
+(`ROLE_USER`). Todo usuário novo nasce `user`; só o comando `create-admin` cria ou
+promove administradores.
+
+- **`require_admin`** (`app/api/deps.py:95-106`) é a dependência que restringe uma rota ao
+  papel `admin`. Ela depende de `get_current_user`, então a ordem dos erros é: sem token
+  `401` → token inválido `401` → usuário inativo `403 "Usuario inativo."` → papel
+  insuficiente `403 "Acesso restrito a administradores."`.
+- **O papel vem do banco**, não do token. `get_current_user` lê o usuário com
+  `find_by_email` a cada requisição (`app/api/deps.py:76`) e `require_admin` confere
+  `current_user["role"]`. Mudar o papel no banco vale na próxima requisição, sem esperar o
+  token expirar. O claim `role` continua no token só como informação para o cliente.
+- **Rotas que exigem admin hoje:** `POST /auth/register` (`app/api/v1/routes/auth.py:29-32`).
+  As rotas `/admin/...` dos próximos planos usam a mesma dependência.
+
+### Primeiro administrador
+
+Como o cadastro exige um administrador, o primeiro é criado pela linha de comando
+(`app/cli.py`). Com o ambiente Docker no ar, na raiz do orquestrador:
+
+```bash
+docker compose exec backend python -m app.cli create-admin --email <email> --password <senha>
+```
+
+- Se o e-mail não existe, cria o usuário com papel `admin` e imprime
+  `Administrador criado: <email>`.
+- Se já existe, **promove**: grava `role="admin"` e `is_active=True` sem tocar na senha e
+  imprime `Usuario promovido a administrador: <email>`. Rodar de novo não duplica.
+- Opcional: `--full-name "<nome>"`.
+- A senha passa pelas mesmas regras do cadastro e **nunca** é impressa — nem nos erros de
+  validação (`exc.errors(include_input=False)`, `app/cli.py:43`).
+- Códigos de saída (`app/cli.py:18-20`): `0` sucesso · `1` banco indisponível · `2`
+  entrada inválida (senha fraca, e-mail inválido, argumento ausente ou conflito de índice).
+
+A regra fica no service (`UserService.create_or_promote_admin`,
+`app/services/user_service.py:74-90`); o comando só conecta ao banco, garante os índices,
+chama o service e imprime o resultado.
 
 ## Logging
 
@@ -231,6 +273,7 @@ Requer MongoDB acessível. A API sobe sem ele, mas as rotas de domínio responde
 |---|---|
 | `503` em todas as rotas de domínio | MongoDB não conectou no `lifespan`; conferir `MONGODB_URL`, `GET /health/` e o log `ERROR app.api.deps` (o detalhe técnico fica só no log) |
 | `InsecureConfigurationError` na subida | `APP_ENV` não é `development` e `JWT_SECRET_KEY` está com a chave padrão; gere uma chave |
+| `401`/`403` no `POST /auth/register` | O cadastro exige token de administrador; crie o primeiro com `create-admin` e use **Authorize** no `/docs` |
 | `429` no login | 5 falhas seguidas para o mesmo e-mail/username; esperar 15 min ou reiniciar o backend |
 | `warning` "Nao foi possivel criar os indices" | Base com e-mails ou usernames repetidos; `bash scripts/reset-db.sh` |
 | Erro de credencial placeholder | A URI contém `<db_password>` ou similar; o `MongoManager` aborta sem tentar a rede |
@@ -242,7 +285,7 @@ Requer MongoDB acessível. A API sobe sem ele, mas as rotas de domínio responde
 Ordem sugerida para entender o backend: `app/core/config.py` → `app/core/database.py` →
 `app/core/security.py` → `app/models/user.py` e `app/schemas/user.py` →
 `app/repositories/user_repository.py` → `app/services/user_service.py` →
-`app/api/deps.py` → `app/api/v1/routes/` → `tests/` (documentação executável dos
+`app/api/deps.py` → `app/api/v1/routes/` → `app/cli.py` → `tests/` (documentação executável dos
 comportamentos esperados).
 
 ## Ambiente de desenvolvimento
@@ -272,14 +315,15 @@ pytest --cov=app --cov-fail-under=80      # testes + cobertura mínima de 80%
 Regras e limites em `pyproject.toml`: linha de 100 colunas, complexidade máx. 10, máx. 50
 comandos por função; `PLR2004`, `ARG001` e `PLR0913` desligadas só em `tests/`. O `B008`
 aceita `Depends`/`Query`/etc. do FastAPI como valor padrão. `jose` e `passlib` não têm
-tipos: o mypy ignora só os imports delas. Cobertura atual: 87%.
+tipos: o mypy ignora só os imports delas. Cobertura atual: 89%.
 
-**43 testes**, todos com MongoDB mockado (sem dependência de banco real):
+**57 testes**, todos com MongoDB mockado (sem dependência de banco real):
 
 - `tests/test_health.py` — 6 testes: import do app, rota raiz, preflight CORS,
   health com banco up/down, detecção de placeholder de senha sem chamada de rede.
-- `tests/test_auth_flow.py` — 24 testes: registro (sucesso, e-mail duplicado, username
-  duplicado, senha fraca, chave duplicada pelo índice), login (sucesso, por username,
+- `tests/test_auth_flow.py` — 28 testes: registro (sucesso, e-mail duplicado, username
+  duplicado, senha fraca, chave duplicada pelo índice), autorização do registro (sem token
+  `401`, papel `user` `403`, token real de admin `200`, admin inativo `403`), login (sucesso, por username,
   senha errada, usuário inativo, 6ª falha → `429`, sucesso zera o contador),
   `/users/me` (leitura, atualização, username duplicado pela checagem e pelo índice,
   troca de senha, senha atual errada, sem token, token inválido, usuário inativo), falha
@@ -295,8 +339,16 @@ tipos: o mypy ignora só os imports delas. Cobertura atual: 87%.
 - `tests/test_user_repository.py` — 3 testes: `DuplicateKeyError` vira
   `UniqueConstraintError` na inserção e na atualização; campo `desconhecido` sem
   `keyPattern`.
+- `tests/test_user_service.py` — 4 testes de `create_or_promote_admin` com repository
+  falso: cria quando não existe, promove sem alterar a senha, conflito de índice vira
+  `UserConflictError`, usuário que some durante a promoção.
+- `tests/test_cli.py` — 6 testes do `create-admin`: cria e imprime o e-mail sem a senha,
+  promove, senha fraca → `2`, banco fora → `1`, falha no repository → `1`, conflito → `2`.
 
-Fixtures em `conftest.py`: `mongo_up`, `mongo_down`, `client` e duas `autouse` —
+Fixtures em `conftest.py`: `mongo_up`, `mongo_down`, `client`, `as_admin` e duas
+`autouse`. `as_admin` registra `app.dependency_overrides[require_admin]` devolvendo um
+administrador fixo (`ADMIN_USER`) e remove **só** esse override ao final — use-a em testes
+de rotas restritas que não estão testando a autorização em si. As `autouse` são
 `fake_ensure_indexes` (substitui `app.main.ensure_indexes`, para o `lifespan` não tentar
 falar com um MongoDB real, já que `mongo_up` deixa `connected=True`) e
 `clear_login_rate_limiter` (cada teste começa sem falhas de login).
