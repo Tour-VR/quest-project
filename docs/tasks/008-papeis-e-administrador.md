@@ -386,6 +386,11 @@ Meu nome, para registrar no plano: <SEU NOME>
 4. **Documento extra.** `docs/01-arquitetura.md`, tabela "Segurança — estado atual": a linha
    "Autorização: inexistente" ficaria falsa.
 
+5. **Ponteiro do backend atualizado no PR, antes do fechamento.** Depois do merge de
+   Tour-VR/backend#5, o ponteiro `services/backend` foi levado para `be875f5` (`main`) na
+   branch do plano, para a CI do orquestrador rodar o E2E com `app.cli`
+   (opção 1 da [DT-020](../implementacoes-futuras/DT-020-ci-orquestrador-ponteiro-antigo.md)).
+
 ### Dívidas novas
 
 - [DT-020](../implementacoes-futuras/DT-020-ci-orquestrador-ponteiro-antigo.md): a CI do
