@@ -80,6 +80,21 @@ Detalhes em [`docs/02-artefato-orquestrador.md`](docs/02-artefato-orquestrador.m
 
 ---
 
+## Validar antes de abrir PR
+
+Com o Docker Desktop aberto, na raiz do projeto:
+
+```bash
+bash scripts/validate.sh
+```
+
+Roda lint, testes, build, detecção de duplicação e os testes ponta a ponta de todos os
+serviços. No fim mostra um `===== Resumo =====`; o PR só pode ser aberto com todas as
+etapas em `[OK]` ou `[PULADO]`. Sem Docker, use `bash scripts/validate.sh --skip-e2e`.
+Detalhes em [`docs/02-artefato-orquestrador.md`](docs/02-artefato-orquestrador.md#validação).
+
+---
+
 ## ⚠️ Antes de editar qualquer código em `services/`
 
 O `setup.sh` deixa os submódulos na branch `main`, mas um `git submodule update` os

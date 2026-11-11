@@ -1,7 +1,7 @@
 # 07 — Convenções do Projeto
 
 > Aplicam-se a todos os repositórios do TourVR.
-> Última atualização: 2026-11-10
+> Última atualização: 2026-11-11
 
 ## Idioma
 
@@ -144,6 +144,22 @@ git push --recurse-submodules=on-demand
 - **Verificação mínima antes do commit:** `npm run lint`, `npm run format:check`,
   `npm run test:coverage` (em `services/frontend`). Limites de tamanho, complexidade e
   cobertura em [04-artefato-frontend.md](04-artefato-frontend.md#regras-de-qualidade).
+
+---
+
+## Validação
+
+- **Todo PR precisa de `bash scripts/validate.sh` passando** (código de saída 0), na raiz
+  do orquestrador. Ele roda lint, formatação, tipagem, testes com cobertura e build de
+  todos os serviços, duplicação (`jscpd`) e os testes ponta a ponta. Detalhes em
+  [02-artefato-orquestrador.md](02-artefato-orquestrador.md#validação).
+- Sem Docker na máquina, use `bash scripts/validate.sh --skip-e2e` e registre no PR que o
+  E2E não foi executado.
+- Não se desliga regra de lint, não se reduz limite de cobertura ou de duplicação e não se
+  marca teste como `skip` para fazer a validação passar.
+- Testes E2E ficam em `e2e/tests/`. Cenários de caminho principal começam o título com
+  `@golden`. **Um cenário `@golden` só é removido ou enfraquecido com aprovação do
+  orientador.**
 
 ---
 

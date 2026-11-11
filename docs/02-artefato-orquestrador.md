@@ -1,7 +1,7 @@
 # 02 — Artefato: Repositório Orquestrador (`quest-project`)
 
 > Repositório: `github.com/Tour-VR/quest-project` · Branch principal: `main`
-> Última verificação contra o código: 2026-11-09
+> Última verificação contra o código: 2026-11-11
 
 ## Responsabilidade
 
@@ -9,8 +9,9 @@ Agregar os três submódulos, hospedar a base de conhecimento e centralizar a au
 setup, build e execução do ambiente completo.
 
 Agregação, documentação e execução do ambiente local já existem: `scripts/setup.sh`
-prepara os submódulos e `scripts/up.sh` sobe o sistema inteiro com Docker Compose (ver
-[Ambiente local](#ambiente-local)). Ainda não há teste orquestrado nem CI — ver
+prepara os submódulos, `scripts/up.sh` sobe o sistema inteiro com Docker Compose (ver
+[Ambiente local](#ambiente-local)) e `scripts/validate.sh` é o portão único de qualidade
+(ver [Validação](#validação)). Ainda não há CI — ver
 [DT-003](implementacoes-futuras/DT-003-pipeline-ci-cd.md).
 
 ## Conteúdo versionado
@@ -25,9 +26,16 @@ quest-project/
 ├── CLAUDE.md              instruções de carga de contexto para agentes de IA
 ├── docker-compose.yml     ambiente local: mongo + backend + frontend
 ├── .env.example           variáveis do ambiente local (copiar para .env)
+├── .jscpd.json            configuração da detecção de duplicação (limite 3%, 50 tokens)
 ├── docs/                  base de conhecimento (este diretório)
+├── e2e/                   testes ponta a ponta com Playwright (pacote Node próprio)
+│   ├── playwright.config.ts   só Chromium; baseURL = painel
+│   ├── support/               urls.ts, api.ts (createAdminUser), painel.ts (loginNoPainel)
+│   └── tests/                 login.spec.ts
 ├── scripts/
 │   ├── setup.sh               (54 linhas) — preparação principal
+│   ├── validate.sh            (91 linhas) — portão único de qualidade
+│   ├── e2e.sh                 (52 linhas) — sobe a pilha e roda o Playwright
 │   ├── up.sh                  (35 linhas) — sobe o ambiente local
 │   ├── down.sh                (19 linhas) — para o ambiente, preserva os dados
 │   ├── logs.sh                (19 linhas) — acompanha os logs
@@ -129,6 +137,61 @@ Linux do container; por isso `/app/node_modules` fica num volume próprio. Uma p
 Portas 27017, 8000 e 3000 precisam estar livres: um MongoDB ou backend rodando fora do
 Docker impede a subida.
 
+## Validação
+
+`bash scripts/validate.sh` roda todas as verificações do projeto. Ele executa **todas** as
+etapas mesmo que uma falhe, imprime um resumo e sai com código 1 se alguma falhou
+(`scripts/validate.sh:73-91`).
+
+| Etapa | O que roda | Observação |
+|---|---|---|
+| `backend` | `ruff check .`, `ruff format --check .`, `mypy app`, `pytest --cov=app --cov-fail-under=80` | Usa `services/backend/.venv`; se não existir, cria e instala `requirements-dev.txt` |
+| `frontend` | `npm run lint`, `format:check`, `test:coverage`, `build` | `npm ci` se não houver `node_modules` |
+| `vr-app` | O mesmo do frontend | `[PULADO]` enquanto `services/vr-app/package.json` não existir (plano 016) |
+| `duplicacao` | `npx --yes jscpd@4 --config .jscpd.json` sobre `services/backend/app`, `services/frontend/src` e `services/vr-app/src` (se existir) | Reprova acima de 3% |
+| `e2e` | `bash scripts/e2e.sh` | Exige Docker; `--skip-e2e` pula |
+
+Resumo ao final:
+
+```
+===== Resumo =====
+[OK]    backend
+[OK]    frontend
+[PULADO] vr-app (ainda nao iniciado)
+[OK]    duplicacao
+[OK]    e2e
+```
+
+**`--skip-e2e`.** `bash scripts/validate.sh --skip-e2e` não toca no Docker. Serve para
+máquinas sem Docker; o PR deve registrar que o E2E não foi executado.
+
+### Testes ponta a ponta (E2E)
+
+`bash scripts/e2e.sh [argumentos do Playwright]` (`scripts/e2e.sh:17-52`):
+
+1. sai com erro se o Docker não estiver rodando; cria o `.env` se faltar;
+2. `docker compose up -d --build --wait` — a pilha **continua rodando** ao final
+   (`bash scripts/down.sh` para);
+3. espera até 180 s o painel responder em `http://localhost:3000`, porque o serviço
+   `frontend` não tem healthcheck ([DT-019](implementacoes-futuras/DT-019-healthcheck-painel.md));
+4. em `e2e/`: `npm ci` se faltar `node_modules`, `npx playwright install chromium`
+   (na CI, com `--with-deps`);
+5. `npx playwright test "$@"` e sai com o código do Playwright.
+
+Os testes criam um usuário novo a cada execução (`e2e-<timestamp>@tourvr.dev`) pelo helper
+`createAdminUser()` de `e2e/support/api.ts`, hoje via `POST /auth/register`. Cenários de
+caminho principal levam `@golden` no início do título; `bash scripts/e2e.sh --grep @golden`
+roda só eles.
+
+| Cenário (`e2e/tests/login.spec.ts`) | Verifica |
+|---|---|
+| `@golden administrador entra no painel` | Usuário criado pela API faz login e vê "Bem-vindo(a) de volta" no dashboard |
+| `credenciais invalidas mostram mensagem` | Mensagem do backend aparece e a URL continua em `/login` |
+
+**Relatório.** Ao falhar, o script indica `cd e2e && npx playwright show-report`, que abre
+no navegador o relatório HTML com os passos e o *trace* de cada teste. Resultados ficam em
+`e2e/test-results/` e `e2e/playwright-report/`, ignorados pelo `.gitignore`.
+
 ## Configuração dos submódulos
 
 O `.gitmodules` declara `path`, `url` (HTTPS) e `branch = main` para os três submódulos
@@ -163,6 +226,6 @@ Felipe, lorenz.
 | Item | Situação |
 |---|---|
 | `docker-compose.yml` e scripts `up`/`down`/`logs`/`reset-db` | ✅ Existem desde o plano 002 — ver [Ambiente local](#ambiente-local) |
-| Script único de testes/validação | 🔴 Não existe — previsto no plano 005 |
+| Script único de testes/validação | ✅ `scripts/validate.sh` desde o plano 005 — ver [Validação](#validação) |
 | CI/CD (`.github/workflows/`) | 🔴 Não existe — ver DT-003 |
 | Versionamento/release do conjunto | 🔴 Não definido |

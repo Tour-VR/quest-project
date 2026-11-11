@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em execução — Heitor Aquino — 2026-11-11 |
+| **Status** | Em revisão — Heitor Aquino |
 | **Fase** | 0 — Fundação de qualidade |
 | **Depende de** | 003, 004 |
 | **Dívidas atendidas** | nenhuma (implementa o critério de verificação do plano 000 §7) |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Orquestrador |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | — |
+| **Executado em** | 2026-11-11 por Heitor Aquino |
 
 ---
 
@@ -308,21 +308,21 @@ bash scripts/e2e.sh --grep @golden
 
 ## 8. Documentação a atualizar
 
-- [ ] `docs/02-artefato-orquestrador.md` — passo 6
-- [ ] `README.md` — passo 6
-- [ ] `docs/07-convencoes.md` — passo 6
-- [ ] `docs/09-glossario.md` — passo 6
+- [x] `docs/02-artefato-orquestrador.md` — passo 6
+- [x] `README.md` — passo 6
+- [x] `docs/07-convencoes.md` — passo 6
+- [x] `docs/09-glossario.md` — passo 6
 
 ## 9. Critérios de aceite
 
-- [ ] `bash scripts/validate.sh` termina com código 0 numa máquina com Docker
-- [ ] `--skip-e2e` funciona sem Docker
-- [ ] O portão reprova quando um serviço quebra (passo 5.3)
-- [ ] vr-app ausente aparece como `[PULADO]`, não como falha
-- [ ] Os 2 cenários E2E passam; o primeiro tem a tag `@golden`
-- [ ] `e2e/package-lock.json` versionado; `e2e/node_modules`, `e2e/test-results` e
+- [x] `bash scripts/validate.sh` termina com código 0 numa máquina com Docker
+- [x] `--skip-e2e` funciona sem Docker
+- [x] O portão reprova quando um serviço quebra (passo 5.3)
+- [x] vr-app ausente aparece como `[PULADO]`, não como falha
+- [x] Os 2 cenários E2E passam; o primeiro tem a tag `@golden`
+- [x] `e2e/package-lock.json` versionado; `e2e/node_modules`, `e2e/test-results` e
       `e2e/playwright-report` ignorados (já cobertos pelo `.gitignore` do plano 001)
-- [ ] Documentação atualizada
+- [x] Documentação atualizada
 
 ## 10. Commits esperados
 
@@ -356,6 +356,53 @@ docs: documenta a validacao e os testes ponta a ponta
    e `[PULADO]` em vr-app.
 3. Rode `cd e2e && npx playwright show-report`: abre no navegador um relatório com os 2
    testes em verde. Clique no primeiro para ver os passos que o robô fez no painel.
+
+---
+
+## Registro de execução
+
+**Executado por** Heitor Aquino em 2026-11-11, com Claude Code, branch
+`plano/005-validacao-e-e2e` (só o orquestrador).
+
+**O que foi feito**
+
+- `.jscpd.json`, pacote `e2e/` (Playwright 1.65, só Chromium) com `support/urls.ts`,
+  `support/api.ts`, `support/painel.ts` e os 2 cenários de `tests/login.spec.ts`;
+  `e2e/package-lock.json` versionado.
+- `scripts/e2e.sh` e `scripts/validate.sh`, ambos com bit de execução no Git.
+- Verificação (passo 5):
+  - `bash scripts/validate.sh --skip-e2e` → `[OK]` backend (82% de cobertura, 25 testes),
+    frontend (26 testes), duplicação (1,5%); `[PULADO]` vr-app e e2e; código 0.
+  - `bash scripts/validate.sh` → também `[OK] e2e`, 2 cenários passando; código 0.
+  - `bash scripts/e2e.sh --grep @golden` com a pilha parada → 1 cenário passando.
+  - Variável não usada em `services/frontend/src/App.tsx` → `[FALHA] frontend` e código 1;
+    arquivo restaurado com `git checkout`.
+- Documentação: `docs/02-artefato-orquestrador.md` (árvore e seção Validação),
+  `README.md`, `docs/07-convencoes.md`, `docs/09-glossario.md`.
+
+**Desvios do plano**
+
+1. `scripts/e2e.sh` espera até 180 s o painel responder em `http://localhost:3000` antes
+   do Playwright. Com a pilha parada, o `--wait` voltava antes de o contêiner do painel
+   terminar `npm ci && vite` (ele não tem healthcheck) e o cenário `@golden` falhava.
+   Registrado como DT-019.
+2. `python_bin()` no `validate.sh` testa se o interpretador executa (`--version`), em vez
+   de só `command -v`. No Windows, `python3` costuma ser um atalho da Microsoft Store que
+   existe mas não roda.
+3. `@types/node` (^22) adicionado às dependências de `e2e/`: sem ele, o `tsconfig.json`
+   estrito não reconhece `process.env.CI` em `playwright.config.ts`.
+
+**Dívidas novas**
+
+- [DT-018](../implementacoes-futuras/DT-018-duplicacao-backend.md) — dois clones no
+  backend apontados pelo `jscpd` (2,49% das linhas Python, abaixo do limite de 3%).
+- [DT-019](../implementacoes-futuras/DT-019-healthcheck-painel.md) — painel sem
+  healthcheck no Docker Compose.
+
+**Observação de ambiente.** Na máquina de execução, o PATH do Windows tinha uma entrada com
+aspas soltas (`C:\Program Files (x86)\PowerShell"`), que impede o `cmd` de achar o
+`node` e quebra `npx` e `npm run`. Não é problema do projeto; a validação foi feita com o
+PATH corrigido apenas na sessão.
 
 ---
 
