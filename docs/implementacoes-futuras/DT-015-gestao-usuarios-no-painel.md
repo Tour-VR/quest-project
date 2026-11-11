@@ -7,7 +7,7 @@
 | **Esforço** | Médio |
 | **Artefato** | Frontend, Backend |
 | **Registrada em** | 2026-08-20 |
-| **Depende de** | DT-008 (autorização é pré-requisito) |
+| **Depende de** | DT-008 (autorização é pré-requisito) — ✅ atendida pelo plano 008 |
 
 ## Contexto
 
@@ -65,3 +65,8 @@ uma tela de listagem de usuários expõe dados de todos a qualquer conta.
 O item 1 é independente do restante e pode ser executado antes de DT-008 — a rota
 `/users/me` já é protegida e opera apenas sobre o próprio usuário. Bom candidato a plano
 curto de execução.
+
+**Pré-requisito atendido (plano 008, 2026-11-11).** DT-008 foi resolvida: existe
+`require_admin` para proteger as rotas de gestão, e `POST /auth/register` já exige token de
+administrador. O aviso da tela de login que manda usar o Swagger ficou desatualizado — o
+primeiro administrador agora é criado com `create-admin` — e é removido no plano 011.

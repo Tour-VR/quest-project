@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Aberta |
+| **Status** | Resolvida — 2026-11-11 — [plano 008](../tasks/008-papeis-e-administrador.md) |
 | **Prioridade** | P1 |
 | **Esforço** | Médio |
 | **Artefato** | Backend |
@@ -61,11 +61,11 @@ ou dependência equivalente. Nenhuma rota em `app/api/v1/routes/` verifica `role
 
 ## Critérios de aceite
 
-- [ ] Dependência de autorização por papel disponível e testada
-- [ ] Pelo menos uma rota protegida por papel de administrador
-- [ ] Caminho documentado e reproduzível para criar o primeiro administrador
-- [ ] Decisão sobre a abertura de `POST /auth/register` registrada
-- [ ] Testes cobrindo permitido e negado
+- [x] Dependência de autorização por papel disponível e testada
+- [x] Pelo menos uma rota protegida por papel de administrador
+- [x] Caminho documentado e reproduzível para criar o primeiro administrador
+- [x] Decisão sobre a abertura de `POST /auth/register` registrada
+- [x] Testes cobrindo permitido e negado
 
 ## Notas
 
@@ -73,3 +73,20 @@ O papel viaja dentro do token, então uma mudança de papel só surte efeito no 
 Aceitável enquanto não houver revogação; se virar problema, ler o papel do banco em
 `get_current_user` em vez do token — custo de uma consulta a mais por requisição, que já é
 paga hoje.
+
+## Resolução
+
+Resolvida pelo [plano 008](../tasks/008-papeis-e-administrador.md). Decisões:
+
+- **Dois papéis**, `admin` e `user`, em `app/core/roles.py`. Mais de dois exigiria ADR.
+- **`require_admin`** (`app/api/deps.py`) em vez de `require_role("admin")`: com dois
+  papéis, uma dependência fixa basta. Retorna `403 "Acesso restrito a administradores."`.
+- **O papel vem do banco**, não do token: `get_current_user` já relia o usuário a cada
+  requisição, então a preocupação da nota acima (mudança só no próximo login) não se
+  aplica — promover ou rebaixar vale na requisição seguinte.
+- **Cadastro restrito a administrador.** `POST /auth/register` continua existindo, com o
+  mesmo payload e as mesmas respostas, mas exige token de admin. Convite por e-mail ficou
+  fora: o sistema não envia e-mail.
+- **Primeiro administrador por linha de comando**: `python -m app.cli create-admin
+  --email <email> --password <senha>`, que cria ou promove (não duplica) e nunca imprime a
+  senha. Ver [03-artefato-backend.md](../03-artefato-backend.md#primeiro-administrador).
