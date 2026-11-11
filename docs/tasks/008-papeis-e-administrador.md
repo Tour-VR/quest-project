@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em execução — Heitor Aquino — 2026-11-11 |
+| **Status** | Em revisão — Heitor Aquino |
 | **Fase** | 1 — Domínio do campus (backend) |
 | **Depende de** | 007 |
 | **Dívidas atendidas** | DT-008 |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Backend · Orquestrador (E2E e documentação) |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | — |
+| **Executado em** | 2026-11-11 por Heitor Aquino (PRs na seção Registro de execução) |
 
 ---
 
@@ -263,33 +263,33 @@ bash scripts/validate.sh
 
 ## 8. Documentação a atualizar
 
-- [ ] `docs/03-artefato-backend.md` — tabela de endpoints (`POST /auth/register` com auth
+- [x] `docs/03-artefato-backend.md` — tabela de endpoints (`POST /auth/register` com auth
       "Bearer (admin)"); seção "Papéis" nova: `admin`/`user`, `require_admin`, papel lido
       do banco; seção "Primeiro administrador" com o comando no compose:
       `docker compose exec backend python -m app.cli create-admin --email <email> --password <senha>`;
       estrutura com `cli.py` e `roles.py`.
-- [ ] `docs/06-contrato-api.md` — `POST /auth/register` deixa de ser público: erros `401`
+- [x] `docs/06-contrato-api.md` — `POST /auth/register` deixa de ser público: erros `401`
       e `403`; seção "Autenticação": claim `role` pode ser `admin` ou `user`, e a
       autorização usa o papel do banco.
-- [ ] `docs/02-artefato-orquestrador.md` — na execução do ambiente, o passo de criar o
+- [x] `docs/02-artefato-orquestrador.md` — na execução do ambiente, o passo de criar o
       primeiro administrador.
-- [ ] `README.md` (raiz) — em "Primeiros passos", após subir o ambiente, o comando
+- [x] `README.md` (raiz) — em "Primeiros passos", após subir o ambiente, o comando
       `create-admin`.
-- [ ] `docs/implementacoes-futuras/DT-008-...md` — `Resolvida` (plano 008), registrando a
+- [x] `docs/implementacoes-futuras/DT-008-...md` — `Resolvida` (plano 008), registrando a
       decisão: cadastro restrito a admin, primeiro admin por CLI.
-- [ ] `docs/implementacoes-futuras/DT-015-...md` — nota: pré-requisito DT-008 atendido.
-- [ ] `docs/implementacoes-futuras/README.md` — status.
+- [x] `docs/implementacoes-futuras/DT-015-...md` — nota: pré-requisito DT-008 atendido.
+- [x] `docs/implementacoes-futuras/README.md` — status.
 
 ## 9. Critérios de aceite
 
-- [ ] `require_admin` disponível e coberto pelos testes de permitido e negado
-- [ ] `POST /auth/register` retorna `401` sem token, `403` para `role="user"`, `200` para admin
-- [ ] `docker compose exec backend python -m app.cli create-admin --email a@b.com --password abc12345`
+- [x] `require_admin` disponível e coberto pelos testes de permitido e negado
+- [x] `POST /auth/register` retorna `401` sem token, `403` para `role="user"`, `200` para admin
+- [x] `docker compose exec backend python -m app.cli create-admin --email a@b.com --password abc12345`
       cria o admin; executado de novo, informa que promoveu (não duplica)
-- [ ] O comando nunca imprime a senha
-- [ ] E2E `@golden` de login passa com o admin criado pelo comando
-- [ ] `bash scripts/validate.sh` passando, cobertura ≥ 80%
-- [ ] Documentação da seção 8 atualizada
+- [x] O comando nunca imprime a senha
+- [x] E2E `@golden` de login passa com o admin criado pelo comando
+- [x] `bash scripts/validate.sh` passando, cobertura ≥ 80%
+- [x] Documentação da seção 8 atualizada
 
 ## 10. Commits esperados
 
@@ -349,3 +349,49 @@ Execute o plano docs/tasks/008-papeis-e-administrador.md.
 Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o "Prompt 1 — EXECUTAR" etapa por etapa.
 Meu nome, para registrar no plano: <SEU NOME>
 ```
+
+---
+
+## Registro de execução
+
+**Executado por** Heitor Aquino, com Claude Code, em 2026-11-11.
+
+### O que foi feito
+
+- Backend (`plano/008-papeis-e-administrador`): `app/core/roles.py`; literais `"user"`
+  trocados por `ROLE_USER`; `require_admin` em `app/api/deps.py`; `POST /auth/register`
+  com `Depends(require_admin)`; `UserService.create_or_promote_admin` com os privados
+  `_build_user_document` e `_insert_user` (reaproveitados por `register_user`);
+  `app/cli.py` com `create-admin`; fixture `as_admin`; testes novos.
+- Orquestrador: `e2e/support/api.ts` cria o administrador pelo comando; documentação da
+  seção 8 atualizada; DT-008 resolvida.
+- Verificação: `bash scripts/validate.sh` → código 0 (backend 57 testes, cobertura 88,9%;
+  frontend 26 testes; duplicação 1,23%; E2E 2 testes, `@golden` verde). Critérios de aceite
+  conferidos também no ambiente Docker: `create-admin` cria e, repetido, promove; o
+  cadastro responde `401` sem token, `403` para `role="user"` e `200` para admin.
+
+### Desvios do plano
+
+1. **Helper de E2E.** O plano 005 definiu `createAdminUser(request): Promise<TestUser>`
+   (gera e-mail e senha e os devolve). Mantida essa assinatura, como o passo 8 manda; o
+   parâmetro virou `_request`, sem uso. O pacote `e2e` é ESM (`"type": "module"`), onde
+   `__dirname` não existe: a raiz do repositório vem de `import.meta.url`.
+2. **CLI, erros além dos previstos.** Falha de banco durante a operação (`ConnectionError`)
+   também sai com `1`, e conflito de índice (`UserInputError`) com `2`, para o comando nunca
+   terminar com *traceback*.
+3. **Testes extras** (além da seção 7): `test_create_or_promote_admin_translates_unique_constraint`,
+   `test_create_or_promote_admin_raises_when_promoted_user_vanishes`,
+   `test_create_admin_promotes_existing_user`, `test_create_admin_repository_failure_returns_1`
+   e `test_create_admin_conflict_returns_2`.
+4. **Documento extra.** `docs/01-arquitetura.md`, tabela "Segurança — estado atual": a linha
+   "Autorização: inexistente" ficaria falsa.
+
+### Dívidas novas
+
+Nenhuma.
+
+### Observação de ambiente
+
+Na máquina do executor, o `PATH` do Windows tem uma aspa (`"`) sobrando depois de
+`PowerShell`; com ela, o `cmd` aberto pelo `npm` não encontra o `node`. A validação foi
+rodada com o `PATH` limpo só no processo. Não é problema do repositório.
