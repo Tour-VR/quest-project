@@ -30,6 +30,7 @@ escolhe uma ou mais dívidas, e produz um plano em [`../tasks/`](../tasks/README
 | [DT-017](DT-017-revisao-scripts-ssh.md) | ~~Comentários inadequados nos scripts~~ ✅ Resolvida (plano 001) | P3 | Baixo | Orquestrador |
 | [DT-018](DT-018-duplicacao-backend.md) | Duplicação de código no backend (2,5% do Python) | P3 | Baixo | Backend |
 | [DT-019](DT-019-healthcheck-painel.md) | Painel sem healthcheck no Docker Compose | P3 | Baixo | Orquestrador |
+| [DT-020](DT-020-ci-orquestrador-ponteiro-antigo.md) | CI do orquestrador testa o submódulo no ponteiro antigo | P1 | Baixo | Orquestrador |
 
 **Prioridades:** `P0` bloqueia o avanço ou representa risco real · `P1` alta, resolver na
 fase corrente · `P2` média, planejar · `P3` baixa, oportunidade.

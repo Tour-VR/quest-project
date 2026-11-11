@@ -388,7 +388,10 @@ Meu nome, para registrar no plano: <SEU NOME>
 
 ### Dívidas novas
 
-Nenhuma.
+- [DT-020](../implementacoes-futuras/DT-020-ci-orquestrador-ponteiro-antigo.md): a CI do
+  PR do orquestrador roda o E2E com o backend no ponteiro antigo da `main`, onde
+  `app.cli` não existe; o PR fica vermelho até o ponteiro ser atualizado. A decisão de
+  como seguir é do orientador.
 
 ### Observação de ambiente
 
