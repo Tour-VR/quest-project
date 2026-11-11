@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Aberta |
+| **Status** | Parcial — itens 1 a 3 resolvidos em 2026-11-11 pelo [plano 007](../tasks/007-seguranca-backend.md); 4 e 5 abertos |
 | **Prioridade** | P0 |
 | **Esforço** | Médio |
 | **Artefato** | Backend, Frontend |
@@ -73,10 +73,10 @@ acessível a qualquer JavaScript executado na página.
 
 ## Critérios de aceite
 
-- [ ] Aplicação recusa subir em ambiente não-desenvolvimento com `JWT_SECRET_KEY` default
-- [ ] Teste cobrindo a recusa de inicialização
-- [ ] Sexta tentativa de login falha na mesma janela retorna `429`
-- [ ] Teste cobrindo o rate limiting
+- [x] Aplicação recusa subir em ambiente não-desenvolvimento com `JWT_SECRET_KEY` default
+- [x] Teste cobrindo a recusa de inicialização
+- [x] Sexta tentativa de login falha na mesma janela retorna `429`
+- [x] Teste cobrindo o rate limiting
 - [ ] Decisão sobre refresh token registrada em ADR
 
 ## Notas
@@ -84,3 +84,19 @@ acessível a qualquer JavaScript executado na página.
 Os itens 1 e 2 são de esforço trivial e eliminam o risco mais grave — não devem esperar
 pelo restante. Os itens 4 e 5 dependem da decisão de autenticação do dispositivo Quest e
 não devem ser implementados antes dela, sob pena de retrabalho.
+
+## Resolução
+
+Parcialmente resolvida pelo [plano 007](../tasks/007-seguranca-backend.md):
+
+- **Item 1** — `ensure_secure_settings` (`app/core/config.py`) é chamada na primeira linha
+  de `create_app()` e levanta `InsecureConfigurationError` fora de `development` com a
+  chave padrão.
+- **Item 2** — comando de geração da chave no `.env.example` do backend, no da raiz e em
+  [03-artefato-backend.md](../03-artefato-backend.md#configuração).
+- **Item 3** — `LoginRateLimiter` em memória (`app/core/rate_limit.py`): 5 falhas por par
+  IP + identificador em 15 minutos → `429`; sucesso zera. Aplicado só em
+  `POST /auth/login`: `POST /auth/register` passa a exigir administrador no plano 008, e
+  por isso ficou fora.
+
+**Abertos:** itens 4 (refresh token) e 5 (cookie `httpOnly`), que dependem da ADR-0009.
