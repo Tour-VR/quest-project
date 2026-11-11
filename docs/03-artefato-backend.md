@@ -1,7 +1,7 @@
 # 03 — Artefato: Backend (`services/backend`)
 
 > Repositório: `github.com/Tour-VR/backend` · Commit fixado: `d3f1449`
-> Última verificação contra o código: 2026-11-09
+> Última verificação contra o código: 2026-11-11
 
 ## Responsabilidade
 
@@ -39,21 +39,28 @@ services/backend/
 ├── Dockerfile                  python:3.11-slim, expõe uvicorn na 8000
 ├── .env.example
 └── app/
-    ├── main.py                 create_app(): lifespan, CORS, router, rota "/"
+    ├── main.py                 create_app(): fail-fast, logging, lifespan (+ índices),
+    │                           limitador de login, CORS, router, rota "/"
     ├── core/
-    │   ├── config.py           Settings (pydantic-settings) + cors_origins
+    │   ├── config.py           Settings + ensure_secure_settings (fail-fast da chave JWT)
     │   ├── database.py         MongoManager, get_mongo_manager, get_database
+    │   ├── indexes.py          ensure_indexes: índices únicos de `users`
+    │   ├── logging.py          configure_logging (biblioteca padrão, nível por LOG_LEVEL)
+    │   ├── rate_limit.py       LoginRateLimiter (janela deslizante em memória)
     │   └── security.py         hash/verify senha, create/decode JWT, força de senha
     ├── api/
-    │   ├── deps.py             get_user_service, get_current_user, erro 503 padrão
+    │   ├── deps.py             get_user_service, get_current_user, get_login_rate_limiter,
+    │                           erro 503 padrão
     │   └── v1/
     │       ├── router.py       agrega health + auth + users
     │       └── routes/         auth.py · users.py · health.py
     ├── models/user.py          UserModel (dataclass, slots)
     ├── schemas/user.py         9 schemas Pydantic
-    ├── repositories/user_repository.py   5 métodos de acesso à collection `users`
+    ├── repositories/
+    │   ├── errors.py           UniqueConstraintError + duplicated_field (chave duplicada)
+    │   └── user_repository.py  5 métodos de acesso à collection `users`
     └── services/user_service.py          regras de negócio + 4 exceções de domínio
-└── tests/                      conftest.py + 25 testes
+└── tests/                      conftest.py + 43 testes
 ```
 
 ## Endpoints
@@ -88,9 +95,25 @@ collection `users`:
 | `created_at` | `datetime` | `now(utc)` |
 | `updated_at` | `datetime` | `now(utc)` |
 
-⚠️ Não há índice único em `email` nem em `username`. A unicidade é verificada apenas em
-código, no `UserService`, o que deixa uma janela de corrida entre a checagem e a inserção.
-Ver [DT-006](implementacoes-futuras/DT-006-integridade-dados-mongodb.md).
+**Índices.** Criados na subida da aplicação por `ensure_indexes`
+(`app/core/indexes.py:8-18`), chamado no `lifespan` logo após a conexão
+(`app/main.py:35-39`). `create_index` com o mesmo nome e as mesmas opções é idempotente.
+
+| Nome | Campo | Opções |
+|---|---|---|
+| `users_email_unique` | `email` | `unique` |
+| `users_username_unique` | `username` | `unique`, parcial: só documentos com `username` do tipo string — vários usuários sem username (`null`) não colidem |
+
+As verificações prévias do `UserService` (`find_by_email`, `find_by_username`) continuam
+e dão a mensagem amigável no caso comum; o índice é a garantia contra cadastros
+simultâneos. Quando o MongoDB recusa por chave duplicada, o repository levanta
+`UniqueConstraintError(campo)` (`app/repositories/user_repository.py:66-67` e `83-84`) e o
+service traduz para `UserConflictError` (`app/services/user_service.py:79-84` e `136-142`),
+que vira `400`.
+
+Se a criação falhar (por exemplo, base local já com e-mails repetidos), o backend registra
+`warning` "Nao foi possivel criar os indices" e **sobe sem o índice**. No ambiente local,
+`bash scripts/reset-db.sh` limpa a base e resolve.
 
 ## Regras de negócio relevantes
 
@@ -108,6 +131,28 @@ e [app/core/security.py](../services/backend/app/core/security.py):
   existe. Esta uniformidade é intencional; preservá-la em mudanças futuras.
 - **Troca de senha** exige a senha atual e recusa uma nova senha idêntica à atual.
 - **Usuário inativo** é bloqueado no login (`401`) e nas rotas protegidas (`403`).
+- **Limite de tentativas de login.** `LOGIN_MAX_FAILURES` (5) falhas para o mesmo par
+  IP + identificador dentro de `LOGIN_WINDOW_SECONDS` (900 s) bloqueiam novas tentativas
+  com `429`; um login bem-sucedido zera o contador (`app/api/v1/routes/auth.py:46-76`). A
+  chave combina IP **e** identificador porque, atrás do Docker, todos os acessos podem
+  chegar com o mesmo IP. O limitador fica em memória (`app/core/rate_limit.py`), criado
+  em `create_app()` e guardado em `app.state`: **zera quando o backend reinicia**
+  (inclusive no `--reload`) e só vale para uma instância. É preocupação HTTP, por isso
+  fica na rota e não no service.
+
+## Logging
+
+`configure_logging` (`app/core/logging.py`) usa o `logging` da biblioteca padrão, em
+texto, uma linha por evento (`data nível módulo mensagem`), com nível por `LOG_LEVEL`.
+Cada módulo usa `logger = logging.getLogger(__name__)`. Eventos registrados hoje:
+
+| Nível | Onde | Evento |
+|---|---|---|
+| `ERROR` | `app/api/deps.py:38` | Falha de acesso ao banco (o texto técnico fica só no log) |
+| `WARNING` | `app/main.py:39` | Não foi possível criar os índices |
+| `INFO` | `app/api/v1/routes/auth.py:67` | Falha de login, com o identificador digitado |
+
+Senha, hash e token **nunca** são registrados (`07-convencoes.md`, segurança item 4).
 
 ## Configuração
 
@@ -120,14 +165,26 @@ orquestrador, e `MONGODB_URL` e `APP_CORS_ORIGINS` são fixadas no `docker-compo
 |---|---|---|
 | `APP_NAME` | `Meu Backend MVP` | `.env.example` sobrescreve para `OculosVR Backend` |
 | `APP_ENV` | `development` | |
-| `APP_DEBUG` | `true` | ⚠️ em `true`, o detalhe da exceção do banco vaza no `503` |
+| `APP_DEBUG` | `false` | Liga o modo debug do FastAPI. `.env.example` usa `true` (máquina local); em qualquer outro ambiente, `false`. Não afeta o `503`, que nunca traz detalhe técnico |
 | `APP_HOST` / `APP_PORT` | `0.0.0.0` / `8000` | |
 | `APP_CORS_ORIGINS` | `http://localhost:3000,http://127.0.0.1:3000` | lista separada por vírgula |
 | `MONGODB_URL` | `mongodb://localhost:27017` | |
 | `MONGODB_DB` | `meu_backend_db` | `.env.example` usa `oculosvr_db` |
-| `JWT_SECRET_KEY` | `troque_esta_chave` | ⚠️ default inseguro, sobe sem erro — ver DT-007 |
+| `JWT_SECRET_KEY` | `troque_esta_chave` (`DEFAULT_JWT_SECRET_KEY`) | **Fail-fast:** com `APP_ENV` diferente de `development` e esta chave padrão, a aplicação não sobe |
 | `JWT_ALGORITHM` | `HS256` | |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | `60` | |
+| `LOG_LEVEL` | `INFO` | Nível do logging (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |
+| `LOGIN_MAX_FAILURES` | `5` | Falhas de login permitidas na janela antes do `429` |
+| `LOGIN_WINDOW_SECONDS` | `900` | Janela deslizante do limite de login (15 min) |
+
+**Fail-fast da chave JWT.** A primeira linha de `create_app()` chama
+`ensure_secure_settings(settings)` (`app/main.py:24`; regra em
+`app/core/config.py:49-57`). Fora de `development`, com a chave padrão, levanta
+`InsecureConfigurationError` com o comando para gerar uma chave:
+
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
 
 ## Execução
 
@@ -172,7 +229,10 @@ Requer MongoDB acessível. A API sobe sem ele, mas as rotas de domínio responde
 
 | Sintoma | Causa provável |
 |---|---|
-| `503` em todas as rotas de domínio | MongoDB não conectou no `lifespan`; conferir `MONGODB_URL` e `GET /health/` |
+| `503` em todas as rotas de domínio | MongoDB não conectou no `lifespan`; conferir `MONGODB_URL`, `GET /health/` e o log `ERROR app.api.deps` (o detalhe técnico fica só no log) |
+| `InsecureConfigurationError` na subida | `APP_ENV` não é `development` e `JWT_SECRET_KEY` está com a chave padrão; gere uma chave |
+| `429` no login | 5 falhas seguidas para o mesmo e-mail/username; esperar 15 min ou reiniciar o backend |
+| `warning` "Nao foi possivel criar os indices" | Base com e-mails ou usernames repetidos; `bash scripts/reset-db.sh` |
 | Erro de credencial placeholder | A URI contém `<db_password>` ou similar; o `MongoManager` aborta sem tentar a rede |
 | Erro de CORS no painel | A origem do painel não está em `APP_CORS_ORIGINS` |
 | `ModuleNotFoundError` fora do Docker | Virtualenv não ativado ou `pip install -r requirements.txt` não executado |
@@ -212,18 +272,34 @@ pytest --cov=app --cov-fail-under=80      # testes + cobertura mínima de 80%
 Regras e limites em `pyproject.toml`: linha de 100 colunas, complexidade máx. 10, máx. 50
 comandos por função; `PLR2004`, `ARG001` e `PLR0913` desligadas só em `tests/`. O `B008`
 aceita `Depends`/`Query`/etc. do FastAPI como valor padrão. `jose` e `passlib` não têm
-tipos: o mypy ignora só os imports delas. Cobertura atual: 83%.
+tipos: o mypy ignora só os imports delas. Cobertura atual: 87%.
 
-**25 testes**, todos com MongoDB mockado (sem dependência de banco real):
+**43 testes**, todos com MongoDB mockado (sem dependência de banco real):
 
 - `tests/test_health.py` — 6 testes: import do app, rota raiz, preflight CORS,
   health com banco up/down, detecção de placeholder de senha sem chamada de rede.
-- `tests/test_auth_flow.py` — 19 testes: registro (sucesso, e-mail duplicado, username
-  duplicado, senha fraca), login (sucesso, por username, senha errada, usuário inativo),
-  `/users/me` (leitura, atualização, username duplicado, troca de senha, senha atual
-  errada, sem token, token inválido, usuário inativo), e falha de banco em 3 rotas.
+- `tests/test_auth_flow.py` — 24 testes: registro (sucesso, e-mail duplicado, username
+  duplicado, senha fraca, chave duplicada pelo índice), login (sucesso, por username,
+  senha errada, usuário inativo, 6ª falha → `429`, sucesso zera o contador),
+  `/users/me` (leitura, atualização, username duplicado pela checagem e pelo índice,
+  troca de senha, senha atual errada, sem token, token inválido, usuário inativo), falha
+  de banco em 3 rotas (comparando o `detail` por igualdade) e `503` sem detalhe técnico
+  mesmo com `APP_DEBUG=true`.
+- `tests/test_config.py` — 4 testes: fail-fast da chave padrão fora de `development`,
+  chave padrão aceita em `development`, chave própria aceita em produção,
+  `app_debug` padrão `False`.
+- `tests/test_rate_limit.py` — 4 testes do `LoginRateLimiter` com relógio falso: bloqueio
+  após 5 falhas, desbloqueio após a janela, `reset` e `clear`.
+- `tests/test_indexes.py` — 2 testes: nomes e opções dos índices; o `lifespan` sobrevive
+  a falha na criação dos índices.
+- `tests/test_user_repository.py` — 3 testes: `DuplicateKeyError` vira
+  `UniqueConstraintError` na inserção e na atualização; campo `desconhecido` sem
+  `keyPattern`.
 
-Fixtures em `conftest.py`: `mongo_up`, `mongo_down`, `client`.
+Fixtures em `conftest.py`: `mongo_up`, `mongo_down`, `client` e duas `autouse` —
+`fake_ensure_indexes` (substitui `app.main.ensure_indexes`, para o `lifespan` não tentar
+falar com um MongoDB real, já que `mongo_up` deixa `connected=True`) e
+`clear_login_rate_limiter` (cada teste começa sem falhas de login).
 
 **Integração contínua.** Os mesmos quatro comandos rodam no GitHub em todo PR e push na
 `main`, pelo workflow `.github/workflows/ci.yml` (check `CI / validacao`) — ver
