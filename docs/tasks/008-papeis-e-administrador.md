@@ -393,5 +393,5 @@ Nenhuma.
 ### Observação de ambiente
 
 Na máquina do executor, o `PATH` do Windows tem uma aspa (`"`) sobrando depois de
-`PowerShell`; com ela, o `cmd` aberto pelo `npm` não encontra o `node`. A validação foi
+`PowerShell\7`; com ela, o `cmd` aberto pelo `npm` não encontra o `node`. A validação foi
 rodada com o `PATH` limpo só no processo. Não é problema do repositório.
