@@ -106,3 +106,5 @@ os arquivos de `implementacoes-futuras/` relacionados ao tema.
    deve dizer isso explicitamente, não deixar em branco.
 5. **Sem arquivos vazios.** Placeholder sem conteúdo é ruído; não crie o arquivo até
    ter o que escrever.
+
+[link quebrado proposital](arquivo-que-nao-existe.md)
