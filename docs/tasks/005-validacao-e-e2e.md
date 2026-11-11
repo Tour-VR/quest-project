@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em revisão — Heitor Aquino |
+| **Status** | Concluído |
 | **Fase** | 0 — Fundação de qualidade |
 | **Depende de** | 003, 004 |
 | **Dívidas atendidas** | nenhuma (implementa o critério de verificação do plano 000 §7) |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Orquestrador |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | 2026-11-11 por Heitor Aquino |
+| **Executado em** | 2026-11-11 por Heitor Aquino — PR: https://github.com/Tour-VR/quest-project/pull/5 |
 
 ---
 
