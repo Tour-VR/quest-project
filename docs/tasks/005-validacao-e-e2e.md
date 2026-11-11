@@ -400,7 +400,7 @@ docs: documenta a validacao e os testes ponta a ponta
   healthcheck no Docker Compose.
 
 **Observação de ambiente.** Na máquina de execução, o PATH do Windows tinha uma entrada com
-aspas soltas (`C:\Program Files (x86)\PowerShell"`), que impede o `cmd` de achar o
+aspas soltas (`C:\Program Files (x86)\PowerShell\7"`), que impede o `cmd` de achar o
 `node` e quebra `npx` e `npm run`. Não é problema do projeto; a validação foi feita com o
 PATH corrigido apenas na sessão.
 
