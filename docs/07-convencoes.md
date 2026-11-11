@@ -47,6 +47,7 @@ Commits como `dsadsa` ou `ajuda joão` existem no histórico e **não devem se r
 - `main` é a branch de integração de todos os repositórios.
 - Trabalho novo em branch descritiva: `feat/dominio-turismo`, `fix/gitignore-padroes`.
 - Não commitar direto em `main` sem revisão, salvo correções triviais de documentação.
+- PR só é mergeado com `CI / validacao` verde.
 
 ### Trabalhando com submódulos
 

@@ -11,8 +11,8 @@ setup, build e execução do ambiente completo.
 Agregação, documentação e execução do ambiente local já existem: `scripts/setup.sh`
 prepara os submódulos, `scripts/up.sh` sobe o sistema inteiro com Docker Compose (ver
 [Ambiente local](#ambiente-local)) e `scripts/validate.sh` é o portão único de qualidade
-(ver [Validação](#validação)). Ainda não há CI — ver
-[DT-003](implementacoes-futuras/DT-003-pipeline-ci-cd.md).
+(ver [Validação](#validação)). Desde o plano 006, o GitHub roda essas verificações sozinho
+em todo PR e push na `main` (ver [Integração contínua](#integração-contínua)).
 
 ## Conteúdo versionado
 
@@ -21,6 +21,7 @@ quest-project/
 ├── .gitmodules            declaração dos 3 submódulos (URLs HTTPS, branch main)
 ├── .gitignore             padrões globais
 ├── .gitattributes         força fim de linha LF nos scripts .sh
+├── .github/workflows/ci.yml  integração contínua (job `validacao`)
 ├── LICENSE                MIT, "Copyright (c) 2026 Tour VR"
 ├── README.md              porta de entrada do projeto
 ├── CLAUDE.md              instruções de carga de contexto para agentes de IA
@@ -192,6 +193,49 @@ roda só eles.
 no navegador o relatório HTML com os passos e o *trace* de cada teste. Resultados ficam em
 `e2e/test-results/` e `e2e/playwright-report/`, ignorados pelo `.gitignore`.
 
+## Integração contínua
+
+Os três repositórios com código têm `.github/workflows/ci.yml` (plano 006). Todos usam
+`ubuntu-latest`, disparam em `push` na `main` e em `pull_request` para a `main`, e cancelam
+a execução anterior da mesma branch (`concurrency`). O job se chama `validacao`; no PR o
+*status check* aparece como **`CI / validacao`** — é ele que a proteção de branch exige.
+
+| Repositório | O que roda | Limite |
+|---|---|---|
+| `Tour-VR/backend` | Python 3.11 com cache de `pip`; `pip install -r requirements-dev.txt`, `ruff check .`, `ruff format --check .`, `mypy app`, `pytest --cov=app --cov-fail-under=80` | 10 min |
+| `Tour-VR/frontend` | Node 22 com cache de `npm`; `npm ci`, `npm run lint`, `format:check`, `test:coverage`, `build` | 10 min |
+| `Tour-VR/quest-project` | Checkout com submódulos; ponteiros na `main`; links internos; `bash scripts/validate.sh` completo (com E2E) | 30 min |
+
+**Orquestrador, passo a passo** (`.github/workflows/ci.yml`):
+
+1. **Ponteiros dos submódulos pertencem a `main`** — em cada submódulo,
+   `git merge-base --is-ancestor HEAD origin/main`. Reprova ponteiro para commit que não
+   está na `main` do respectivo repositório.
+2. **Links internos da documentação** — `lycheeverse/lychee-action@v2` com `--offline`
+   sobre `docs/**/*.md` e `README.md`. Só confere links para arquivos do próprio
+   repositório; não acessa sites externos.
+3. **Validação completa** — copia `.env.example` para `.env` e roda `bash scripts/validate.sh`
+   com `CI=true` (o Playwright instala o Chromium com `--with-deps`).
+4. Se algo falhar, o relatório do Playwright (`e2e/playwright-report`) fica disponível por
+   7 dias como *artifact* da execução.
+
+Num PR de plano, a CI do orquestrador testa os submódulos nos ponteiros atuais da `main`:
+os ponteiros só mudam no fechamento do plano (protocolo, Prompt 3), e o código novo já foi
+testado na CI do próprio submódulo.
+
+**Como ler uma falha.** No PR, clique em *Details* ao lado de `CI / validacao`; o passo com
+✗ vermelho mostra o log. Pelo terminal:
+
+```bash
+gh pr checks <numero> --watch    # acompanha até terminar
+gh run view --log-failed         # mostra só o log dos passos que falharam
+```
+
+**Proteção de branch.** Configurada manualmente pelo orientador em cada repositório
+(*Settings* → *Branches*): PR obrigatório, check `validacao` obrigatório e branch
+atualizada antes do merge. No orquestrador, os commits de reserva e fechamento de plano
+continuam indo direto para a `main`.
+
 ## Configuração dos submódulos
 
 O `.gitmodules` declara `path`, `url` (HTTPS) e `branch = main` para os três submódulos
@@ -227,5 +271,6 @@ Felipe, lorenz.
 |---|---|
 | `docker-compose.yml` e scripts `up`/`down`/`logs`/`reset-db` | ✅ Existem desde o plano 002 — ver [Ambiente local](#ambiente-local) |
 | Script único de testes/validação | ✅ `scripts/validate.sh` desde o plano 005 — ver [Validação](#validação) |
-| CI/CD (`.github/workflows/`) | 🔴 Não existe — ver DT-003 |
+| CI (`.github/workflows/ci.yml`) | ✅ Existe desde o plano 006 — ver [Integração contínua](#integração-contínua) |
+| Deploy automático (CD) | 🔴 Não existe |
 | Versionamento/release do conjunto | 🔴 Não definido |

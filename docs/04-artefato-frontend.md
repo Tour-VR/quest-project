@@ -165,6 +165,11 @@ npm run dev        # http://localhost:3000
 | `npm run test:coverage` | Testes com cobertura; falha abaixo de 80% em linhas, funções, ramos ou comandos |
 | `npm run clean` | Remove `dist/` |
 
+**Integração contínua.** `npm ci`, `lint`, `format:check`, `test:coverage` e `build` rodam
+no GitHub em todo PR e push na `main`, pelo workflow `.github/workflows/ci.yml` (check
+`CI / validacao`) — ver
+[02-artefato-orquestrador.md](02-artefato-orquestrador.md#integração-contínua).
+
 ### Regras de qualidade
 
 Definidas em `eslint.config.js` (plano 004). Reprovam o `npm run lint`:

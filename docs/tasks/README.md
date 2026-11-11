@@ -97,7 +97,7 @@ reserva o plano com o seu nome antes de começar.
 | [003](003-qualidade-backend.md) | Qualidade do backend | 0 | 002 | — | Concluído |
 | [004](004-qualidade-frontend.md) | Qualidade do frontend | 0 | 002 | DT-013 | Concluído |
 | [005](005-validacao-e-e2e.md) | Validação única e primeiro E2E | 0 | 003, 004 | — | Concluído |
-| [006](006-integracao-continua.md) | Integração contínua | 0 | 005 | DT-003 | Em execução — Heitor Aquino |
+| [006](006-integracao-continua.md) | Integração contínua | 0 | 005 | DT-003 | Em revisão — Heitor Aquino |
 | [007](007-seguranca-backend.md) | Segurança do backend | 1 | 006 | DT-006, DT-007, DT-009 | Validado |
 | [008](008-papeis-e-administrador.md) | Papéis e administrador | 1 | 007 | DT-008 | Validado |
 | [009](009-pontos-de-interesse-backend.md) | Pontos de interesse no backend | 1 | 008 | DT-016 (parcial) | Validado |

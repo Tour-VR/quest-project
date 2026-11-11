@@ -200,6 +200,8 @@ Executado por: <nome do aluno>
 Nenhum. (ou a lista, com justificativa)
 ```
 
+Espere `gh pr checks --watch` ficar verde antes do relatório ao aluno; se falhar, corrija.
+
 ### Etapa 10 — Relatório ao aluno
 
 Termine com uma mensagem curta, em português simples, contendo:
