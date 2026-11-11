@@ -1,6 +1,6 @@
 # 04 — Artefato: Frontend (`services/frontend`)
 
-> Repositório: `github.com/Tour-VR/frontend` · Commit fixado: `c3d6d53`
+> Repositório: `github.com/Tour-VR/frontend` · Commit fixado: `644647e`
 > Última verificação contra o código: 2026-11-10
 
 ## Responsabilidade

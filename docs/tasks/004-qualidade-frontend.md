@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em revisão — Heitor Aquino |
+| **Status** | Concluído |
 | **Fase** | 0 — Fundação de qualidade |
 | **Depende de** | 002 |
 | **Dívidas atendidas** | DT-013 |
