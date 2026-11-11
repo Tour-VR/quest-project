@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validacao:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Ponteiros dos submodulos pertencem a main
+        run: |
+          git submodule foreach --quiet '
+            git fetch --quiet origin main
+            if git merge-base --is-ancestor HEAD origin/main; then
+              echo "[OK] $name"
+            else
+              echo "[ERRO] $name aponta para commit fora da main"; exit 1
+            fi'
+      - name: Links internos da documentacao
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --offline --no-progress 'docs/**/*.md' README.md
+          fail: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Ambiente
+        run: cp .env.example .env
+      - name: Validacao completa
+        run: bash scripts/validate.sh
+        env:
+          CI: "true"
+      - name: Relatorio do Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: e2e/playwright-report
+          retention-days: 7
