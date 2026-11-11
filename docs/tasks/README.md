@@ -96,7 +96,7 @@ reserva o plano com o seu nome antes de começar.
 | [002](002-ambiente-docker-compose.md) | Ambiente Docker Compose | 0 | 001 | DT-002, DT-005, DT-014 | Concluído |
 | [003](003-qualidade-backend.md) | Qualidade do backend | 0 | 002 | — | Concluído |
 | [004](004-qualidade-frontend.md) | Qualidade do frontend | 0 | 002 | DT-013 | Concluído |
-| [005](005-validacao-e-e2e.md) | Validação única e primeiro E2E | 0 | 003, 004 | — | Validado |
+| [005](005-validacao-e-e2e.md) | Validação única e primeiro E2E | 0 | 003, 004 | — | Em execução — Heitor Aquino |
 | [006](006-integracao-continua.md) | Integração contínua | 0 | 005 | DT-003 | Validado |
 | [007](007-seguranca-backend.md) | Segurança do backend | 1 | 006 | DT-006, DT-007, DT-009 | Validado |
 | [008](008-papeis-e-administrador.md) | Papéis e administrador | 1 | 007 | DT-008 | Validado |
