@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Aberta |
+| **Status** | Parcial — itens 4 a 6 resolvidos em 2026-11-11 pelo [plano 007](../tasks/007-seguranca-backend.md); 1 e 2 abertos |
 | **Prioridade** | P2 |
 | **Esforço** | Médio |
 | **Artefato** | Backend |
@@ -63,11 +63,27 @@ O frontend registra erros apenas com `console.error` em `AuthContext.tsx` e `Log
 
 - [ ] Logs em JSON, com nível configurável
 - [ ] Todo log de requisição carrega um `request_id` correlacionável
-- [ ] Resposta `503` não contém detalhe técnico da exceção, independentemente de `APP_DEBUG`
-- [ ] Nenhuma senha, hash ou token aparece em log
-- [ ] Padrão de `app_debug` no código é `False`
+- [x] Resposta `503` não contém detalhe técnico da exceção, independentemente de `APP_DEBUG`
+- [x] Nenhuma senha, hash ou token aparece em log
+- [x] Padrão de `app_debug` no código é `False`
 
 ## Notas
 
 Manter simples: `structlog` ou o `logging` da biblioteca padrão com um formatter JSON são
 suficientes. Não introduzir stack de observabilidade completa em um projeto deste porte.
+
+## Resolução
+
+Parcialmente resolvida pelo [plano 007](../tasks/007-seguranca-backend.md):
+
+- **Logging básico** — `configure_logging` (`app/core/logging.py`) com o `logging` da
+  biblioteca padrão, em texto, nível por `LOG_LEVEL`. Registra falha de banco (`ERROR`),
+  falha na criação de índices (`WARNING`) e falha de login (`INFO`, só o identificador).
+- **Item 4** — nenhuma senha, hash ou token é registrado.
+- **Item 5** — o `503` devolve sempre só `"Banco de dados indisponivel."`; o texto da
+  exceção vai para o log.
+- **Item 6** — `app_debug` padrão `False`; o `.env.example` liga em desenvolvimento.
+
+**Abertos:** item 1 (formato JSON) e item 2 (`request_id`) — não necessários no porte
+atual. O item 3 foi atendido só para falha de login e de banco; registro de cadastro e
+de troca de senha não foi feito.

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Aberta |
+| **Status** | Resolvida — 2026-11-11 — [plano 007](../tasks/007-seguranca-backend.md) |
 | **Prioridade** | P0 |
 | **Esforço** | Baixo |
 | **Artefato** | Backend |
@@ -56,13 +56,23 @@ Nenhuma ocorrência de `create_index` ou `create_indexes` em todo o backend. O `
 
 ## Critérios de aceite
 
-- [ ] Índice único em `email` criado automaticamente na subida da aplicação
-- [ ] Índice único esparso em `username` criado automaticamente
-- [ ] Criação de índice é idempotente e não derruba a aplicação se o banco estiver fora
-- [ ] `DuplicateKeyError` resulta em `400` com mensagem clara, não em `500`
-- [ ] Teste cobrindo o caminho de erro de chave duplicada
+- [x] Índice único em `email` criado automaticamente na subida da aplicação
+- [x] Índice único esparso em `username` criado automaticamente
+- [x] Criação de índice é idempotente e não derruba a aplicação se o banco estiver fora
+- [x] `DuplicateKeyError` resulta em `400` com mensagem clara, não em `500`
+- [x] Teste cobrindo o caminho de erro de chave duplicada
 
 ## Notas
 
 Atenção ao índice de `username`: um índice único simples trataria múltiplos `null` como
 duplicatas e impediria o cadastro de mais de um usuário sem username.
+
+## Resolução
+
+Resolvida pelo [plano 007](../tasks/007-seguranca-backend.md). `ensure_indexes` (`app/core/indexes.py`) cria, no `lifespan`,
+`users_email_unique` (único) e `users_username_unique` (único e parcial, só quando
+`username` é string). Falha na criação vira `warning` no log e a API sobe mesmo assim. O
+repository traduz `DuplicateKeyError` em `UniqueConstraintError(campo)`
+(`app/repositories/errors.py`) e o service em `UserConflictError` → `400`, com a mesma
+mensagem da checagem prévia. Bases antigas com duplicatas: `bash scripts/reset-db.sh`
+(ver [03-artefato-backend.md](../03-artefato-backend.md#modelo-de-dados)).

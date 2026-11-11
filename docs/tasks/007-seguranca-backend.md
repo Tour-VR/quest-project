@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em execução — Heitor Aquino — 2026-11-11 |
+| **Status** | Em revisão — Heitor Aquino |
 | **Fase** | 1 — Domínio do campus (backend) |
 | **Depende de** | 006 |
 | **Dívidas atendidas** | DT-006, DT-007 (itens 1 a 3), DT-009 (itens 4 a 6, parcial) |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Backend · Orquestrador (documentação) |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | — |
+| **Executado em** | 2026-11-11 por Heitor Aquino |
 
 ---
 
@@ -309,33 +309,33 @@ bash scripts/validate.sh
 
 ## 8. Documentação a atualizar
 
-- [ ] `docs/03-artefato-backend.md` — tabela de Configuração (`APP_DEBUG` padrão `false`,
+- [x] `docs/03-artefato-backend.md` — tabela de Configuração (`APP_DEBUG` padrão `false`,
       `LOG_LEVEL`, `LOGIN_MAX_FAILURES`, `LOGIN_WINDOW_SECONDS`, fail-fast da chave);
       remover o aviso "Não há índice único"; descrever os índices; estrutura com
       `indexes.py`, `logging.py`, `rate_limit.py`, `repositories/errors.py`; contagem de
       testes atualizada.
-- [ ] `docs/06-contrato-api.md` — `POST /auth/login`: erro `429`; "Formato de erro": o
+- [x] `docs/06-contrato-api.md` — `POST /auth/login`: erro `429`; "Formato de erro": o
       `503` nunca traz detalhe técnico; `POST /auth/register`: `400` também por índice.
-- [ ] `docs/implementacoes-futuras/DT-006-...md` — `Resolvida` (plano 007).
-- [ ] `docs/implementacoes-futuras/DT-007-...md` — Status `Parcial`: itens 1–3 resolvidos
+- [x] `docs/implementacoes-futuras/DT-006-...md` — `Resolvida` (plano 007).
+- [x] `docs/implementacoes-futuras/DT-007-...md` — Status `Parcial`: itens 1–3 resolvidos
       pelo plano 007; 4 e 5 seguem abertos.
-- [ ] `docs/implementacoes-futuras/DT-009-...md` — Status `Parcial`: itens 4–6 resolvidos
+- [x] `docs/implementacoes-futuras/DT-009-...md` — Status `Parcial`: itens 4–6 resolvidos
       (sem vazamento no `503`, `app_debug=False`, logging básico); 1–2 abertos.
-- [ ] `docs/implementacoes-futuras/README.md` — status das três dívidas.
+- [x] `docs/implementacoes-futuras/README.md` — status das três dívidas.
 
 ## 9. Critérios de aceite
 
-- [ ] Com `APP_ENV=production` e chave padrão, `uvicorn main:app` termina com
+- [x] Com `APP_ENV=production` e chave padrão, `uvicorn main:app` termina com
       `InsecureConfigurationError` e a mensagem de como gerar a chave
-- [ ] `503` nunca contém o texto da exceção, mesmo com `APP_DEBUG=true`
-- [ ] Índices `users_email_unique` e `users_username_unique` existem no MongoDB do compose
+- [x] `503` nunca contém o texto da exceção, mesmo com `APP_DEBUG=true`
+- [x] Índices `users_email_unique` e `users_username_unique` existem no MongoDB do compose
       após `docker compose up` (`docker compose exec mongo mongosh tourvr_db --eval
       "db.users.getIndexes()"`)
-- [ ] A 6ª tentativa de login errada na mesma janela retorna `429`
-- [ ] Chave duplicada na inserção retorna `400`, não `500` nem `503`
-- [ ] Todos os testes da seção 7 passando, cobertura ≥ 80%
-- [ ] `bash scripts/validate.sh` passando
-- [ ] Documentação da seção 8 atualizada
+- [x] A 6ª tentativa de login errada na mesma janela retorna `429`
+- [x] Chave duplicada na inserção retorna `400`, não `500` nem `503`
+- [x] Todos os testes da seção 7 passando, cobertura ≥ 80%
+- [x] `bash scripts/validate.sh` passando
+- [x] Documentação da seção 8 atualizada
 
 ## 10. Commits esperados
 
@@ -397,3 +397,48 @@ Execute o plano docs/tasks/007-seguranca-backend.md.
 Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o "Prompt 1 — EXECUTAR" etapa por etapa.
 Meu nome, para registrar no plano: <SEU NOME>
 ```
+
+---
+
+## Registro de execução
+
+Executado em 2026-11-11 por Heitor Aquino, com Claude Code.
+
+**O que foi feito**
+
+- Passos 1 a 7 no backend, branch `plano/007-seguranca-backend`, um commit por passo
+  (mensagens da seção 10), mais `chore(env)` para o `.env.example` do backend.
+- Testes: **43** (eram 25), cobertura **86,9%**. Ruff, `ruff format`, `mypy --strict` limpos.
+- `bash scripts/validate.sh` completo: `[OK]` backend, frontend, duplicação (1,33%) e e2e
+  (2 testes, incluindo o `@golden` de login); vr-app `[PULADO]`.
+- Critérios conferidos na pilha real do `docker compose`:
+  - `APP_ENV=production` com a chave padrão → `uvicorn main:app` termina com
+    `InsecureConfigurationError` e o comando para gerar a chave;
+  - `db.users.getIndexes()` mostra `users_email_unique` e `users_username_unique`
+    (parcial, `username` do tipo string);
+  - 6 logins errados seguidos: `401 401 401 401 401 429`;
+  - 4 cadastros simultâneos do mesmo e-mail: `200 400 400 400`, 1 documento no banco;
+  - com o `mongo` parado: `503` com `{"detail":"Banco de dados indisponivel."}`, e o
+    detalhe só no log (`ERROR app.api.deps Falha de acesso ao banco: ...`).
+
+**Desvios do plano**
+
+1. **Testes extras, além da seção 7:** `test_clear_removes_all_keys` (rate limit),
+   `test_update_user_translates_duplicate_key` e
+   `test_duplicate_without_key_pattern_reports_unknown_field` (repository) e
+   `test_users_me_update_duplicate_key_returns_400` (auth flow). Cobrem os ramos novos de
+   `update_user_by_email`, `update_current_user` e `duplicated_field`.
+2. **Mensagens de conflito viraram constantes** (`EMAIL_CONFLICT_MESSAGE`,
+   `USERNAME_CONFLICT_MESSAGE` em `user_service.py`), para não repetir a string em quatro
+   lugares. O texto não mudou.
+3. **`docs/01-arquitetura.md`** também foi atualizado (não estava na seção 8): a linha
+   "Rate limiting 🔴 Inexistente" e a frase "respondem `503` com detalhe" ficariam falsas.
+4. **Ordem dos commits** do backend segue a ordem dos passos (o de chave duplicada vem
+   antes do de índices); as mensagens são as da seção 10.
+5. **Ambiente da máquina, não do código:** neste terminal o `npm` não achava o `node` ao
+   rodar scripts e o Docker não achava o `docker-credential-desktop`. O `validate.sh` foi
+   rodado com `npm_config_script_shell` apontando para o Git Bash e com um `DOCKER_CONFIG`
+   temporário sem ajudante de credenciais (só para baixar a imagem pública
+   `node:22-slim`). Nenhum arquivo do projeto mudou por isso.
+
+**Dívidas novas registradas:** nenhuma.

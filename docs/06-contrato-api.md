@@ -2,7 +2,7 @@
 
 > **Fonte de verdade da integração backend ↔ frontend ↔ vr-app.**
 > Extraído por leitura direta do código, não do README do submódulo.
-> Última verificação: 2026-08-20 · Base: `http://127.0.0.1:8000`
+> Última verificação: 2026-11-11 · Base: `http://127.0.0.1:8000`
 
 ## Regra de manutenção
 
@@ -115,7 +115,7 @@ Cria um usuário. Público.
 
 | Erro | Quando |
 |---|---|
-| `400` | e-mail já cadastrado · username já cadastrado |
+| `400` | e-mail já cadastrado · username já cadastrado — pela checagem prévia ou pelo índice único do MongoDB (cadastros simultâneos); a mensagem é a mesma nos dois casos |
 | `422` | senha fraca · e-mail inválido · username fora do padrão (validação Pydantic) |
 | `503` | MongoDB indisponível |
 
@@ -141,10 +141,17 @@ Autentica e emite o token. Público.
 | Erro | Quando |
 |---|---|
 | `401` | credenciais inválidas — **inclui** usuário inexistente, senha errada e conta inativa |
+| `429` | `"Muitas tentativas. Tente novamente em alguns minutos."` — 5 falhas para o mesmo par IP + identificador em 15 minutos |
 | `503` | MongoDB indisponível |
 
 > A mensagem `"Credenciais invalidas."` é idêntica nos três casos, por decisão de
 > segurança: não revela se uma conta existe. **Preservar esse comportamento.**
+
+**Limite de tentativas.** A partir da 6ª tentativa errada com o mesmo identificador
+(campo `email`) e do mesmo IP dentro de 15 minutos (janela deslizante), a resposta é
+`429`, antes mesmo de consultar o banco. Um login bem-sucedido zera o contador. Os
+valores vêm de `LOGIN_MAX_FAILURES` e `LOGIN_WINDOW_SECONDS`. O contador fica em memória
+e zera quando o backend reinicia (`app/api/v1/routes/auth.py:46-76`).
 
 ---
 
@@ -217,10 +224,12 @@ Todos os erros seguem o padrão do FastAPI:
 
 Erros de validação (`422`) usam a estrutura de lista do Pydantic, com `loc`, `msg` e `type`.
 
-**Erro `503`:** produzido por `build_database_http_exception` em `app/api/deps.py`. A
-mensagem base é `"Banco de dados indisponivel."`; com `APP_DEBUG=true`, o detalhe técnico
-da exceção é concatenado — comportamento aceitável em desenvolvimento, inaceitável em
-produção. Ver [DT-009](implementacoes-futuras/DT-009-observabilidade-e-logging.md).
+**Erro `503`:** produzido por `build_database_http_exception` em `app/api/deps.py:35-42`.
+O `detail` é **sempre** exatamente `"Banco de dados indisponivel."` e nunca traz o texto
+da exceção, em qualquer ambiente e mesmo com `APP_DEBUG=true`. O detalhe técnico fica
+apenas no log do servidor (`ERROR app.api.deps Falha de acesso ao banco: ...`).
+
+**Erro `429`:** só em `POST /auth/login`, quando o limite de tentativas é atingido.
 
 ## CORS
 

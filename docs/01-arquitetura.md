@@ -122,8 +122,9 @@ main.tsx → App.tsx (BrowserRouter + AuthProvider + Routes)
 ## Ciclo de vida e resiliência
 
 O backend **sobe mesmo sem MongoDB disponível**. Isso é intencional: o `MongoManager`
-tenta conectar no `lifespan`, guarda o erro, e as rotas de domínio respondem `503` com
-detalhe. O endpoint `/health/` reporta `degraded` em vez de a aplicação inteira falhar.
+tenta conectar no `lifespan`, guarda o erro, e as rotas de domínio respondem `503` (sem
+detalhe técnico na resposta; a causa fica no log do servidor). Se conectar, cria os
+índices únicos de `users`; se a criação falhar, só registra `warning`. O endpoint `/health/` reporta `degraded` em vez de a aplicação inteira falhar.
 Facilita desenvolvimento e diagnóstico.
 
 Placeholders de senha comuns (`<db_password>`, `<password>`, `SUA_SENHA`) são detectados
@@ -140,7 +141,7 @@ antes de qualquer tentativa de rede, com mensagem explícita.
 | CORS | Lista explícita de origens via `APP_CORS_ORIGINS` |
 | Autorização | 🔴 Inexistente — `role` viaja no token mas nenhuma rota o verifica |
 | Refresh token | 🔴 Inexistente |
-| Rate limiting | 🔴 Inexistente |
+| Rate limiting | `POST /auth/login`: 5 falhas por IP + identificador em 15 min → `429`, em memória (plano 007) |
 
 Fragilidades conhecidas estão registradas em
 [implementacoes-futuras/](implementacoes-futuras/README.md).

@@ -16,10 +16,10 @@ escolhe uma ou mais dívidas, e produz um plano em [`../tasks/`](../tasks/README
 | [DT-003](DT-003-pipeline-ci-cd.md) | ~~Ausência de CI em todos os repositórios~~ ✅ Resolvida (plano 006) | P1 | Médio | Todos |
 | [DT-004](DT-004-configuracao-submodulos.md) | ~~Submódulos sem branch declarada~~ ✅ Resolvida (plano 001) | P1 | Baixo | Orquestrador |
 | [DT-005](DT-005-sincronizacao-documentacao-codigo.md) | ~~READMEs dos submódulos divergem do código~~ ✅ Resolvida (plano 002) | P2 | Baixo | Backend, Frontend |
-| [DT-006](DT-006-integridade-dados-mongodb.md) | Sem índices únicos no MongoDB | P0 | Baixo | Backend |
-| [DT-007](DT-007-hardening-autenticacao.md) | Fragilidades na autenticação | P0 | Médio | Backend, Frontend |
+| [DT-006](DT-006-integridade-dados-mongodb.md) | ~~Sem índices únicos no MongoDB~~ ✅ Resolvida (plano 007) | P0 | Baixo | Backend |
+| [DT-007](DT-007-hardening-autenticacao.md) | Fragilidades na autenticação — ⚠️ parcial (plano 007): faltam refresh token e cookie `httpOnly` | P0 | Médio | Backend, Frontend |
 | [DT-008](DT-008-autorizacao-por-papel.md) | Campo `role` sem autorização efetiva | P1 | Médio | Backend |
-| [DT-009](DT-009-observabilidade-e-logging.md) | Sem logging estruturado; vazamento em debug | P2 | Médio | Backend |
+| [DT-009](DT-009-observabilidade-e-logging.md) | Sem logging estruturado; vazamento em debug — ⚠️ parcial (plano 007): faltam JSON e `request_id` | P2 | Médio | Backend |
 | [DT-010](DT-010-tratamento-global-erros-frontend.md) | Sem interceptor de resposta 401 | P1 | Baixo | Frontend |
 | [DT-011](DT-011-dashboard-dados-reais.md) | Dashboard com métricas fictícias | P2 | Médio | Frontend, Backend |
 | [DT-012](DT-012-contrato-api-tipado.md) | Contrato da API duplicado manualmente | P2 | Médio | Frontend, Backend |
