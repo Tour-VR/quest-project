@@ -436,3 +436,14 @@ duplicação, E2E 5/5).
 ### Dívidas novas registradas
 
 Nenhuma.
+
+### CI do PR do orquestrador
+
+O check `CI / validacao` do PR do orquestrador fica **vermelho** só na etapa E2E: a CI testa
+o frontend no ponteiro atual da `main`, que ainda não tem as telas deste plano, e os 3
+cenários novos falham. Backend, frontend e duplicação passam. É a
+[DT-020](../implementacoes-futuras/DT-020-ci-orquestrador-ponteiro-antigo.md), já
+registrada. Localmente, com o frontend da branch do plano, `bash scripts/validate.sh`
+terminou com todas as etapas `[OK]`. Caminho para destravar (opção 1 da DT-020): o
+orientador faz o merge do PR do frontend; depois, uma sessão de correção (Prompt 2) aponta
+o submódulo `services/frontend` para a nova `main` na branch do plano, e a CI fica verde.
