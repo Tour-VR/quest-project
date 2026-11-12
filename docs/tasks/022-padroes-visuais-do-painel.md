@@ -2,14 +2,14 @@
 
 | | |
 |---|---|
-| **Status** | Aguardando validação |
+| **Status** | Em execução — Heitor Aquino — 2026-11-12 |
 | **Fase** | 2 — Painel administrativo |
 | **Depende de** | 011 |
 | **Dívidas atendidas** | nenhuma |
 | **ADRs relacionadas** | nenhuma |
 | **Artefatos afetados** | Frontend |
 | **Planejado em** | 2026-11-12 |
-| **Validado em** | *(pendente)* |
+| **Validado em** | 2026-11-12 por Felipe Santos |
 | **Executado em** | *(pendente)* |
 
 ---
