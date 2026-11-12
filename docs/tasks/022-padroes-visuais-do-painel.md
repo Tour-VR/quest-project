@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Frontend |
 | **Planejado em** | 2026-11-12 |
 | **Validado em** | 2026-11-12 por Felipe Santos |
-| **Executado em** | 2026-11-12 por Heitor Aquino (agente Claude Code) | — PRs: [Tour-VR/frontend#5](https://github.com/Tour-VR/frontend/pull/5), [Tour-VR/quest-project#13](https://github.com/Tour-VR/quest-project/pull/13)
+| **Executado em** | 2026-11-12 por Heitor Aquino (agente Claude Code) — PRs: [Tour-VR/frontend#5](https://github.com/Tour-VR/frontend/pull/5), [Tour-VR/quest-project#13](https://github.com/Tour-VR/quest-project/pull/13) |
 
 ---
 
