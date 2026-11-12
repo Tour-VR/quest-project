@@ -13,7 +13,7 @@ mesmo commit. Divergência aqui é bug, não detalhe.
 
 Apesar de o código estar organizado em `app/api/v1/`, **as rotas não têm prefixo `/api/v1`**.
 O `api_router` é incluído sem prefixo em `app/main.py`, e os caminhos efetivos são
-`/auth/...`, `/users/...` e `/health/`. A estrutura de pastas antecipa o versionamento;
+`/auth/...`, `/users/...`, `/admin/...`, `/public/...` e `/health/`. A estrutura de pastas antecipa o versionamento;
 a exposição HTTP ainda não o adotou.
 
 ## Autenticação
@@ -37,10 +37,10 @@ Não há refresh token. Expirado o prazo, é necessário novo login.
 ### Papéis e autorização
 
 Dois papéis: `admin` e `user` (`app/core/roles.py`). Rotas restritas a administradores
-usam a dependência `require_admin` (`app/api/deps.py:95-106`).
+usam a dependência `require_admin` (`app/api/deps.py:105-115`).
 
 **A autorização usa o papel gravado no banco, não o claim do token.** A cada requisição
-protegida o backend relê o usuário pelo `sub` (`app/api/deps.py:76`); o claim `role` serve
+protegida o backend relê o usuário pelo `sub` (`app/api/deps.py:86`); o claim `role` serve
 só de informação para o cliente. Promover ou rebaixar alguém vale na requisição seguinte.
 
 Erros de uma rota restrita a administradores, nesta ordem:
@@ -54,6 +54,14 @@ Erros de uma rota restrita a administradores, nesta ordem:
 
 A autenticação é verificada antes do corpo: sem token, a resposta é `401` mesmo com
 payload inválido.
+
+## Convenções de prefixo
+
+| Prefixo | Quem acessa | Autorização |
+|---|---|---|
+| `/auth`, `/users/me` | Usuários do painel | Ver cada rota |
+| `/admin/...` | Somente papel `admin` | `require_admin` aplicado ao roteador inteiro; erros na tabela de [Papéis e autorização](#papéis-e-autorização) |
+| `/public/...` | Qualquer pessoa (app do visitante) | **Sem token**; só devolve conteúdo publicado |
 
 ---
 
@@ -239,6 +247,251 @@ Troca a senha do usuário autenticado. Requer Bearer.
 
 ---
 
+## Pontos de interesse
+
+Entidade definida na [ADR-0007](08-decisoes-arquiteturais.md#adr-0007--modelo-de-domínio-do-campus).
+Rotas administrativas em `app/api/v1/routes/admin_points.py`; públicas em
+`app/api/v1/routes/public_points.py`. Limites em `app/schemas/point.py:22-34`.
+
+**Ponto de interesse (resposta administrativa — `PointAdminResponse`)**
+
+```json
+{
+  "id": "6730f1c2a1b2c3d4e5f60718",
+  "slug": "biblioteca-central",
+  "name": "Biblioteca Central",
+  "summary": "Onde ficam os livros e as salas de estudo.",
+  "history": "A biblioteca recebeu este nome em homenagem a ...",
+  "status": "draft",
+  "media": [
+    {
+      "id": "0b6f8c0e-6a8e-4d0b-9a63-2f1c3b1d9e10",
+      "kind": "photo",
+      "url": "https://exemplo.com/fachada.jpg",
+      "caption": "Fachada principal",
+      "alt_text": "Prédio de tijolos com duas portas de vidro"
+    }
+  ],
+  "created_at": "2026-11-11T12:00:00Z",
+  "updated_at": "2026-11-11T12:00:00Z",
+  "published_at": null
+}
+```
+
+**Campos de entrada (`PointCreate`; em `PointUpdate` todos são opcionais)**
+
+| Campo | Obrigatório | Regras |
+|---|---|---|
+| `slug` | sim | 3–60 caracteres; letras minúsculas, números e hifens entre palavras (`^[a-z0-9]+(?:-[a-z0-9]+)*$`); espaços nas pontas removidos e normalizado para minúsculas |
+| `name` | sim | 3–120 caracteres, após remover espaços das pontas |
+| `summary` | sim | 1–280 caracteres |
+| `history` | sim | 1–10000 caracteres |
+| `media` | não | lista com até 20 itens; padrão `[]` |
+| `media[].id` | não | se ausente, o servidor gera um UUID |
+| `media[].kind` | não | apenas `"photo"` (padrão) |
+| `media[].url` | sim | 1–500 caracteres (texto; upload de arquivos chega no plano 013) |
+| `media[].caption` | não | ≤ 200 caracteres |
+| `media[].alt_text` | sim | 1–200 caracteres |
+
+Slug fora do formato responde `422` com a mensagem
+`"Slug deve ter de 3 a 60 caracteres, apenas letras minusculas, numeros e hifens entre palavras (ex.: biblioteca-central)."`.
+
+**Regras de negócio**
+
+- `point_id` é o `ObjectId` do MongoDB em texto. Id malformado responde `404`, igual a
+  inexistente.
+- O `status` só muda por `/publish` e `/unpublish`; o `PUT` não o altera.
+- `published_at` guarda a **primeira** publicação e não é apagado ao despublicar.
+- Depois da primeira publicação o `slug` não muda mais (os QR Codes impressos deixariam
+  de funcionar).
+- Listas ordenadas por `name`, em ordem crescente. Sem paginação.
+
+---
+
+## `GET /admin/points`
+
+Lista os pontos, rascunhos e publicados. Exige admin.
+
+**Query:** `status` opcional, `draft` ou `published`.
+
+**200** — lista de `PointAdminResponse` (pode ser vazia).
+
+| Erro | Quando |
+|---|---|
+| `401` / `403` | ver [Papéis e autorização](#papéis-e-autorização) |
+| `422` | `status` diferente de `draft` e `published` |
+| `503` | MongoDB indisponível |
+
+---
+
+## `POST /admin/points`
+
+Cria um ponto como **rascunho** (`status: "draft"`, `published_at: null`). Exige admin.
+
+**Request**
+```json
+{
+  "slug": "biblioteca-central",
+  "name": "Biblioteca Central",
+  "summary": "Onde ficam os livros e as salas de estudo.",
+  "history": "A biblioteca recebeu este nome em homenagem a ...",
+  "media": [
+    { "url": "https://exemplo.com/fachada.jpg", "caption": "Fachada principal", "alt_text": "Prédio de tijolos" }
+  ]
+}
+```
+
+**201** — `PointAdminResponse` do ponto criado; cada mídia sem `id` recebe um.
+
+| Erro | Quando |
+|---|---|
+| `401` / `403` | ver [Papéis e autorização](#papéis-e-autorização) |
+| `409` | `"Ja existe um ponto com este slug."` — pela checagem prévia ou pelo índice único `points_slug_unique` (cadastros simultâneos) |
+| `422` | slug fora do padrão · campo fora dos limites · mais de 20 mídias |
+| `503` | MongoDB indisponível |
+
+> Ao contrário de usuários (que mantêm `400` por compatibilidade), conflito de slug
+> responde **`409`**.
+
+---
+
+## `GET /admin/points/{point_id}`
+
+Um ponto, rascunho ou publicado. Exige admin.
+
+**200** — `PointAdminResponse`.
+
+| Erro | Quando |
+|---|---|
+| `401` / `403` | ver [Papéis e autorização](#papéis-e-autorização) |
+| `404` | `"Ponto de interesse nao encontrado."` — inexistente ou id malformado |
+| `503` | MongoDB indisponível |
+
+---
+
+## `PUT /admin/points/{point_id}`
+
+Atualiza um ponto. Exige admin.
+
+**Request** — envie só os campos a alterar; campo ausente ou `null` não é alterado. Se
+`media` for enviada, **substitui a lista inteira** (o painel envia a lista completa).
+```json
+{ "name": "Biblioteca Central Prof. Fulano" }
+```
+
+**200** — `PointAdminResponse` atualizado, com `updated_at` novo.
+
+| Erro | Quando |
+|---|---|
+| `400` | `"Nenhum campo valido para atualizacao."` — corpo vazio ou só com `null` |
+| `400` | `"O slug nao pode mudar depois da primeira publicacao, pois os QR Codes impressos deixariam de funcionar."` |
+| `401` / `403` | ver [Papéis e autorização](#papéis-e-autorização) |
+| `404` | `"Ponto de interesse nao encontrado."` |
+| `409` | `"Ja existe um ponto com este slug."` — novo slug já usado por outro ponto |
+| `422` | campo fora dos limites |
+| `503` | MongoDB indisponível |
+
+---
+
+## `DELETE /admin/points/{point_id}`
+
+Remove o ponto. Exige admin.
+
+**204** — sem corpo.
+
+| Erro | Quando |
+|---|---|
+| `401` / `403` | ver [Papéis e autorização](#papéis-e-autorização) |
+| `404` | `"Ponto de interesse nao encontrado."` |
+| `503` | MongoDB indisponível |
+
+---
+
+## `POST /admin/points/{point_id}/publish`
+
+Publica o ponto: `status` passa a `"published"`. Na primeira publicação preenche
+`published_at`; publicar de novo é permitido e mantém a data original (idempotente).
+Exige admin. Sem corpo.
+
+**200** — `PointAdminResponse`.
+
+| Erro | Quando |
+|---|---|
+| `401` / `403` | ver [Papéis e autorização](#papéis-e-autorização) |
+| `404` | `"Ponto de interesse nao encontrado."` |
+| `503` | MongoDB indisponível |
+
+---
+
+## `POST /admin/points/{point_id}/unpublish`
+
+Volta o ponto para rascunho (`status: "draft"`). `published_at` fica intacto, então o slug
+continua travado. Exige admin. Sem corpo.
+
+**200** — `PointAdminResponse`.
+
+| Erro | Quando |
+|---|---|
+| `401` / `403` | ver [Papéis e autorização](#papéis-e-autorização) |
+| `404` | `"Ponto de interesse nao encontrado."` |
+| `503` | MongoDB indisponível |
+
+---
+
+## `GET /public/points`
+
+Lista os pontos **publicados**. Público, sem token. Rascunhos nunca aparecem.
+
+**200** — lista de `PointPublicSummary`:
+```json
+[
+  {
+    "slug": "biblioteca-central",
+    "name": "Biblioteca Central",
+    "summary": "Onde ficam os livros e as salas de estudo.",
+    "cover_url": "https://exemplo.com/fachada.jpg"
+  }
+]
+```
+
+`cover_url` é a `url` da primeira mídia do tipo `photo`, ou `null` se não houver.
+
+| Erro | Quando |
+|---|---|
+| `503` | MongoDB indisponível |
+
+---
+
+## `GET /public/points/{slug}`
+
+Conteúdo de um ponto publicado — é o que o QR Code (`/p/<slug>`) abre. Público, sem token.
+
+**200** — `PointPublicDetail` (sem `id`, `status` nem datas):
+```json
+{
+  "slug": "biblioteca-central",
+  "name": "Biblioteca Central",
+  "summary": "Onde ficam os livros e as salas de estudo.",
+  "history": "A biblioteca recebeu este nome em homenagem a ...",
+  "media": [
+    {
+      "id": "0b6f8c0e-6a8e-4d0b-9a63-2f1c3b1d9e10",
+      "kind": "photo",
+      "url": "https://exemplo.com/fachada.jpg",
+      "caption": "Fachada principal",
+      "alt_text": "Prédio de tijolos com duas portas de vidro"
+    }
+  ]
+}
+```
+
+| Erro | Quando |
+|---|---|
+| `404` | `"Ponto de interesse nao encontrado."` — inexistente **ou rascunho** |
+| `503` | MongoDB indisponível |
+
+---
+
 ## Formato de erro
 
 Todos os erros seguem o padrão do FastAPI:
@@ -249,7 +502,7 @@ Todos os erros seguem o padrão do FastAPI:
 
 Erros de validação (`422`) usam a estrutura de lista do Pydantic, com `loc`, `msg` e `type`.
 
-**Erro `503`:** produzido por `build_database_http_exception` em `app/api/deps.py:35-42`.
+**Erro `503`:** produzido por `build_database_http_exception` em `app/api/deps.py:46-53`.
 O `detail` é **sempre** exatamente `"Banco de dados indisponivel."` e nunca traz o texto
 da exceção, em qualquer ambiente e mesmo com `APP_DEBUG=true`. O detalhe técnico fica
 apenas no log do servidor (`ERROR app.api.deps Falha de acesso ao banco: ...`).
@@ -265,6 +518,6 @@ liberados, e origens restritas à lista de `APP_CORS_ORIGINS`. O frontend em
 ## Endpoints ausentes
 
 O `vr-app` e as telas planejadas do painel exigirão rotas que **ainda não existem**:
-listagem e gestão de usuários, entidades de turismo (roteiros, pontos de interesse,
-mídia), sessões de uso e métricas. Nada disso está implementado. Ver
+listagem e gestão de usuários, upload de mídia (plano 013), panoramas e conexões entre
+pontos (plano 019), registro de visitas e métricas (plano 010). Ver
 [DT-016](implementacoes-futuras/DT-016-modelagem-dominio-turismo.md).

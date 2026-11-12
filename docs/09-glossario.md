@@ -11,9 +11,12 @@ sessões de planejamento e de execução.
 | **OculosVR** | Nome herdado do MVP, ainda presente no código (`oculosvr_db`, `oculosvr-frontend`, `@OculosVR:token`, título do painel). É o **mesmo produto**; a renomeação para TourVR não foi concluída. |
 | **Painel administrativo** | O `frontend` web, usado por administradores para gerenciar o conteúdo — não é a experiência do visitante. |
 | **Aplicação VR** | O `vr-app`, executado no headset. É o produto entregue ao usuário final. Ainda não existe. |
-| **Roteiro** *(proposto)* | Sequência curada de pontos turísticos que compõem uma visita. Ainda não modelado. |
-| **Ponto de interesse** *(proposto)* | Local específico dentro de um roteiro, com mídia e informação associadas. Ainda não modelado. |
-| **Sessão de uso** *(proposto)* | Registro de uma visita realizada por um usuário no headset. Contabilizada de forma fictícia no dashboard atual. |
+| **Ponto de interesse** | Lugar do campus com conteúdo próprio (biblioteca, auditório, cantina...): `slug`, nome, resumo, história e mídias embutidas. Entidade central do domínio (`PointOfInterest`, collection `points`), definida na [ADR-0007](08-decisoes-arquiteturais.md#adr-0007--modelo-de-domínio-do-campus). |
+| **Slug** | Identificador público e legível de um ponto (ex.: `biblioteca-central`): letras minúsculas, números e hifens, único. Vai no QR Code (`/p/<slug>`) e **não muda** depois da primeira publicação. |
+| **Rascunho / Publicado** | Os dois estados (`status`) de um ponto: `draft` (só o painel vê) e `published` (o visitante vê). Muda só pelas ações explícitas de publicar e despublicar. |
+| **Mídia (item)** | Foto embutida num ponto (`MediaItem`: `id`, `kind`, `url`, `caption`, `alt_text`), no máximo 20 por ponto. Hoje só `kind="photo"`; panoramas chegam no plano 019. |
+| **Roteiro** | Sequência curada de pontos que compõem uma visita. **Fora do escopo atual (ADR-0007).** |
+| **Sessão de uso** | Registro de uma visita realizada por um usuário no headset. **Fora do escopo atual (ADR-0007)**; visitas anônimas chegam no plano 010. |
 
 ## Infraestrutura e repositórios
 
@@ -50,7 +53,7 @@ sessões de planejamento e de execução.
 | **Schema × Model** | *Schema* é o contrato HTTP (`app/schemas/`); *Model* é o documento persistido (`app/models/`). Não são a mesma coisa. |
 | **Repository** | Camada que executa queries no MongoDB, sem regra de negócio. |
 | **Service** | Camada de regra de negócio; levanta exceções de domínio, nunca `HTTPException`. |
-| **Exceção de domínio** | `UserInputError`, `UserConflictError`, `AuthenticationError`, `UserNotFoundError` — traduzidas em códigos HTTP pelas rotas. |
+| **Exceção de domínio** | `UserInputError`, `UserConflictError`, `AuthenticationError`, `UserNotFoundError`, `PointInputError`, `PointConflictError`, `PointNotFoundError` — traduzidas em códigos HTTP pelas rotas. |
 | **JWT** | *JSON Web Token* — token assinado que carrega a identidade do usuário. |
 | **bcrypt / passlib** | Algoritmo e biblioteca de hash de senha. |
 

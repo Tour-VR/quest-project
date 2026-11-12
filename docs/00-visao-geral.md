@@ -45,7 +45,7 @@ produto — a experiência de realidade virtual — ainda não foi iniciado.
 | Painel administrativo web (login + dashboard) | ✅ Implementado (dashboard com dados fictícios) |
 | Health check e diagnóstico de banco | ✅ Implementado |
 | **App do visitante (AR e VR)** | 🔴 **Não iniciado** — repositório vazio; stack decidida na ADR-0006 |
-| **Modelo de domínio do campus** | 🔴 **Não existe** — sem Ponto de Interesse, Mídia, Visita |
+| **Modelo de domínio do campus** | 🟡 Parcial — pontos de interesse no backend (ADR-0007); visitas e telas do painel pendentes |
 | Pipeline de mídia 360° / storage | 🔴 Não existe |
 | Orquestração de ambiente (compose, scripts) | 🔴 Não existe |
 | CI/CD | 🔴 Não existe |
