@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Aberta |
+| **Status** | Em andamento |
 | **Prioridade** | **P0** |
 | **Esforço** | **Alto** |
 | **Artefato** | Backend, Frontend, VR App |
@@ -81,7 +81,7 @@ dispositivo. Provavelmente a decisão de maior impacto sobre custo e desempenho.
 Aplicam-se à decomposição, não a uma implementação única:
 
 - [ ] ADR-0006 decidida e registrada
-- [ ] ADR-0007 com o modelo de domínio validado pelo orientador
+- [x] ADR-0007 com o modelo de domínio validado pelo orientador (plano 009)
 - [ ] ADR-0008 com a estratégia de mídia definida
 - [ ] Cada etapa subsequente com seu próprio plano em `docs/tasks/`
 

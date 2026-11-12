@@ -5,10 +5,13 @@
 
 ## Responsabilidade
 
-Expor a API REST do sistema: autenticação de administradores, gestão de perfil de usuário
-e diagnóstico de saúde. É a única camada com acesso ao banco de dados.
+Expor a API REST do sistema: autenticação de administradores, gestão de perfil de usuário,
+cadastro e publicação de **pontos de interesse** do campus (rotas `/admin/points`) e leitura
+pública desses pontos para o app do visitante (rotas `/public/points`), além do diagnóstico
+de saúde. É a única camada com acesso ao banco de dados.
 
-**Ainda não modela nada do domínio de turismo** — apenas usuários.
+O domínio do campus segue a [ADR-0007](08-decisoes-arquiteturais.md#adr-0007--modelo-de-domínio-do-campus).
+Ainda não existem visitas (plano 010), upload de mídia (plano 013) nem panoramas (plano 019).
 
 ## Stack
 
@@ -44,25 +47,33 @@ services/backend/
     ├── core/
     │   ├── config.py           Settings + ensure_secure_settings (fail-fast da chave JWT)
     │   ├── database.py         MongoManager, get_mongo_manager, get_database
-    │   ├── indexes.py          ensure_indexes: índices únicos de `users`
+    │   ├── indexes.py          ensure_indexes: índices únicos de `users` e `points`
     │   ├── logging.py          configure_logging (biblioteca padrão, nível por LOG_LEVEL)
     │   ├── rate_limit.py       LoginRateLimiter (janela deslizante em memória)
     │   ├── roles.py            ROLE_ADMIN, ROLE_USER, VALID_ROLES
     │   └── security.py         hash/verify senha, create/decode JWT, força de senha
     ├── api/
-    │   ├── deps.py             get_user_service, get_current_user, require_admin,
-    │                           get_login_rate_limiter, erro 503 padrão
+    │   ├── deps.py             get_user_service, get_point_service, get_current_user,
+    │                           require_admin, get_login_rate_limiter, erro 503 padrão
     │   └── v1/
-    │       ├── router.py       agrega health + auth + users
-    │       └── routes/         auth.py · users.py · health.py
-    ├── models/user.py          UserModel (dataclass, slots)
-    ├── schemas/user.py         9 schemas Pydantic
+    │       ├── router.py       agrega health + auth + users + admin_points + public_points
+    │       └── routes/         auth.py · users.py · health.py ·
+    │                           admin_points.py · public_points.py
+    ├── models/
+    │   ├── user.py             UserModel (dataclass, slots)
+    │   └── point.py            PointModel + constantes de status e tipo de mídia
+    ├── schemas/
+    │   ├── user.py             9 schemas Pydantic
+    │   └── point.py            7 schemas + limites do contrato (fonte única)
     ├── repositories/
     │   ├── errors.py           UniqueConstraintError + duplicated_field (chave duplicada)
-    │   └── user_repository.py  5 métodos de acesso à collection `users`
-    ├── services/user_service.py          regras de negócio + 4 exceções de domínio
+    │   ├── user_repository.py  5 métodos de acesso à collection `users`
+    │   └── point_repository.py 8 métodos de acesso à collection `points`
+    ├── services/
+    │   ├── user_service.py     regras de usuário + 4 exceções de domínio
+    │   └── point_service.py    regras de publicação e slug + 3 exceções de domínio
     └── cli.py                  comando `create-admin` (python -m app.cli)
-└── tests/                      conftest.py + 57 testes
+└── tests/                      conftest.py + 105 testes
 ```
 
 ## Endpoints
@@ -79,6 +90,19 @@ Contrato completo, com payloads e códigos de erro, em
 | `GET` | `/users/me` | Bearer |
 | `PUT` | `/users/me` | Bearer |
 | `PUT` | `/users/me/password` | Bearer |
+| `GET` | `/admin/points` | Bearer (admin) |
+| `POST` | `/admin/points` | Bearer (admin) |
+| `GET` | `/admin/points/{point_id}` | Bearer (admin) |
+| `PUT` | `/admin/points/{point_id}` | Bearer (admin) |
+| `DELETE` | `/admin/points/{point_id}` | Bearer (admin) |
+| `POST` | `/admin/points/{point_id}/publish` | Bearer (admin) |
+| `POST` | `/admin/points/{point_id}/unpublish` | Bearer (admin) |
+| `GET` | `/public/points` | — |
+| `GET` | `/public/points/{slug}` | — |
+
+Prefixos: `/admin/...` exige papel `admin` (o roteador inteiro depende de `require_admin`,
+`app/api/v1/routes/admin_points.py:18-22`); `/public/...` não pede token e só devolve
+pontos publicados.
 
 ## Modelo de dados
 
@@ -97,14 +121,34 @@ collection `users`:
 | `created_at` | `datetime` | `now(utc)` |
 | `updated_at` | `datetime` | `now(utc)` |
 
+`PointModel` (`app/models/point.py`) — documento
+da collection `points` ([ADR-0007](08-decisoes-arquiteturais.md#adr-0007--modelo-de-domínio-do-campus)):
+
+| Campo | Tipo | Padrão |
+|---|---|---|
+| `_id` | `ObjectId` | gerado pelo MongoDB; exposto como `id` (texto) nas rotas admin |
+| `slug` | `str` | — (único; vai no QR Code) |
+| `name` | `str` | — |
+| `summary` | `str` | — |
+| `history` | `str` | — |
+| `status` | `str` | `"draft"` (`POINT_STATUS_DRAFT`) ou `"published"` |
+| `media` | `list[dict]` | `[]` — itens `{"id", "kind": "photo", "url", "caption", "alt_text"}`, máx. 20 |
+| `created_at` | `datetime` | `now(utc)` |
+| `updated_at` | `datetime` | `now(utc)` |
+| `published_at` | `datetime \| None` | `None` — data da **primeira** publicação |
+
+Os limites de cada campo são constantes de `app/schemas/point.py:22-34` (fonte única,
+espelhada pelo painel no plano 012).
+
 **Índices.** Criados na subida da aplicação por `ensure_indexes`
-(`app/core/indexes.py:8-18`), chamado no `lifespan` logo após a conexão
+(`app/core/indexes.py:8-20`), chamado no `lifespan` logo após a conexão
 (`app/main.py:35-39`). `create_index` com o mesmo nome e as mesmas opções é idempotente.
 
 | Nome | Campo | Opções |
 |---|---|---|
 | `users_email_unique` | `email` | `unique` |
 | `users_username_unique` | `username` | `unique`, parcial: só documentos com `username` do tipo string — vários usuários sem username (`null`) não colidem |
+| `points_slug_unique` | `slug` (collection `points`) | `unique` |
 
 As verificações prévias do `UserService` (`find_by_email`, `find_by_username`) continuam
 e dão a mensagem amigável no caso comum; o índice é a garantia contra cadastros
@@ -112,6 +156,10 @@ simultâneos. Quando o MongoDB recusa por chave duplicada, o repository levanta
 `UniqueConstraintError(campo)` (`app/repositories/user_repository.py:66-67` e `83-84`) e o
 service traduz para `UserConflictError` (`app/services/user_service.py:106-114` e `165-171`),
 que vira `400`.
+
+Em pontos, o mesmo padrão: `PointService` checa o slug antes (`find_by_slug`) e, se o
+índice recusar, `UniqueConstraintError` vira `PointConflictError` → `409`
+(`app/services/point_service.py:132-147` e `116-123`).
 
 Se a criação falhar (por exemplo, base local já com e-mails repetidos), o backend registra
 `warning` "Nao foi possivel criar os indices" e **sobe sem o índice**. No ambiente local,
@@ -142,22 +190,50 @@ e [app/core/security.py](../services/backend/app/core/security.py):
   (inclusive no `--reload`) e só vale para uma instância. É preocupação HTTP, por isso
   fica na rota e não no service.
 
+### Pontos de interesse
+
+Implementadas em `app/services/point_service.py`.
+Exceções de domínio: `PointInputError` (→ `400`), `PointConflictError` (→ `409`) e
+`PointNotFoundError` (→ `404`); a tradução para HTTP fica em `_to_http_error`
+(`app/api/v1/routes/admin_points.py:33-38`).
+
+- **Slug normalizado:** espaços das pontas removidos e minúsculas; fora do padrão
+  `^[a-z0-9]+(?:-[a-z0-9]+)*$` ou dos limites (3–60) a validação responde `422`.
+- **Slug único:** checagem prévia + índice `points_slug_unique`; conflito responde `409`.
+- **Slug imutável depois da primeira publicação.** Se `published_at` está preenchido, um
+  `PUT` com slug diferente responde `400` (`app/services/point_service.py:165-170`) — os
+  QR Codes impressos deixariam de funcionar. Vale mesmo depois de despublicar.
+- **Publicação explícita.** `status` só muda por `/publish` e `/unpublish`, nunca pelo
+  `PUT`. Publicar preenche `published_at` só na primeira vez
+  (`app/services/point_service.py:176-182`); despublicar mantém a data.
+- **Rascunho é invisível ao visitante.** As rotas `/public/points` consultam só
+  `status="published"` (`app/repositories/point_repository.py`, `list_published` e
+  `find_published_by_slug`); rascunho responde `404`.
+- **`point_id` malformado** responde `404`, igual a inexistente; o repository nem consulta
+  o banco.
+- **Atualização parcial:** campo ausente ou `null` não é alterado; corpo vazio responde
+  `400`. A lista `media`, quando enviada, substitui a anterior inteira.
+- **Mídia:** itens sem `id` recebem um UUID gerado pelo servidor; apenas `kind="photo"`.
+- **Capa pública:** `cover_url` é a `url` da primeira mídia `photo`, ou `null`.
+- **Ordem:** listas por `name` crescente, sem paginação.
+
 ## Papéis
 
 Dois papéis, definidos em `app/core/roles.py`: `admin` (`ROLE_ADMIN`) e `user`
 (`ROLE_USER`). Todo usuário novo nasce `user`; só o comando `create-admin` cria ou
 promove administradores.
 
-- **`require_admin`** (`app/api/deps.py:95-106`) é a dependência que restringe uma rota ao
+- **`require_admin`** (`app/api/deps.py:105-115`) é a dependência que restringe uma rota ao
   papel `admin`. Ela depende de `get_current_user`, então a ordem dos erros é: sem token
   `401` → token inválido `401` → usuário inativo `403 "Usuario inativo."` → papel
   insuficiente `403 "Acesso restrito a administradores."`.
 - **O papel vem do banco**, não do token. `get_current_user` lê o usuário com
-  `find_by_email` a cada requisição (`app/api/deps.py:76`) e `require_admin` confere
+  `find_by_email` a cada requisição (`app/api/deps.py:86`) e `require_admin` confere
   `current_user["role"]`. Mudar o papel no banco vale na próxima requisição, sem esperar o
   token expirar. O claim `role` continua no token só como informação para o cliente.
-- **Rotas que exigem admin hoje:** `POST /auth/register` (`app/api/v1/routes/auth.py:29-32`).
-  As rotas `/admin/...` dos próximos planos usam a mesma dependência.
+- **Rotas que exigem admin hoje:** `POST /auth/register` (`app/api/v1/routes/auth.py:29-32`)
+  e todas as rotas `/admin/points` (dependência no roteador,
+  `app/api/v1/routes/admin_points.py:18-22`).
 
 ### Primeiro administrador
 
@@ -190,7 +266,7 @@ Cada módulo usa `logger = logging.getLogger(__name__)`. Eventos registrados hoj
 
 | Nível | Onde | Evento |
 |---|---|---|
-| `ERROR` | `app/api/deps.py:38` | Falha de acesso ao banco (o texto técnico fica só no log) |
+| `ERROR` | `app/api/deps.py:49` | Falha de acesso ao banco (o texto técnico fica só no log) |
 | `WARNING` | `app/main.py:39` | Não foi possível criar os índices |
 | `INFO` | `app/api/v1/routes/auth.py:67` | Falha de login, com o identificador digitado |
 
@@ -286,7 +362,8 @@ Ordem sugerida para entender o backend: `app/core/config.py` → `app/core/datab
 `app/core/security.py` → `app/models/user.py` e `app/schemas/user.py` →
 `app/repositories/user_repository.py` → `app/services/user_service.py` →
 `app/api/deps.py` → `app/api/v1/routes/` → `app/cli.py` → `tests/` (documentação executável dos
-comportamentos esperados).
+comportamentos esperados). Para pontos de interesse, a mesma sequência com `point.py`,
+`point_repository.py`, `point_service.py`, `admin_points.py` e `public_points.py`.
 
 ## Ambiente de desenvolvimento
 
@@ -315,9 +392,9 @@ pytest --cov=app --cov-fail-under=80      # testes + cobertura mínima de 80%
 Regras e limites em `pyproject.toml`: linha de 100 colunas, complexidade máx. 10, máx. 50
 comandos por função; `PLR2004`, `ARG001` e `PLR0913` desligadas só em `tests/`. O `B008`
 aceita `Depends`/`Query`/etc. do FastAPI como valor padrão. `jose` e `passlib` não têm
-tipos: o mypy ignora só os imports delas. Cobertura atual: 89%.
+tipos: o mypy ignora só os imports delas. Cobertura atual: 93%.
 
-**57 testes**, todos com MongoDB mockado (sem dependência de banco real):
+**105 testes**, todos com MongoDB mockado (sem dependência de banco real):
 
 - `tests/test_health.py` — 6 testes: import do app, rota raiz, preflight CORS,
   health com banco up/down, detecção de placeholder de senha sem chamada de rede.
@@ -334,8 +411,8 @@ tipos: o mypy ignora só os imports delas. Cobertura atual: 89%.
   `app_debug` padrão `False`.
 - `tests/test_rate_limit.py` — 4 testes do `LoginRateLimiter` com relógio falso: bloqueio
   após 5 falhas, desbloqueio após a janela, `reset` e `clear`.
-- `tests/test_indexes.py` — 2 testes: nomes e opções dos índices; o `lifespan` sobrevive
-  a falha na criação dos índices.
+- `tests/test_indexes.py` — 3 testes: nomes e opções dos índices de `users` e de
+  `points`; o `lifespan` sobrevive a falha na criação dos índices.
 - `tests/test_user_repository.py` — 3 testes: `DuplicateKeyError` vira
   `UniqueConstraintError` na inserção e na atualização; campo `desconhecido` sem
   `keyPattern`.
@@ -344,6 +421,19 @@ tipos: o mypy ignora só os imports delas. Cobertura atual: 89%.
   `UserConflictError`, usuário que some durante a promoção.
 - `tests/test_cli.py` — 6 testes do `create-admin`: cria e imprime o e-mail sem a senha,
   promove, senha fraca → `2`, banco fora → `1`, falha no repository → `1`, conflito → `2`.
+- `tests/test_admin_points.py` — 32 testes (com `parametrize`): criação (slug normalizado,
+  slug inválido `422`, campo não texto `422`, slug duplicado pela checagem e pelo índice
+  `409`, banco fora `503`), listagem com filtro e filtro inválido `422`, leitura e `404`,
+  atualização (nome, mídia com ids gerados, corpo vazio `400`, slug travado depois de
+  publicar `400`, slug livre em rascunho, slug de outro ponto `409`, índice `409`, ponto
+  removido no meio `404`), remoção `204`/`404`, publicação que só preenche `published_at`
+  uma vez, despublicação que mantém a data, `503` em cinco rotas, `401` sem token em
+  quatro rotas e `403` para papel `user`.
+- `tests/test_public_points.py` — 5 testes: lista só com os campos do resumo e `cover_url`
+  da primeira foto, detalhe sem `id`/`status`/datas, rascunho `404` e `503` nas duas rotas.
+- `tests/test_point_repository.py` — 10 testes com collection falsa: id malformado não
+  toca o banco, filtros e ordenação por `name`, retornos de escrita, `DuplicateKeyError`
+  vira `UniqueConstraintError`, `PyMongoError` vira `ConnectionError`, banco ausente.
 
 Fixtures em `conftest.py`: `mongo_up`, `mongo_down`, `client`, `as_admin` e duas
 `autouse`. `as_admin` registra `app.dependency_overrides[require_admin]` devolvendo um

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em execução — Heitor Aquino — 2026-11-11 |
+| **Status** | Em revisão — Heitor Aquino |
 | **Fase** | 1 — Domínio do campus (backend) |
 | **Depende de** | 008 |
 | **Dívidas atendidas** | DT-016 (parcial: modelo e CRUD) |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Backend · Orquestrador (documentação) |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | — |
+| **Executado em** | 2026-11-11 por Heitor Aquino |
 
 ---
 
@@ -353,32 +353,32 @@ bash scripts/validate.sh
 
 ## 8. Documentação a atualizar
 
-- [ ] `docs/08-decisoes-arquiteturais.md` — ADR-0007 (passo 6)
-- [ ] `docs/06-contrato-api.md` — uma seção por rota nova (request, resposta de exemplo,
+- [x] `docs/08-decisoes-arquiteturais.md` — ADR-0007 (passo 6)
+- [x] `docs/06-contrato-api.md` — uma seção por rota nova (request, resposta de exemplo,
       tabela de erros), no formato das existentes; nova seção "Convenções de prefixo"
       (`/admin` exige admin, `/public` sem token); remover pontos de interesse da lista
       "Endpoints ausentes"
-- [ ] `docs/03-artefato-backend.md` — estrutura, endpoints, modelo de dados de `points`,
+- [x] `docs/03-artefato-backend.md` — estrutura, endpoints, modelo de dados de `points`,
       regras de negócio (slug imutável após publicar, rascunho invisível)
-- [ ] `docs/09-glossario.md` — "Ponto de interesse" deixa de ser *(proposto)* e passa a ter
+- [x] `docs/09-glossario.md` — "Ponto de interesse" deixa de ser *(proposto)* e passa a ter
       a definição da ADR-0007; novos termos **Slug**, **Rascunho / Publicado**, **Mídia
       (item)**; "Roteiro" e "Sessão de uso": marcar como "fora do escopo atual (ADR-0007)"
-- [ ] `docs/00-visao-geral.md` — tabela "Estado atual": modelo de domínio do campus
+- [x] `docs/00-visao-geral.md` — tabela "Estado atual": modelo de domínio do campus
       "🟡 Parcial — pontos de interesse no backend"
-- [ ] `docs/implementacoes-futuras/DT-016-...md` — Status `Em andamento`; critério
+- [x] `docs/implementacoes-futuras/DT-016-...md` — Status `Em andamento`; critério
       "ADR-0007" marcado
 
 ## 9. Critérios de aceite
 
-- [ ] As 7 rotas admin e as 2 públicas respondem conforme o contrato, com os códigos de
+- [x] As 7 rotas admin e as 2 públicas respondem conforme o contrato, com os códigos de
       erro da seção 5
-- [ ] Índice `points_slug_unique` criado na subida
-- [ ] Slug imutável após a primeira publicação
-- [ ] Rascunho nunca aparece nas rotas públicas
-- [ ] Nenhuma rota pula camada (rota → service → repository)
-- [ ] ADR-0007 registrada e indexada
-- [ ] `bash scripts/validate.sh` passando, cobertura ≥ 80%
-- [ ] Documentação da seção 8 atualizada
+- [x] Índice `points_slug_unique` criado na subida
+- [x] Slug imutável após a primeira publicação
+- [x] Rascunho nunca aparece nas rotas públicas
+- [x] Nenhuma rota pula camada (rota → service → repository)
+- [x] ADR-0007 registrada e indexada
+- [x] `bash scripts/validate.sh` passando, cobertura ≥ 80%
+- [x] Documentação da seção 8 atualizada
 
 ## 10. Commits esperados
 
@@ -451,3 +451,62 @@ Execute o plano docs/tasks/009-pontos-de-interesse-backend.md.
 Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o "Prompt 1 — EXECUTAR" etapa por etapa.
 Meu nome, para registrar no plano: <SEU NOME>
 ```
+
+---
+
+## Registro de execução
+
+**Executado por** Heitor Aquino, com Claude Code, em 2026-11-11.
+
+### O que foi feito
+
+- Backend (`plano/009-pontos-de-interesse-backend`), seis commits na ordem da seção 10:
+  `app/models/point.py`; `app/schemas/point.py` (constantes documentadas no topo e 7
+  schemas); `app/repositories/point_repository.py` e índice `points_slug_unique` em
+  `app/core/indexes.py`; `app/services/point_service.py` (3 exceções, 4 mensagens,
+  serializadores estáticos); `get_point_service` em `app/api/deps.py`;
+  `app/api/v1/routes/admin_points.py` (7 rotas, `_to_http_error`) e
+  `app/api/v1/routes/public_points.py` (2 rotas), incluídos em `app/api/v1/router.py`;
+  testes em `tests/test_admin_points.py`, `tests/test_public_points.py`,
+  `tests/test_point_repository.py` e um teste novo em `tests/test_indexes.py`.
+- Orquestrador: ADR-0007 registrada e indexada; documentação da seção 8 atualizada
+  (contrato da API, backend, glossário, visão geral, DT-016 `Em andamento`).
+- Verificação: `bash scripts/validate.sh` → código 0 (backend 105 testes, cobertura
+  92,7%; frontend 26 testes; duplicação 0,92%, sem clones no código novo; E2E 2 testes,
+  `@golden` verde). Critérios conferidos também na API real em Docker: criar `201`, slug
+  repetido `409`, sem token `401`, rascunho no público `404`, publicar `200`, público
+  com só `slug/name/summary/history/media`, `cover_url` da primeira foto, trocar slug
+  publicado `400`, despublicar mantém `published_at`, id malformado `404`, apagar `204`;
+  índice `points_slug_unique` presente na collection `points`.
+
+### Desvios do plano
+
+1. **Captura de exceções nas rotas admin.** O plano pede que cada rota capture
+   `(PointNotFoundError, PointConflictError, PointInputError, ConnectionError)`. A tupla
+   virou a constante `_HANDLED_ERRORS` do módulo, usada nas sete rotas — mesmo
+   comportamento, sem repetir a lista.
+2. **`strip` antes da validação.** Os validadores de texto rodam em `mode="before"` (para
+   o limite mínimo valer depois do `strip`) e só tratam `str`; outro tipo segue para o
+   Pydantic e vira `422`, não `500`. Coberto por
+   `test_create_point_non_text_field_returns_422`.
+3. **Mídia no `PUT`.** `model_dump(exclude_none=True)` também removeria `caption: null` e
+   `id: null` de dentro de cada mídia. Quando `media` vem no corpo, a lista é remontada a
+   partir do schema (todas as chaves, `id` gerado quando ausente), como no `POST`.
+4. **Testes extras** (além da seção 7): `test_get_point_success`,
+   `test_update_point_replaces_media_and_generates_ids`,
+   `test_update_slug_used_by_other_point_returns_409`,
+   `test_update_point_duplicate_key_returns_409`,
+   `test_update_point_removed_meanwhile_returns_404`,
+   `test_create_point_non_text_field_returns_422`,
+   `test_ensure_indexes_creates_point_slug_index` e mais casos em
+   `tests/test_point_repository.py` (filtros, ordenação, tradução de erros).
+
+### Dívidas novas registradas
+
+Nenhuma.
+
+### Observação de ambiente
+
+Como no plano 008: na máquina do executor, o `PATH` do Windows tem uma aspa (`"`) sobrando
+depois de `PowerShell\7`, e o `cmd` aberto pelo `npm` deixa de encontrar o `node`. A
+validação foi rodada com o `PATH` limpo só no processo. Não é problema do repositório.
