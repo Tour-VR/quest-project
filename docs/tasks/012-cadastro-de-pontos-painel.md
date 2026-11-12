@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Validado |
+| **Status** | Em execução — Heitor Aquino — 2026-11-12 |
 | **Fase** | 2 — Painel administrativo |
 | **Depende de** | 009, 011 |
 | **Dívidas atendidas** | DT-016 (parcial — gestão do domínio no painel) |
