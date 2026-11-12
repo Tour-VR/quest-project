@@ -447,3 +447,8 @@ registrada. Localmente, com o frontend da branch do plano, `bash scripts/validat
 terminou com todas as etapas `[OK]`. Caminho para destravar (opção 1 da DT-020): o
 orientador faz o merge do PR do frontend; depois, uma sessão de correção (Prompt 2) aponta
 o submódulo `services/frontend` para a nova `main` na branch do plano, e a CI fica verde.
+
+**Correção (2026-11-12, Prompt 2).** Tour-VR/frontend#4 foi mergeado (`9a2427c`). O
+ponteiro de `services/frontend` foi atualizado para esse commit na branch do plano, como a
+opção 1 da DT-020 prevê. A CI do orquestrador passa a testar o frontend novo. Com isso, o
+Prompt 3 não precisa mais atualizar o ponteiro do frontend para este plano.
