@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em execução — Heitor Aquino — 2026-11-11 |
+| **Status** | Em revisão — Heitor Aquino |
 | **Fase** | 1 — Domínio do campus (backend) |
 | **Depende de** | 009 |
 | **Dívidas atendidas** | DT-011 (parte do backend: endpoint de métricas) · DT-016 (parcial: visitas) |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Backend · Orquestrador (documentação) |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | — |
+| **Executado em** | 2026-11-11 por Heitor Aquino |
 
 ---
 
@@ -291,31 +291,31 @@ bash scripts/validate.sh
 
 ## 8. Documentação a atualizar
 
-- [ ] `docs/06-contrato-api.md` — seções `POST /public/points/{slug}/visits` e
+- [x] `docs/06-contrato-api.md` — seções `POST /public/points/{slug}/visits` e
       `GET /admin/metrics/overview` (exemplo de corpo, tabela de erros); remover "sessões
       de uso e métricas" de "Endpoints ausentes"
-- [ ] `docs/03-artefato-backend.md` — estrutura (novos módulos), endpoints, modelo da
+- [x] `docs/03-artefato-backend.md` — estrutura (novos módulos), endpoints, modelo da
       collection `visits` com os índices, nota de privacidade (sem IP, sem navegador)
-- [ ] `docs/09-glossario.md` — termo **Visita**: registro anônimo de abertura de um ponto,
+- [x] `docs/09-glossario.md` — termo **Visita**: registro anônimo de abertura de um ponto,
       com modo `ar` ou `vr`; ajustar "Sessão de uso" para apontar para "Visita"
-- [ ] `docs/implementacoes-futuras/DT-011-...md` — Status `Parcial`: endpoint de métricas
+- [x] `docs/implementacoes-futuras/DT-011-...md` — Status `Parcial`: endpoint de métricas
       pronto (plano 010); consumo no painel pendente (plano 015)
-- [ ] `docs/implementacoes-futuras/DT-016-...md` — registrar o avanço: visitas
-- [ ] Nova dívida em `docs/implementacoes-futuras/` (próximo número livre, seguindo
+- [x] `docs/implementacoes-futuras/DT-016-...md` — registrar o avanço: visitas
+- [x] Nova dívida em `docs/implementacoes-futuras/` (próximo número livre, seguindo
       `_template.md`): "Registro de visitas sem limite de taxa" — qualquer pessoa pode
       inflar as métricas chamando a rota pública em laço; proposta: limite por IP em
       memória como o do login (plano 007). Atualizar o índice `README.md` da pasta
 
 ## 9. Critérios de aceite
 
-- [ ] `POST /public/points/{slug}/visits` com `{"mode": "ar"}` grava a visita e responde
+- [x] `POST /public/points/{slug}/visits` com `{"mode": "ar"}` grava a visita e responde
       `201 {"recorded": true}`
-- [ ] Rascunho ou slug inexistente responde `404` e não grava nada
-- [ ] O documento salvo contém apenas `point_slug`, `mode` e `visited_at`
-- [ ] `GET /admin/metrics/overview` responde no formato do contrato e exige admin
-- [ ] Índices `visits_point_slug` e `visits_visited_at` criados na subida
-- [ ] `bash scripts/validate.sh` passando, cobertura ≥ 80%
-- [ ] Documentação da seção 8 atualizada, incluindo a dívida nova
+- [x] Rascunho ou slug inexistente responde `404` e não grava nada
+- [x] O documento salvo contém apenas `point_slug`, `mode` e `visited_at`
+- [x] `GET /admin/metrics/overview` responde no formato do contrato e exige admin
+- [x] Índices `visits_point_slug` e `visits_visited_at` criados na subida
+- [x] `bash scripts/validate.sh` passando, cobertura ≥ 80%
+- [x] Documentação da seção 8 atualizada, incluindo a dívida nova
 
 ## 10. Commits esperados
 
@@ -358,6 +358,46 @@ docs: registra divida de limite de taxa no registro de visitas
 5. Em `GET /admin/metrics/overview`, **Execute**. Deve mostrar `visits_total: 4`,
    `visits_by_mode` com `ar: 3` e `vr: 1`, e a Biblioteca Central em `top_points`.
 6. Tente registrar visita com `slug` = `nao-existe`: resposta `404`.
+
+---
+
+## Registro de execução
+
+**Executado por:** Heitor Aquino, com agente de IA, em 2026-11-11.
+
+**O que foi feito**
+
+- Backend (`services/backend`, branch `plano/010-visitas-e-metricas-backend`):
+  `VisitModel`, schemas `VisitCreate`/`VisitRecordedResponse` e de métricas,
+  `VisitRepository` (contagens e pipelines `$group`), `count_points` e
+  `find_names_by_slugs` no `PointRepository`, índices `visits_point_slug` e
+  `visits_visited_at`, `VisitService` e `MetricsService`, dependências
+  `get_visit_service`/`get_metrics_service`, rota `POST /public/points/{slug}/visits` e
+  roteador `/admin/metrics` com `GET /overview`.
+- Testes: 23 novos (105 → 128), incluindo os 13 da seção 7 e extras para os índices de
+  `visits`, os novos métodos do `PointRepository` e os demais métodos do
+  `VisitRepository`. Cobertura 93,6%.
+- Documentação: contrato da API, artefato backend, glossário, DT-011 (Parcial), DT-016
+  (andamento) e nova DT-021.
+
+**Validação**
+
+- `ruff check .`, `ruff format --check .`, `mypy app`, `pytest --cov=app --cov-fail-under=80`:
+  128 testes passando, cobertura 93,61%.
+- `bash scripts/validate.sh` com E2E: código de saída 0 (backend, frontend, duplicação e
+  e2e `[OK]`; vr-app pulado). Na máquina do aluno, o `cmd.exe` aberto pelo `npm` não
+  encontrava o `node`; a validação rodou com `npm_config_script_shell` apontando para o
+  Git Bash, apenas na sessão, sem alterar código nem configuração do projeto.
+
+**Desvios do plano**
+
+- `datetime.now(UTC)` no lugar de `datetime.now(timezone.utc)`: mesmo valor; o Ruff do
+  projeto (regra `UP017`) exige o alias `UTC`, já usado em `point_service.py`.
+- Os schemas de métricas e os métodos novos do `PointRepository` entraram no primeiro
+  commit do backend, junto com o restante do domínio de visitas.
+
+**Dívidas novas:** [DT-021](../implementacoes-futuras/DT-021-limite-taxa-registro-visitas.md)
+— registro de visitas sem limite de taxa (prevista na seção 11).
 
 ---
 
