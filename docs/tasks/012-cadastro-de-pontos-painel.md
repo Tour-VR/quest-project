@@ -330,3 +330,9 @@ Meu nome, para registrar no plano: <SEU NOME>
    do backend que trava o slug.
 
 **Dívidas novas registradas:** nenhuma.
+
+**CI do orquestrador vermelha por causa da DT-020.** Localmente, `validate.sh` passa com o
+frontend da branch do plano. No GitHub, o PR do orquestrador roda o E2E com o frontend no
+ponteiro da `main` (painel sem a tela de pontos), e os 3 cenários novos falham. Para ficar
+verde: mesclar primeiro o PR do frontend, depois atualizar o ponteiro de `services/frontend`
+na branch do plano (opção 1 da DT-020) e rodar a CI de novo.
