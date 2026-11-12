@@ -113,7 +113,7 @@ reserva o plano com o seu nome antes de começar.
 | [019](019-panoramas-e-conexoes.md) | Panoramas e conexões | 4 | 013, 017 | — | Validado |
 | [020](020-cena-vr-360.md) | Cena VR 360° | 4 | 019 | — | Validado |
 | [021](021-navegacao-vr-e-encerramento.md) | Navegação VR e encerramento | 4 | 018, 020 | DT-016 | Validado |
-| [022](022-padroes-visuais-do-painel.md) | Padrões visuais e de movimento do painel | 2 | 011 | — | Em execução — Heitor Aquino |
+| [022](022-padroes-visuais-do-painel.md) | Padrões visuais e de movimento do painel | 2 | 011 | — | Em revisão — Heitor Aquino |
 
 **Status possíveis:** `Rascunho` · `Aguardando validação` · `Validado` ·
 `Em execução — nome` · `Em revisão — nome` · `Concluído` · `Cancelado`
