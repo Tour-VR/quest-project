@@ -121,7 +121,7 @@ collection `users`:
 | `created_at` | `datetime` | `now(utc)` |
 | `updated_at` | `datetime` | `now(utc)` |
 
-`PointModel` ([app/models/point.py](../services/backend/app/models/point.py)) — documento
+`PointModel` (`app/models/point.py`) — documento
 da collection `points` ([ADR-0007](08-decisoes-arquiteturais.md#adr-0007--modelo-de-domínio-do-campus)):
 
 | Campo | Tipo | Padrão |
@@ -192,7 +192,7 @@ e [app/core/security.py](../services/backend/app/core/security.py):
 
 ### Pontos de interesse
 
-Implementadas em [app/services/point_service.py](../services/backend/app/services/point_service.py).
+Implementadas em `app/services/point_service.py`.
 Exceções de domínio: `PointInputError` (→ `400`), `PointConflictError` (→ `409`) e
 `PointNotFoundError` (→ `404`); a tradução para HTTP fica em `_to_http_error`
 (`app/api/v1/routes/admin_points.py:33-38`).
