@@ -100,7 +100,7 @@ reserva o plano com o seu nome antes de começar.
 | [006](006-integracao-continua.md) | Integração contínua | 0 | 005 | DT-003 | Concluído |
 | [007](007-seguranca-backend.md) | Segurança do backend | 1 | 006 | DT-006, DT-007, DT-009 | Concluído |
 | [008](008-papeis-e-administrador.md) | Papéis e administrador | 1 | 007 | DT-008 | Concluído |
-| [009](009-pontos-de-interesse-backend.md) | Pontos de interesse no backend | 1 | 008 | DT-016 (parcial) | Validado |
+| [009](009-pontos-de-interesse-backend.md) | Pontos de interesse no backend | 1 | 008 | DT-016 (parcial) | Em execução — Heitor Aquino |
 | [010](010-visitas-e-metricas-backend.md) | Visitas e métricas no backend | 1 | 009 | DT-011 (backend) | Validado |
 | [011](011-base-do-painel.md) | Base do painel | 2 | 008 | DT-010, DT-012 | Validado |
 | [012](012-cadastro-de-pontos-painel.md) | Cadastro de pontos no painel | 2 | 009, 011 | — | Validado |
