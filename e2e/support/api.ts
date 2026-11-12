@@ -1,6 +1,7 @@
 import type { APIRequestContext } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { URLS } from './urls';
 
 export interface TestUser {
   email: string;
@@ -24,5 +25,28 @@ export async function createAdminUser(_request: APIRequestContext): Promise<Test
     ],
     { cwd: REPO_ROOT, stdio: 'pipe' },
   );
+  return user;
+}
+
+/** Entra pela API e devolve o token de acesso do usuario. */
+async function loginPelaApi(request: APIRequestContext, user: TestUser): Promise<string> {
+  const response = await request.post(`${URLS.api}/auth/login`, { data: user });
+  if (!response.ok()) throw new Error(`login pela API falhou: ${response.status()}`);
+  const body = (await response.json()) as { access_token: string };
+  return body.access_token;
+}
+
+/** Cria um usuario comum (papel `user`) via POST /auth/register, autenticado como o admin. */
+export async function createCommonUser(
+  request: APIRequestContext,
+  admin: TestUser,
+): Promise<TestUser> {
+  const token = await loginPelaApi(request, admin);
+  const user = { email: `e2e-comum-${Date.now()}@tourvr.dev`, password: 'senhaE2E123' };
+  const response = await request.post(`${URLS.api}/auth/register`, {
+    data: user,
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok()) throw new Error(`cadastro do usuario comum falhou: ${response.status()}`);
   return user;
 }
