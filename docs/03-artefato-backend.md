@@ -47,33 +47,41 @@ services/backend/
     ├── core/
     │   ├── config.py           Settings + ensure_secure_settings (fail-fast da chave JWT)
     │   ├── database.py         MongoManager, get_mongo_manager, get_database
-    │   ├── indexes.py          ensure_indexes: índices únicos de `users` e `points`
+    │   ├── indexes.py          ensure_indexes: índices de `users`, `points` e `visits`
     │   ├── logging.py          configure_logging (biblioteca padrão, nível por LOG_LEVEL)
     │   ├── rate_limit.py       LoginRateLimiter (janela deslizante em memória)
     │   ├── roles.py            ROLE_ADMIN, ROLE_USER, VALID_ROLES
     │   └── security.py         hash/verify senha, create/decode JWT, força de senha
     ├── api/
-    │   ├── deps.py             get_user_service, get_point_service, get_current_user,
-    │                           require_admin, get_login_rate_limiter, erro 503 padrão
+    │   ├── deps.py             get_user_service, get_point_service, get_visit_service,
+    │                           get_metrics_service, get_current_user, require_admin,
+    │                           get_login_rate_limiter, erro 503 padrão
     │   └── v1/
     │       ├── router.py       agrega health + auth + users + admin_points + public_points
-    │       └── routes/         auth.py · users.py · health.py ·
-    │                           admin_points.py · public_points.py
+    │       │                   + admin_metrics
+    │       └── routes/         auth.py · users.py · health.py · admin_points.py ·
+    │                           public_points.py (+ registro de visita) · admin_metrics.py
     ├── models/
     │   ├── user.py             UserModel (dataclass, slots)
-    │   └── point.py            PointModel + constantes de status e tipo de mídia
+    │   ├── point.py            PointModel + constantes de status e tipo de mídia
+    │   └── visit.py            VisitModel + constantes de modo (`ar`, `vr`)
     ├── schemas/
     │   ├── user.py             9 schemas Pydantic
-    │   └── point.py            7 schemas + limites do contrato (fonte única)
+    │   ├── point.py            7 schemas + limites do contrato (fonte única)
+    │   ├── visit.py            VisitCreate, VisitRecordedResponse
+    │   └── metrics.py          MetricsOverviewResponse, VisitsByMode, TopPoint
     ├── repositories/
     │   ├── errors.py           UniqueConstraintError + duplicated_field (chave duplicada)
     │   ├── user_repository.py  5 métodos de acesso à collection `users`
-    │   └── point_repository.py 8 métodos de acesso à collection `points`
+    │   ├── point_repository.py 10 métodos de acesso à collection `points`
+    │   └── visit_repository.py 5 métodos de acesso à collection `visits` (contagens e `$group`)
     ├── services/
     │   ├── user_service.py     regras de usuário + 4 exceções de domínio
-    │   └── point_service.py    regras de publicação e slug + 3 exceções de domínio
+    │   ├── point_service.py    regras de publicação e slug + 3 exceções de domínio
+    │   ├── visit_service.py    registro anônimo de visita a ponto publicado
+    │   └── metrics_service.py  resumo de pontos e visitas (janela de 7 dias, top 5)
     └── cli.py                  comando `create-admin` (python -m app.cli)
-└── tests/                      conftest.py + 105 testes
+└── tests/                      conftest.py + 128 testes
 ```
 
 ## Endpoints
@@ -99,10 +107,12 @@ Contrato completo, com payloads e códigos de erro, em
 | `POST` | `/admin/points/{point_id}/unpublish` | Bearer (admin) |
 | `GET` | `/public/points` | — |
 | `GET` | `/public/points/{slug}` | — |
+| `POST` | `/public/points/{slug}/visits` | — |
+| `GET` | `/admin/metrics/overview` | Bearer (admin) |
 
 Prefixos: `/admin/...` exige papel `admin` (o roteador inteiro depende de `require_admin`,
-`app/api/v1/routes/admin_points.py:18-22`); `/public/...` não pede token e só devolve
-pontos publicados.
+`app/api/v1/routes/admin_points.py:18-22` e `app/api/v1/routes/admin_metrics.py:14-18`);
+`/public/...` não pede token e só devolve pontos publicados.
 
 ## Modelo de dados
 
@@ -140,8 +150,22 @@ da collection `points` ([ADR-0007](08-decisoes-arquiteturais.md#adr-0007--modelo
 Os limites de cada campo são constantes de `app/schemas/point.py:22-34` (fonte única,
 espelhada pelo painel no plano 012).
 
+`VisitModel` (`app/models/visit.py`) — documento da collection `visits`, um por abertura
+de ponto no app do visitante:
+
+| Campo | Tipo | Padrão |
+|---|---|---|
+| `point_slug` | `str` | — (slug do ponto visitado) |
+| `mode` | `str` | — `"ar"` (`VISIT_MODE_AR`) ou `"vr"` (`VISIT_MODE_VR`) |
+| `visited_at` | `datetime` | `now(utc)` |
+
+**Privacidade.** A visita é anônima: não guarda IP, navegador, usuário nem qualquer outro
+dado pessoal — só os três campos acima (`app/models/visit.py:14-25`, conferido por
+`test_visit_document_has_no_personal_data`). Visitas de um ponto excluído permanecem no
+histórico.
+
 **Índices.** Criados na subida da aplicação por `ensure_indexes`
-(`app/core/indexes.py:8-20`), chamado no `lifespan` logo após a conexão
+(`app/core/indexes.py:8-24`), chamado no `lifespan` logo após a conexão
 (`app/main.py:35-39`). `create_index` com o mesmo nome e as mesmas opções é idempotente.
 
 | Nome | Campo | Opções |
@@ -149,6 +173,8 @@ espelhada pelo painel no plano 012).
 | `users_email_unique` | `email` | `unique` |
 | `users_username_unique` | `username` | `unique`, parcial: só documentos com `username` do tipo string — vários usuários sem username (`null`) não colidem |
 | `points_slug_unique` | `slug` (collection `points`) | `unique` |
+| `visits_point_slug` | `point_slug` (collection `visits`) | — (agrupamento do ranking) |
+| `visits_visited_at` | `visited_at` (collection `visits`) | — (janela dos últimos 7 dias) |
 
 As verificações prévias do `UserService` (`find_by_email`, `find_by_username`) continuam
 e dão a mensagem amigável no caso comum; o índice é a garantia contra cadastros
@@ -216,6 +242,28 @@ Exceções de domínio: `PointInputError` (→ `400`), `PointConflictError` (→
 - **Mídia:** itens sem `id` recebem um UUID gerado pelo servidor; apenas `kind="photo"`.
 - **Capa pública:** `cover_url` é a `url` da primeira mídia `photo`, ou `null`.
 - **Ordem:** listas por `name` crescente, sem paginação.
+
+### Visitas e métricas
+
+Implementadas em `app/services/visit_service.py` e `app/services/metrics_service.py`.
+
+- **Registro só em ponto publicado.** `VisitService.record_visit` busca o ponto com
+  `find_published_by_slug`; rascunho ou slug inexistente levanta `PointNotFoundError`
+  (reaproveitada de `point_service.py`) → `404`, sem gravar nada
+  (`app/services/visit_service.py:20-27`).
+- **Relógio injetado.** `MetricsService.overview(now)` recebe o instante atual da rota
+  (`datetime.now(UTC)`, `app/api/v1/routes/admin_metrics.py:22-30`), o que permite testar
+  a janela sem congelar o tempo.
+- **Constantes:** `METRICS_RECENT_DAYS = 7` e `TOP_POINTS_LIMIT = 5`
+  (`app/services/metrics_service.py:11-12`).
+- **Contagem no banco.** `count_by_mode` e `top_point_slugs` usam pipelines `$group` no
+  `VisitRepository` (`app/repositories/visit_repository.py:55-72`); o modo ausente vem
+  como `0`. O ranking é ordenado por total decrescente e, no empate, pelo slug.
+- **Ranking com nome atual.** Os slugs do ranking viram nomes por
+  `PointRepository.find_names_by_slugs`; slug sem ponto (excluído) é descartado, mantendo
+  a ordem (`app/services/metrics_service.py:25-34`).
+- **Sem limite de taxa** no registro público — ver
+  [DT-021](implementacoes-futuras/DT-021-limite-taxa-registro-visitas.md).
 
 ## Papéis
 
@@ -363,7 +411,9 @@ Ordem sugerida para entender o backend: `app/core/config.py` → `app/core/datab
 `app/repositories/user_repository.py` → `app/services/user_service.py` →
 `app/api/deps.py` → `app/api/v1/routes/` → `app/cli.py` → `tests/` (documentação executável dos
 comportamentos esperados). Para pontos de interesse, a mesma sequência com `point.py`,
-`point_repository.py`, `point_service.py`, `admin_points.py` e `public_points.py`.
+`point_repository.py`, `point_service.py`, `admin_points.py` e `public_points.py`; para
+visitas e métricas, `visit.py`, `visit_repository.py`, `visit_service.py`,
+`metrics_service.py` e `admin_metrics.py`.
 
 ## Ambiente de desenvolvimento
 
@@ -394,7 +444,7 @@ comandos por função; `PLR2004`, `ARG001` e `PLR0913` desligadas só em `tests/
 aceita `Depends`/`Query`/etc. do FastAPI como valor padrão. `jose` e `passlib` não têm
 tipos: o mypy ignora só os imports delas. Cobertura atual: 93%.
 
-**105 testes**, todos com MongoDB mockado (sem dependência de banco real):
+**128 testes**, todos com MongoDB mockado (sem dependência de banco real):
 
 - `tests/test_health.py` — 6 testes: import do app, rota raiz, preflight CORS,
   health com banco up/down, detecção de placeholder de senha sem chamada de rede.
@@ -411,8 +461,8 @@ tipos: o mypy ignora só os imports delas. Cobertura atual: 93%.
   `app_debug` padrão `False`.
 - `tests/test_rate_limit.py` — 4 testes do `LoginRateLimiter` com relógio falso: bloqueio
   após 5 falhas, desbloqueio após a janela, `reset` e `clear`.
-- `tests/test_indexes.py` — 3 testes: nomes e opções dos índices de `users` e de
-  `points`; o `lifespan` sobrevive a falha na criação dos índices.
+- `tests/test_indexes.py` — 4 testes: nomes e opções dos índices de `users`, `points` e
+  `visits`; o `lifespan` sobrevive a falha na criação dos índices.
 - `tests/test_user_repository.py` — 3 testes: `DuplicateKeyError` vira
   `UniqueConstraintError` na inserção e na atualização; campo `desconhecido` sem
   `keyPattern`.
@@ -431,9 +481,20 @@ tipos: o mypy ignora só os imports delas. Cobertura atual: 93%.
   quatro rotas e `403` para papel `user`.
 - `tests/test_public_points.py` — 5 testes: lista só com os campos do resumo e `cover_url`
   da primeira foto, detalhe sem `id`/`status`/datas, rascunho `404` e `503` nas duas rotas.
-- `tests/test_point_repository.py` — 10 testes com collection falsa: id malformado não
+- `tests/test_point_repository.py` — 12 testes com collection falsa: id malformado não
   toca o banco, filtros e ordenação por `name`, retornos de escrita, `DuplicateKeyError`
-  vira `UniqueConstraintError`, `PyMongoError` vira `ConnectionError`, banco ausente.
+  vira `UniqueConstraintError`, `PyMongoError` vira `ConnectionError`, banco ausente,
+  `count_points` e `find_names_by_slugs` (filtros, lista vazia sem consulta, erros).
+- `tests/test_visits.py` — 6 testes: registro `201` em `ar` e `vr` com `visited_at` em
+  UTC, modo inválido `422`, rascunho `404` sem gravar, `503`, documento só com
+  `point_slug`/`mode`/`visited_at`.
+- `tests/test_metrics.py` — 3 testes: corpo completo do resumo com ranking em ordem,
+  `401` sem token e `403` para papel `user`, `503`.
+- `tests/test_metrics_service.py` — 3 testes com repositories falsos: janela de 7 dias a
+  partir do `now` informado, ponto excluído some do ranking, base vazia toda zerada.
+- `tests/test_visit_repository.py` — 8 testes com collection falsa (`aggregate`
+  assíncrono): `count_by_mode` preenche o modo ausente, pipeline do ranking, filtros de
+  contagem e inserção, `PyMongoError` vira `ConnectionError`, banco ausente.
 
 Fixtures em `conftest.py`: `mongo_up`, `mongo_down`, `client`, `as_admin` e duas
 `autouse`. `as_admin` registra `app.dependency_overrides[require_admin]` devolvendo um

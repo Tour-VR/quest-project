@@ -490,6 +490,67 @@ Conteúdo de um ponto publicado — é o que o QR Code (`/p/<slug>`) abre. Públ
 | `404` | `"Ponto de interesse nao encontrado."` — inexistente **ou rascunho** |
 | `503` | MongoDB indisponível |
 
+## `POST /public/points/{slug}/visits`
+
+Registra, de forma **anônima**, que um visitante abriu um ponto publicado — chamado pelo
+app do visitante no modo AR (plano 017) ou VR (plano 020). Público, sem token.
+
+**Body** — `VisitCreate`:
+```json
+{ "mode": "ar" }
+```
+
+`mode` aceita apenas `"ar"` ou `"vr"`.
+
+**201** — `VisitRecordedResponse`:
+```json
+{ "recorded": true }
+```
+
+O documento gravado contém **apenas** `point_slug`, `mode` e `visited_at` (UTC): nada de
+IP, navegador ou usuário. Não há limite de taxa — ver
+[DT-021](implementacoes-futuras/DT-021-limite-taxa-registro-visitas.md).
+
+| Erro | Quando |
+|---|---|
+| `404` | `"Ponto de interesse nao encontrado."` — inexistente **ou rascunho**; nada é gravado |
+| `422` | `mode` ausente ou fora de `ar`/`vr` |
+| `503` | MongoDB indisponível |
+
+---
+
+## `GET /admin/metrics/overview`
+
+Resumo com contagens reais de pontos e visitas, para o painel (plano 015). Exige papel
+`admin`.
+
+**200** — `MetricsOverviewResponse`:
+```json
+{
+  "points_total": 8,
+  "points_published": 5,
+  "visits_total": 142,
+  "visits_last_7_days": 37,
+  "visits_by_mode": { "ar": 120, "vr": 22 },
+  "top_points": [
+    { "slug": "biblioteca-central", "name": "Biblioteca Central", "visits": 61 },
+    { "slug": "cantina", "name": "Cantina", "visits": 40 }
+  ]
+}
+```
+
+- `visits_last_7_days`: visitas com `visited_at` nos últimos 7 dias
+  (`METRICS_RECENT_DAYS`) contados a partir do momento da requisição.
+- `visits_by_mode`: sempre traz as duas chaves, com `0` quando não há visitas no modo.
+- `top_points`: até 5 pontos (`TOP_POINTS_LIMIT`), do mais visitado para o menos; empate
+  desempatado pelo slug. Usa o nome **atual** do ponto. Visitas de pontos excluídos
+  continuam contando em `visits_total`, mas o ponto não aparece no ranking.
+
+| Erro | Quando |
+|---|---|
+| `401` / `403` | Sem token / papel diferente de `admin` — ver [Papéis e autorização](#papéis-e-autorização) |
+| `503` | MongoDB indisponível |
+
 ---
 
 ## Formato de erro
@@ -502,7 +563,7 @@ Todos os erros seguem o padrão do FastAPI:
 
 Erros de validação (`422`) usam a estrutura de lista do Pydantic, com `loc`, `msg` e `type`.
 
-**Erro `503`:** produzido por `build_database_http_exception` em `app/api/deps.py:46-53`.
+**Erro `503`:** produzido por `build_database_http_exception` em `app/api/deps.py:63-70`.
 O `detail` é **sempre** exatamente `"Banco de dados indisponivel."` e nunca traz o texto
 da exceção, em qualquer ambiente e mesmo com `APP_DEBUG=true`. O detalhe técnico fica
 apenas no log do servidor (`ERROR app.api.deps Falha de acesso ao banco: ...`).
@@ -519,5 +580,5 @@ liberados, e origens restritas à lista de `APP_CORS_ORIGINS`. O frontend em
 
 O `vr-app` e as telas planejadas do painel exigirão rotas que **ainda não existem**:
 listagem e gestão de usuários, upload de mídia (plano 013), panoramas e conexões entre
-pontos (plano 019), registro de visitas e métricas (plano 010). Ver
+pontos (plano 019). Ver
 [DT-016](implementacoes-futuras/DT-016-modelagem-dominio-turismo.md).

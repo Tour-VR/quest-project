@@ -16,7 +16,8 @@ sessões de planejamento e de execução.
 | **Rascunho / Publicado** | Os dois estados (`status`) de um ponto: `draft` (só o painel vê) e `published` (o visitante vê). Muda só pelas ações explícitas de publicar e despublicar. |
 | **Mídia (item)** | Foto embutida num ponto (`MediaItem`: `id`, `kind`, `url`, `caption`, `alt_text`), no máximo 20 por ponto. Hoje só `kind="photo"`; panoramas chegam no plano 019. |
 | **Roteiro** | Sequência curada de pontos que compõem uma visita. **Fora do escopo atual (ADR-0007).** |
-| **Sessão de uso** | Registro de uma visita realizada por um usuário no headset. **Fora do escopo atual (ADR-0007)**; visitas anônimas chegam no plano 010. |
+| **Visita** | Registro anônimo de que alguém abriu um ponto publicado no app do visitante, com modo `ar` (celular) ou `vr` (Quest). Guarda só `point_slug`, `mode` e `visited_at` (`Visit`, collection `visits`); alimenta o resumo de `GET /admin/metrics/overview` (plano 010). |
+| **Sessão de uso** | Registro de uso identificado por usuário. **Fora do escopo (ADR-0007)**: o sistema registra apenas [Visitas](#produto-e-domínio) anônimas. |
 
 ## Infraestrutura e repositórios
 

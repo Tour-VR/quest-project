@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Aberta |
+| **Status** | Parcial — endpoint de métricas pronto (plano 010); consumo no painel pendente (plano 015) |
 | **Prioridade** | P2 |
 | **Esforço** | Médio |
 | **Artefato** | Frontend, Backend |
@@ -55,8 +55,10 @@ ambiente VR ou de sessão em lugar algum do sistema.
 
 **Quando o domínio existir (depende de DT-016)**
 
-3. Criar `GET /metrics/overview` no backend, protegido por papel de administrador
-   ([DT-008](DT-008-autorizacao-por-papel.md)), agregando contagens reais.
+3. ✅ Criar `GET /admin/metrics/overview` no backend, protegido por papel de administrador
+   ([DT-008](DT-008-autorizacao-por-papel.md)), agregando contagens reais — **feito no
+   plano 010** (`services/backend/app/api/v1/routes/admin_metrics.py`; contrato em
+   [06-contrato-api.md](../06-contrato-api.md#get-adminmetricsoverview)).
 4. Consumir o endpoint no `Dashboard`, com estados de carregando, erro e vazio.
 5. Implementar as páginas "Usuários" ([DT-015](DT-015-gestao-usuarios-no-painel.md)) e
    "Configurações VR" com rotas reais.
@@ -68,6 +70,10 @@ ambiente VR ou de sessão em lugar algum do sistema.
 - [ ] Após DT-016: cartões refletem contagens reais, com tratamento de carregando e erro
 
 ## Notas
+
+**Andamento (2026-11-11, plano 010).** O backend já entrega contagens reais: total de
+pontos e de publicados, total de visitas, visitas dos últimos 7 dias, visitas por modo
+(`ar`/`vr`) e os 5 pontos mais visitados. Falta o painel consumir o endpoint (plano 015).
 
 A etapa imediata custa minutos e elimina o risco de má interpretação em apresentação. Não
 esperar pelo domínio para executá-la.

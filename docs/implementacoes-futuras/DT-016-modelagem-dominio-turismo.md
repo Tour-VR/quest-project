@@ -87,6 +87,11 @@ Aplicam-se à decomposição, não a uma implementação única:
 
 ## Notas
 
+**Andamento (2026-11-11, plano 010).** Visitas anônimas modeladas: entidade `Visit`
+(collection `visits`, campos `point_slug`, `mode` e `visited_at`), registradas por
+`POST /public/points/{slug}/visits` e resumidas em `GET /admin/metrics/overview`. No lugar
+da `Sessao` do esboço acima, a ADR-0007 optou por visita anônima, sem usuário.
+
 Recomendação de escopo: modelar **um** roteiro completo, de ponta a ponta — do cadastro no
 painel até a visualização no headset — antes de generalizar. Uma fatia vertical funcionando
 ensina mais sobre o modelo correto do que qualquer discussão em abstrato, e dá ao grupo
