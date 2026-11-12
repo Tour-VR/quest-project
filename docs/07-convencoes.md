@@ -137,6 +137,10 @@ git push --recurse-submodules=on-demand
   descrição legível do contrato continua em [06-contrato-api.md](06-contrato-api.md).
 - **Estilo.** Tailwind por classes utilitárias no JSX. Sem CSS-in-JS, sem arquivos `.css`
   por componente.
+- **Movimento e camadas.** Use os tokens de `src/index.css` (plano 022): `animate-scale-in`,
+  `shadow-popover`, `z-(--z-drawer)` etc. Proibido `z-index` numérico solto, duração ou
+  curva de animação inventada na hora. Telas de listagem usam os componentes de
+  `src/components/ui/` (ver [04-artefato-frontend.md](04-artefato-frontend.md#componentes-base-e-movimento)).
 - **Estado.** `useState` local e Context para estado global. Não introduzir Redux,
   Zustand ou similar sem ADR.
 - **Organização.** Páginas (`src/pages/`) só compõem componentes. Componentes de uma

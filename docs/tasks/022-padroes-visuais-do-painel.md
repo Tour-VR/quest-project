@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em execução — Heitor Aquino — 2026-11-12 |
+| **Status** | Em revisão — Heitor Aquino |
 | **Fase** | 2 — Painel administrativo |
 | **Depende de** | 011 |
 | **Dívidas atendidas** | nenhuma |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Frontend |
 | **Planejado em** | 2026-11-12 |
 | **Validado em** | 2026-11-12 por Felipe Santos |
-| **Executado em** | *(pendente)* |
+| **Executado em** | 2026-11-12 por Heitor Aquino (agente Claude Code) |
 
 ---
 
@@ -250,3 +250,38 @@ Execute o plano docs/tasks/022-padroes-visuais-do-painel.md.
 Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o "Prompt 1 — EXECUTAR" etapa por etapa.
 Meu nome, para registrar no plano: <SEU NOME>
 ```
+
+---
+
+## Registro de execução
+
+**2026-11-12 — Heitor Aquino (agente Claude Code).**
+
+O que foi feito, no submódulo `services/frontend`, branch `plano/022-padroes-visuais-do-painel`:
+
+- Passo 1: `@radix-ui/react-dialog` e `@radix-ui/react-dropdown-menu` instalados.
+- Passo 2: tokens de sombra, curva, animações e camadas em `src/index.css`, mais a regra de
+  `prefers-reduced-motion`.
+- Passo 3: `PageHeader`, `Toolbar`, `DataTable`, `RowActions`, `Dialog`, `StatusPulse` e
+  `Spinner` em `src/components/ui/`, cada um com teste.
+- Passo 4: `AdminLayout` com barra lateral fixa a partir de `md` e `MobileTopBar` com gaveta
+  abaixo disso. O conteúdo comum da barra foi extraído para `SidebarPanel.tsx`, e
+  `SidebarNav` ganhou `onNavigate`.
+- Passo 5: o dashboard usa `PageHeader` (título "Dashboard", saudação como descrição).
+- Documentação: `docs/04-artefato-frontend.md` (seção "Componentes base e movimento") e
+  `docs/07-convencoes.md` (regra de tokens).
+
+**Desvios do plano:**
+
+1. **A barra do celular e a barra lateral não ficam as duas na página.** O plano previa
+   esconder uma delas só com CSS (`md:hidden`). Assim, o texto "TourVR Admin" e o menu
+   apareceriam duas vezes no HTML. O E2E `@golden` (`e2e/tests/painel-base.spec.ts:12`) usa
+   `getByText('TourVR Admin')`, que falha quando acha dois elementos. A solução foi o hook
+   `src/hooks/useMediaQuery.ts`: o `AdminLayout` monta **ou** a barra lateral **ou** a
+   `MobileTopBar`. Em tela larga, o HTML do layout fica como antes. Os testes simulam a tela
+   estreita com `src/test/matchMedia.ts`, porque o jsdom não tem `matchMedia`.
+2. **O `FullScreenLoader` continua sem `Spinner`.** O passo 3 só pedia a troca se ele já
+   tivesse um ícone girando, e ele não tem.
+3. **Os testes não precisaram de stubs para o Radix.** O risco previsto em 11 não aconteceu.
+
+**Dívidas novas:** nenhuma.

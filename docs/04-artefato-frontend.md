@@ -22,6 +22,7 @@ Não possui lógica de negócio própria — é uma casca sobre a API REST.
 | Roteamento | React Router | 7.13 |
 | HTTP | Axios | 1.13 |
 | Ícones | lucide-react | 0.546 |
+| Diálogo e menu acessíveis | `@radix-ui/react-dialog`, `@radix-ui/react-dropdown-menu` | 1.3 / 2.2 |
 | Lint | ESLint (`typescript-eslint` `strictTypeChecked` + `react-hooks`) | 10 |
 | Formatação | Prettier | 3 |
 | Testes | Vitest + Testing Library (`jsdom`), cobertura v8 | 5 |
@@ -44,15 +45,18 @@ services/frontend/
 └── src/                    ~650 linhas de código (sem contar testes e api.d.ts)
     ├── main.tsx            StrictMode + createRoot
     ├── App.tsx             BrowserRouter > AuthProvider > Routes (rotas aninhadas)
-    ├── index.css           @import "tailwindcss"
+    ├── index.css           Tailwind + tokens de sombra, camadas e animação (plano 022)
     ├── vite-env.d.ts       tipo de import.meta.env (VITE_API_URL)
     ├── pages/              só compõem componentes
     │   ├── Login.tsx       aviso de sessão, formulário e "Não tem acesso?"
-    │   └── Dashboard.tsx   saudação + cartão "métricas no plano 015"
+    │   └── Dashboard.tsx   PageHeader com saudação + cartão "métricas no plano 015"
     ├── layouts/
-    │   ├── AdminLayout.tsx barra lateral ("TourVR Admin", menu, "Sair do sistema") + <Outlet />
+    │   ├── AdminLayout.tsx barra lateral fixa (≥ md) ou MobileTopBar (< md) + <Outlet />
+    │   ├── SidebarPanel.tsx "TourVR Admin", menu e "Sair do sistema" (usado nos dois modos)
+    │   ├── MobileTopBar.tsx botão "Abrir menu" → gaveta (Radix Dialog) com o SidebarPanel
     │   └── SidebarNav.tsx  NavLink nos itens habilitados; "em breve" nos demais
     ├── components/
+    │   ├── ui/                  componentes base do painel (ver "Componentes base e movimento")
     │   ├── ProtectedRoute.tsx   carregando → loader; sem sessão → /login; sem admin → AccessDenied
     │   ├── AccessDenied.tsx     "Acesso restrito a administradores." + botão "Sair"
     │   ├── FullScreenLoader.tsx
@@ -66,14 +70,16 @@ services/frontend/
     │   ├── messages.ts     textos de sessão expirada, acesso restrito e avisos
     │   └── navigation.ts   NAV_ITEMS (rótulo, rota, ícone, enabled)
     ├── hooks/
-    │   └── useLoginForm.ts estado do formulário e envio (POST /auth/login)
+    │   ├── useLoginForm.ts estado do formulário e envio (POST /auth/login)
+    │   └── useMediaQuery.ts media query reativa (BELOW_MD_QUERY escolhe barra ou gaveta)
     ├── contexts/
     │   └── AuthContext.tsx  sessão, isAdmin, sessionNotice e registro do handler de 401
     ├── services/
     │   └── api.ts           instância Axios, gestão do token, interceptores de request e de 401
     ├── test/
     │   ├── setup.ts         jest-dom + limpa localStorage após cada teste
-    │   └── factories.ts     buildUser e buildAuthValue para os testes
+    │   ├── factories.ts     buildUser e buildAuthValue para os testes
+    │   └── matchMedia.ts    stubMatchMedia: simula tela estreita/larga (o jsdom não tem)
     └── types/
         ├── api.d.ts         GERADO por npm run gen:types — não editar à mão
         └── index.ts         aliases: User, AuthResponse, LoginPayload
@@ -81,6 +87,44 @@ services/frontend/
 
 Testes ficam ao lado do código, como `Arquivo.test.tsx` (ex.: `pages/Login.test.tsx`).
 A API é sempre mockada com `vi.mock('../services/api')`; não há servidor real nos testes.
+
+## Componentes base e movimento
+
+Criados no plano 022 para que as telas dos planos 012 a 015 sigam o mesmo padrão. Ficam em
+`src/components/ui/`.
+
+| Componente | Uso |
+|---|---|
+| `PageHeader` | Topo de toda tela: `title`, `description?`, `actions?` (botão principal à direita) |
+| `Toolbar` | Linha de busca, filtros e exportar, acima de uma listagem |
+| `DataTable<T>` | Tabela das listagens: `columns` (`key`, `header`, `render`), `rows`, `getRowId`, `emptyMessage` |
+| `RowActions` | Botão "⋯" com menu de ações da linha (Radix Dropdown Menu); `label` para leitor de tela; `danger` pinta a ação de vermelho |
+| `Dialog` | Janela modal (Radix Dialog): fecha com `Esc`, clique fora ou no X |
+| `StatusPulse` | Ponto verde com anel pulsante (online) ou cinza (offline) |
+| `Spinner` | Ícone de carregamento girando |
+
+**Regra:** tela de listagem usa `PageHeader` + `Toolbar` + `DataTable` + `RowActions`.
+
+**Tokens** (em `src/index.css`, bloco `@theme` do Tailwind 4):
+
+| Tipo | Tokens | Classe gerada |
+|---|---|---|
+| Sombra | `popover`, `dialog`, `tooltip`, `button` | `shadow-popover` etc. |
+| Curva | `--ease-out-expo` = `cubic-bezier(0.16, 1, 0.3, 1)` | `ease-out-expo` |
+| Animação | `scale-in`/`scale-out` (120ms, 94%→100% com fade), `fade-in`/`fade-out` (200ms), `drawer-in`/`drawer-out` (200ms), `pulse-ring` (1,8s, infinito) | `animate-scale-in` etc. |
+| Camada | `--z-popup` 10 · `--z-drawer-scrim` 20 · `--z-drawer` 30 · `--z-floating` 50 · `--z-toast` 60 | `z-(--z-drawer)` |
+
+Menus e diálogos animam pela entrada e saída do Radix:
+`data-[state=open]:animate-scale-in data-[state=closed]:animate-scale-out`.
+
+**Movimento reduzido:** com `prefers-reduced-motion: reduce` (ex.: Windows › Acessibilidade ›
+Efeitos visuais › "Efeitos de animação" desligado), todas as animações e transições caem
+para 0,01ms.
+
+**Menu em tela estreita:** abaixo de 768px (`md`), o `AdminLayout` monta só a
+`MobileTopBar`; o menu abre como gaveta pela esquerda e fecha ao escolher um item, com
+`Esc` ou com clique no fundo. A partir de 768px, monta só a barra lateral fixa. Montar só
+um dos dois evita duplicar "TourVR Admin" e o menu na página.
 
 ## Rotas
 
