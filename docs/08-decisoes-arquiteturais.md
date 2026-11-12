@@ -15,7 +15,7 @@ registrada aqui só é revertida por outra ADR que a supersede — nunca por edi
 | [0004](#adr-0004--base-de-conhecimento-centralizada-em-docs) | Base de conhecimento centralizada em `docs/` | Aceita |
 | [0005](#adr-0005--separação-entre-sessão-de-planejamento-e-sessão-de-execução) | Separação entre planejamento e execução | Aceita |
 | [0006](#adr-0006--stack-de-desenvolvimento-do-vr-app) | Stack do app do visitante — produto dividido por dispositivo | Aceita |
-| [0007](#adr-0007--modelo-de-domínio-de-turismo) | Modelo de domínio de turismo | Em aberto |
+| [0007](#adr-0007--modelo-de-domínio-do-campus) | Modelo de domínio do campus | Aceita |
 | [0008](#adr-0008--estratégia-de-mídia-imersiva) | Estratégia de mídia imersiva | Em aberto |
 | [0009](#adr-0009--autenticação-do-dispositivo-quest) | Autenticação do dispositivo Quest | Em aberto |
 
@@ -216,13 +216,41 @@ qualquer leitor, mesmo sem o app instalado.
 
 ---
 
-## ADR-0007 — Modelo de domínio de turismo
+## ADR-0007 — Modelo de domínio do campus
 
-**Estado:** 🔴 Em aberto · **Depende de:** ADR-0006
+**Data:** 2026-11-11 · **Estado:** Aceita · **Plano:** [009](tasks/009-pontos-de-interesse-backend.md)
 
-O sistema modela apenas `User`. Não há `Roteiro`, `PontoDeInteresse`, `Cena`, `Midia` nem
-`Sessao`. A granularidade e as relações dependem de como o `vr-app` consumirá o conteúdo.
-Ver [DT-016](implementacoes-futuras/DT-016-modelagem-dominio-turismo.md).
+**Contexto.** Com a ADR-0006, o produto passou a ser um tour do campus: o visitante lê um
+QR Code afixado num local (ou navega no modo VR) e recebe o conteúdo daquele lugar. O
+sistema só modelava `User`. O esboço da DT-016 previa `Roteiro`, `PontoDeInteresse`,
+`Midia` e `Sessao`, pensando em turismo remoto guiado.
+
+**Decisão.**
+
+- A entidade central é o **ponto de interesse** (`PointOfInterest`, collection `points`),
+  com `slug` único, `name`, `summary`, `history`, `status` (`draft`/`published`),
+  `media[]` embutida, `created_at`, `updated_at` e `published_at` (primeira publicação).
+- A mídia é **embutida** no ponto (`MediaItem`: `id`, `kind`, `url`, `caption`,
+  `alt_text`), no máximo 20 por ponto.
+- O `slug` é o identificador público e vai no QR Code; fica **imutável** depois da
+  primeira publicação.
+- O visitante só enxerga pontos publicados; rascunho responde `404`.
+- Visitas são registradas à parte, de forma anônima (`Visit`, plano 010).
+- **Não** há entidade `Roteiro` nesta etapa.
+
+**Justificativa.** O QR Code identifica um lugar, não um percurso: o aluno visita os
+pontos na ordem em que passa por eles. Mídia embutida resolve a página do ponto com uma
+única consulta e não tem uso fora do ponto. A imutabilidade do slug protege os códigos já
+impressos. Roteiros foram descartados até que um ponto funcione de ponta a ponta
+(DT-016, nota de escopo).
+
+**Consequências.**
+
+- ➕ Uma consulta por página do visitante; modelo pequeno, fácil de testar.
+- ➕ O mesmo cadastro alimenta o modo AR e o modo VR.
+- ➖ Corrigir um slug publicado exige criar outro ponto e reimprimir o QR.
+- ➖ Mídia embutida limita o reaproveitamento de uma foto entre pontos (aceitável).
+- ➖ Documento cresce com a mídia; o limite de 20 itens mantém o tamanho sob controle.
 
 ---
 
