@@ -43,9 +43,10 @@ produto — a experiência de realidade virtual — ainda não foi iniciado.
 |---|---|
 | Autenticação (registro, login, JWT, perfil) | ✅ Implementada e testada |
 | Painel administrativo web (login + dashboard) | ✅ Implementado (dashboard com dados fictícios) |
+| Cadastro de pontos no painel | ✅ Implementado (plano 012) — criar, editar, publicar, despublicar e excluir |
 | Health check e diagnóstico de banco | ✅ Implementado |
 | **App do visitante (AR e VR)** | 🔴 **Não iniciado** — repositório vazio; stack decidida na ADR-0006 |
-| **Modelo de domínio do campus** | 🟡 Parcial — pontos de interesse no backend (ADR-0007); visitas e telas do painel pendentes |
+| **Modelo de domínio do campus** | 🟡 Parcial — pontos e visitas no backend (ADR-0007); cadastro de pontos no painel (plano 012); mídia, QR Codes e métricas no painel pendentes |
 | Pipeline de mídia 360° / storage | 🔴 Não existe |
 | Orquestração de ambiente (compose, scripts) | 🔴 Não existe |
 | CI/CD | 🔴 Não existe |

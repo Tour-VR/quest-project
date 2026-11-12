@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em execução — Heitor Aquino — 2026-11-12 |
+| **Status** | Em revisão — Heitor Aquino |
 | **Fase** | 2 — Painel administrativo |
 | **Depende de** | 009, 011 |
 | **Dívidas atendidas** | DT-016 (parcial — gestão do domínio no painel) |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Frontend, Orquestrador (docs e E2E) |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | — |
+| **Executado em** | 2026-11-12 por Heitor Aquino (PRs em revisão) |
 
 ---
 
@@ -222,22 +222,22 @@ cd ../.. && bash scripts/validate.sh
 
 ## 8. Documentação a atualizar
 
-- [ ] `docs/04-artefato-frontend.md` — rotas `/pontos*`, estrutura (`pages/points/`,
+- [x] `docs/04-artefato-frontend.md` — rotas `/pontos*`, estrutura (`pages/points/`,
       `hooks/`, `utils/`, `components/feedback/`), endpoints consumidos
-- [ ] `docs/00-visao-geral.md` — tabela de estado: "Cadastro de pontos no painel ✅"
-- [ ] `docs/implementacoes-futuras/DT-016-...md` — anotar avanço (plano 012)
+- [x] `docs/00-visao-geral.md` — tabela de estado: "Cadastro de pontos no painel ✅"
+- [x] `docs/implementacoes-futuras/DT-016-...md` — anotar avanço (plano 012)
 
 ## 9. Critérios de aceite
 
-- [ ] Admin cria um ponto, vê-o na lista como "Rascunho", publica e vê "Publicado"
-- [ ] Ponto publicado aparece em `GET /public/points`
-- [ ] Slug sugerido sem acentos; slug bloqueado em ponto publicado
-- [ ] Slug duplicado mostra erro no campo, sem perder o que foi digitado
-- [ ] Exclusão pede confirmação e remove o ponto
-- [ ] Estados de carregando, erro e vazio presentes na lista e no formulário
-- [ ] Nenhum arquivo acima de 200 linhas; nenhuma função acima de 60
-- [ ] `bash scripts/validate.sh` passando com os 3 cenários E2E novos
-- [ ] Documentação da seção 8 atualizada
+- [x] Admin cria um ponto, vê-o na lista como "Rascunho", publica e vê "Publicado"
+- [x] Ponto publicado aparece em `GET /public/points`
+- [x] Slug sugerido sem acentos; slug bloqueado em ponto publicado
+- [x] Slug duplicado mostra erro no campo, sem perder o que foi digitado
+- [x] Exclusão pede confirmação e remove o ponto
+- [x] Estados de carregando, erro e vazio presentes na lista e no formulário
+- [x] Nenhum arquivo acima de 200 linhas; nenhuma função acima de 60
+- [x] `bash scripts/validate.sh` passando com os 3 cenários E2E novos
+- [x] Documentação da seção 8 atualizada
 
 ## 10. Commits esperados
 
@@ -290,3 +290,43 @@ Execute o plano docs/tasks/012-cadastro-de-pontos-painel.md.
 Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o "Prompt 1 — EXECUTAR" etapa por etapa.
 Meu nome, para registrar no plano: <SEU NOME>
 ```
+
+---
+
+## Registro de execução
+
+**Executado por:** Heitor Aquino, com agente de IA, em 2026-11-12.
+
+**O que foi feito**
+
+- Frontend: aliases `Point`, `PointCreate`, `PointUpdate`, `PointStatus`; constantes em
+  `src/constants/points.ts`; serviço `src/services/points.ts` (7 chamadas); utilitários
+  `slugify`, `validatePoint` e `apiError`; estados `LoadingState`, `ErrorState` e
+  `EmptyState`; hooks `usePoints`, `usePoint`, `usePointForm` e `usePointActions`; lista
+  `/pontos` e formulário `/pontos/novo` e `/pontos/:pointId`; item "Pontos" habilitado.
+- Orquestrador: `e2e/tests/pontos.spec.ts` com os 3 cenários e o helper `createPoint`.
+- Validação: `npm run lint`, `format:check`, `test:coverage` (110 testes, ~99% de linhas)
+  e `build` passando; `bash scripts/validate.sh` com saída 0 (8 cenários E2E).
+
+**Desvios do plano**
+
+1. **Passo 1:** `npm run gen:types` não gerou diferença — `api.d.ts` já tinha os schemas de
+   pontos desde o plano 009. O commit traz só os aliases.
+2. **Passo 7 — lista com os componentes do plano 022.** O plano 022 (concluído depois da
+   validação deste) tornou obrigatório `PageHeader` + `Toolbar` + `DataTable` +
+   `RowActions` em telas de listagem (`docs/07-convencoes.md`). Por isso não há
+   `PointRow.tsx`: as linhas vêm de `pointColumns.tsx`, e "Publicar"/"Despublicar" e
+   "Excluir" ficam no menu "⋯" da linha.
+3. **Local dos subcomponentes.** `docs/07-convencoes.md` manda componentes de uma página
+   para `src/components/<pagina>/`. `PointsList.tsx` e `PointForm.tsx` ficaram em
+   `src/pages/points/`; `StatusBadge`, `StatusFilter`, `PointFields`, `PointFormActions` e
+   os auxiliares `PointEditor`, `FormField`, `NewPointLink` e `pointColumns` ficaram em
+   `src/components/points/`.
+4. **Hook extra `usePointActions`.** Publicar, despublicar e excluir são usados pela lista
+   e pelo formulário; o hook evita duplicação (jscpd).
+5. **Helper E2E:** `createPoint(request, token, overrides)` — recebe também o `request` do
+   Playwright, necessário para chamar a API; `loginPelaApi` passou a ser exportado.
+6. **PUT em ponto publicado** omite o `slug` (além de `media`), para não esbarrar na regra
+   do backend que trava o slug.
+
+**Dívidas novas registradas:** nenhuma.

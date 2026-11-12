@@ -1,13 +1,14 @@
 # 04 — Artefato: Frontend (`services/frontend`)
 
-> Repositório: `github.com/Tour-VR/frontend` · Commit fixado: `644647e`
+> Repositório: `github.com/Tour-VR/frontend` · Commit fixado: `36c7a5c` (branch `plano/012-cadastro-de-pontos-painel`)
 > Última verificação contra o código: 2026-11-12
 
 ## Responsabilidade
 
 Painel administrativo web do TourVR. Autentica administradores contra o backend, mantém
 a sessão entre recarregamentos, encerra a sessão quando o token expira, restringe o painel
-ao papel `admin` e exibe o painel inicial dentro de um layout com menu (plano 011).
+ao papel `admin` e exibe o painel inicial dentro de um layout com menu (plano 011). Gerencia
+os pontos de interesse do tour: criar, editar, publicar, despublicar e excluir (plano 012).
 
 Não possui lógica de negócio própria — é uma casca sobre a API REST.
 
@@ -49,7 +50,10 @@ services/frontend/
     ├── vite-env.d.ts       tipo de import.meta.env (VITE_API_URL)
     ├── pages/              só compõem componentes
     │   ├── Login.tsx       aviso de sessão, formulário e "Não tem acesso?"
-    │   └── Dashboard.tsx   PageHeader com saudação + cartão "métricas no plano 015"
+    │   ├── Dashboard.tsx   PageHeader com saudação + cartão "métricas no plano 015"
+    │   └── points/
+    │       ├── PointsList.tsx  /pontos — PageHeader, filtro por status, DataTable e ações
+    │       └── PointForm.tsx   /pontos/novo e /pontos/:pointId — carrega o ponto e monta o PointEditor
     ├── layouts/
     │   ├── AdminLayout.tsx barra lateral fixa (≥ md) ou MobileTopBar (< md) + <Outlet />
     │   ├── SidebarPanel.tsx "TourVR Admin", menu e "Sair do sistema" (usado nos dois modos)
@@ -57,6 +61,16 @@ services/frontend/
     │   └── SidebarNav.tsx  NavLink nos itens habilitados; "em breve" nos demais
     ├── components/
     │   ├── ui/                  componentes base do painel (ver "Componentes base e movimento")
+    │   ├── feedback/            LoadingState, ErrorState ("Tentar novamente"), EmptyState (ação opcional)
+    │   ├── points/
+    │   │   ├── pointColumns.tsx   colunas da tabela (nome com link, identificador, selo, data, RowActions)
+    │   │   ├── StatusBadge.tsx    "Rascunho" cinza, "Publicado" verde
+    │   │   ├── StatusFilter.tsx   Todos / Rascunhos / Publicados
+    │   │   ├── NewPointLink.tsx   botão "Novo ponto"
+    │   │   ├── PointEditor.tsx    formulário: avisos, campos e ações
+    │   │   ├── PointFields.tsx    Nome, Identificador, Resumo (x/280) e História (x/10000)
+    │   │   ├── PointFormActions.tsx Salvar; na edição, Publicar/Despublicar e Excluir
+    │   │   └── FormField.tsx      rótulo, dica, contador e erro de um campo
     │   ├── ProtectedRoute.tsx   carregando → loader; sem sessão → /login; sem admin → AccessDenied
     │   ├── AccessDenied.tsx     "Acesso restrito a administradores." + botão "Sair"
     │   ├── FullScreenLoader.tsx
@@ -68,21 +82,31 @@ services/frontend/
     │       └── MetricsPendingCard.tsx  cartão informativo no lugar das métricas
     ├── constants/
     │   ├── messages.ts     textos de sessão expirada, acesso restrito e avisos
+    │   ├── points.ts       limites espelhados do backend, STATUS_LABEL e mensagens dos pontos
     │   └── navigation.ts   NAV_ITEMS (rótulo, rota, ícone, enabled)
     ├── hooks/
     │   ├── useLoginForm.ts estado do formulário e envio (POST /auth/login)
-    │   └── useMediaQuery.ts media query reativa (BELOW_MD_QUERY escolhe barra ou gaveta)
+    │   ├── useMediaQuery.ts media query reativa (BELOW_MD_QUERY escolhe barra ou gaveta)
+    │   ├── usePoints.ts    lista com filtro: { points, loading, error, reload }
+    │   ├── usePoint.ts     um ponto pelo id; sem id (criação) não chama a API
+    │   ├── usePointForm.ts estado, validação e envio (cria ou atualiza; PUT sem `media`)
+    │   └── usePointActions.ts publicar, despublicar e excluir (com window.confirm)
     ├── contexts/
     │   └── AuthContext.tsx  sessão, isAdmin, sessionNotice e registro do handler de 401
     ├── services/
-    │   └── api.ts           instância Axios, gestão do token, interceptores de request e de 401
+    │   ├── api.ts           instância Axios, gestão do token, interceptores de request e de 401
+    │   └── points.ts        7 funções finas sobre `api` para /admin/points
+    ├── utils/
+    │   ├── slugify.ts       sugere o slug: sem acentos, minúsculas, hífens, até 60 caracteres
+    │   ├── validatePoint.ts mensagem por campo com os limites do backend
+    │   └── apiError.ts      apiErrorMessage (detail ou 1ª mensagem do 422) e apiErrorStatus
     ├── test/
     │   ├── setup.ts         jest-dom + limpa localStorage após cada teste
     │   ├── factories.ts     buildUser e buildAuthValue para os testes
     │   └── matchMedia.ts    stubMatchMedia: simula tela estreita/larga (o jsdom não tem)
     └── types/
         ├── api.d.ts         GERADO por npm run gen:types — não editar à mão
-        └── index.ts         aliases: User, AuthResponse, LoginPayload
+        └── index.ts         aliases: User, AuthResponse, LoginPayload, Point, PointCreate, PointUpdate, PointStatus
 ```
 
 Testes ficam ao lado do código, como `Arquivo.test.tsx` (ex.: `pages/Login.test.tsx`).
@@ -132,12 +156,32 @@ um dos dois evita duplicar "TourVR Admin" e o menu na página.
 |---|---|---|
 | `/login` | `Login` | Pública; redireciona para `/dashboard` se já autenticado |
 | `/dashboard` | `Dashboard` dentro de `AdminLayout` | `ProtectedRoute`: sessão **e** papel `admin` |
+| `/pontos` | `PointsList` dentro de `AdminLayout` | idem |
+| `/pontos/novo` | `PointForm` (criação) dentro de `AdminLayout` | idem |
+| `/pontos/:pointId` | `PointForm` (edição) dentro de `AdminLayout` | idem |
 | `*` | — | Redireciona para `/dashboard` |
 
 As telas do painel ficam aninhadas em `ProtectedRoute` → `AdminLayout` (`src/App.tsx`). Uma
 tela nova entra como rota filha do `AdminLayout` e ganha um item em
 `constants/navigation.ts`. Itens com `enabled: false` aparecem cinza, com
-`aria-disabled="true"` e o rótulo "em breve", sem link (hoje: "Pontos", plano 012).
+`aria-disabled="true"` e o rótulo "em breve", sem link. Hoje todos os itens estão
+habilitados ("Dashboard" e "Pontos").
+
+## Cadastro de pontos (plano 012)
+
+- **Lista** (`/pontos`): filtro "Todos / Rascunhos / Publicados" (envia `status` à API),
+  tabela com nome (link para edição), identificador, selo e data de atualização
+  (`toLocaleDateString('pt-BR')`). O menu "⋯" de cada linha tem "Publicar"/"Despublicar" e
+  "Excluir"; depois da ação a lista é recarregada. Sem pontos: "Nenhum ponto cadastrado
+  ainda." com o botão "Novo ponto".
+- **Formulário** (`/pontos/novo`, `/pontos/:pointId`): validação no cliente com os mesmos
+  limites do backend (`constants/points.ts`), mensagem por campo. Na criação, o
+  identificador acompanha `slugify(nome)` até ser editado à mão. Em ponto publicado o
+  identificador fica bloqueado ("Despublique para alterar o identificador."). `409` mostra
+  "Já existe um ponto com este identificador." no campo, sem apagar o que foi digitado;
+  outros erros aparecem no topo via `apiErrorMessage`. Criar navega para `/pontos/<id>` com
+  "Ponto criado."; salvar a edição mostra "Alterações salvas.".
+- **Exclusão** pede `window.confirm` com o nome do ponto.
 
 ## Fluxo de autenticação
 
@@ -194,6 +238,13 @@ restrito a administradores.") com o botão "Sair".
 |---|---|---|
 | `POST` | `/auth/login` | `hooks/useLoginForm.ts` → `submit` |
 | `GET` | `/users/me` | `AuthContext` → `syncUserFromToken` |
+| `GET` | `/admin/points?status=` | `services/points.ts` → `listPoints` (lista e filtro) |
+| `GET` | `/admin/points/{id}` | `getPoint` (tela de edição) |
+| `POST` | `/admin/points` | `createPoint` (Salvar na criação) |
+| `PUT` | `/admin/points/{id}` | `updatePoint` — só nome, slug, resumo e história; `media` nunca é enviada; slug omitido em ponto publicado |
+| `DELETE` | `/admin/points/{id}` | `deletePoint` (após `window.confirm`) |
+| `POST` | `/admin/points/{id}/publish` | `publishPoint` |
+| `POST` | `/admin/points/{id}/unpublish` | `unpublishPoint` |
 
 As rotas `PUT /users/me` e `PUT /users/me/password`, já disponíveis no backend, **não são
 consumidas** — não existe tela de perfil.
@@ -290,7 +341,8 @@ Distinção importante para quem for evoluir o painel:
 | Aviso de sessão expirada (401) | ✅ Real (plano 011) |
 | Nome do usuário na saudação | ✅ Real, vem de `/users/me` |
 | Menu lateral "Dashboard" | ✅ Real, `NavLink` para `/dashboard` |
-| Menu lateral "Pontos" | ⏳ Desabilitado, "em breve" (plano 012) |
+| Menu lateral "Pontos" e cadastro de pontos | ✅ Real (plano 012) |
+| Mídia dos pontos (fotos, panorama) | ⏳ Sem seção no formulário (planos 013 e 019) |
 | Métricas do dashboard | ⏳ Cartão informativo; números reais no plano 015. Nenhum número fictício na tela |
 | Cadastro de usuários | ⏳ Sem tela; o login orienta a falar com um administrador (plano 015) |
 
@@ -308,6 +360,10 @@ Os tipos do contrato são **gerados** do OpenAPI do backend por `npm run gen:typ
 | `User` | `UserMeResponse` (inclui `is_verified`) |
 | `AuthResponse` | `TokenResponse` |
 | `LoginPayload` | `UserLogin` |
+| `Point` | `PointAdminResponse` |
+| `PointCreate` | `PointCreate` |
+| `PointUpdate` | `PointUpdate` |
+| `PointStatus` | `Point['status']` (`draft` ou `published`) |
 
 Quando o backend mudar um schema, rode `npm run gen:types` com a pilha no ar e commite o
 `api.d.ts` junto: a diferença aparece no diff do PR e o `tsc` aponta o que quebrou. Não há

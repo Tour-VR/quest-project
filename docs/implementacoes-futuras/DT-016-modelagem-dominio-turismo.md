@@ -92,6 +92,11 @@ Aplicam-se à decomposição, não a uma implementação única:
 `POST /public/points/{slug}/visits` e resumidas em `GET /admin/metrics/overview`. No lugar
 da `Sessao` do esboço acima, a ADR-0007 optou por visita anônima, sem usuário.
 
+**Andamento (2026-11-12, plano 012).** Pontos de interesse gerenciados pelo painel: telas
+`/pontos`, `/pontos/novo` e `/pontos/:pointId` criam, editam, publicam, despublicam e
+excluem pontos sem Swagger. Mídia (planos 013 e 019) e QR Codes (plano 014) seguem
+pendentes.
+
 Recomendação de escopo: modelar **um** roteiro completo, de ponta a ponta — do cadastro no
 painel até a visualização no headset — antes de generalizar. Uma fatia vertical funcionando
 ensina mais sobre o modelo correto do que qualquer discussão em abstrato, e dá ao grupo
