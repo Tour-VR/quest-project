@@ -189,7 +189,7 @@ um agente de IA, em branch própria, e integrado por Pull Request revisado pelo 
 | 008 | [Papéis e administrador](008-papeis-e-administrador.md) | 1 | 007 | Concluído |
 | 009 | [Pontos de interesse no backend](009-pontos-de-interesse-backend.md) | 1 | 008 | Concluído |
 | 010 | [Visitas e métricas no backend](010-visitas-e-metricas-backend.md) | 1 | 009 | Concluído |
-| 011 | [Base do painel](011-base-do-painel.md) | 2 | 008 | Validado |
+| 011 | [Base do painel](011-base-do-painel.md) | 2 | 008 | Concluído |
 | 012 | [Cadastro de pontos no painel](012-cadastro-de-pontos-painel.md) | 2 | 009, 011 | Validado |
 | 013 | [Upload de mídia](013-upload-de-midia.md) | 2 | 012 | Validado |
 | 014 | [QR Codes imprimíveis](014-qr-codes.md) | 2 | 012 | Validado |
