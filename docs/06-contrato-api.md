@@ -29,10 +29,31 @@ O token é um JWT assinado em `HS256`, com claims:
 | Claim | Conteúdo |
 |---|---|
 | `sub` | e-mail do usuário (normalizado em minúsculas) |
-| `role` | papel do usuário (atualmente sempre `"user"`) |
+| `role` | papel do usuário: `"admin"` ou `"user"` |
 | `exp` | expiração — 60 minutos por padrão |
 
 Não há refresh token. Expirado o prazo, é necessário novo login.
+
+### Papéis e autorização
+
+Dois papéis: `admin` e `user` (`app/core/roles.py`). Rotas restritas a administradores
+usam a dependência `require_admin` (`app/api/deps.py:95-106`).
+
+**A autorização usa o papel gravado no banco, não o claim do token.** A cada requisição
+protegida o backend relê o usuário pelo `sub` (`app/api/deps.py:76`); o claim `role` serve
+só de informação para o cliente. Promover ou rebaixar alguém vale na requisição seguinte.
+
+Erros de uma rota restrita a administradores, nesta ordem:
+
+| Status | `detail` | Quando |
+|---|---|---|
+| `401` | `"Token nao informado."` | sem header `Authorization` |
+| `401` | `"Token invalido ou expirado."` · `"Token invalido."` · `"Usuario nao encontrado."` | token inválido, expirado ou de usuário inexistente |
+| `403` | `"Usuario inativo."` | usuário com `is_active=false` |
+| `403` | `"Acesso restrito a administradores."` | usuário com papel diferente de `admin` |
+
+A autenticação é verificada antes do corpo: sem token, a resposta é `401` mesmo com
+payload inválido.
 
 ---
 
@@ -80,7 +101,9 @@ placeholders de senha (`<db_password>`, `<password>`, `SUA_SENHA`) sem tentativa
 
 ## `POST /auth/register`
 
-Cria um usuário. Público.
+Cria um usuário com papel `user`. **Exige token de administrador** (`Authorization: Bearer`,
+ver [Papéis e autorização](#papéis-e-autorização)). O primeiro administrador é criado pela
+linha de comando `create-admin` ([03-artefato-backend.md](03-artefato-backend.md#primeiro-administrador)).
 
 **Request**
 ```json
@@ -115,12 +138,14 @@ Cria um usuário. Público.
 
 | Erro | Quando |
 |---|---|
+| `401` | sem token · token inválido ou expirado |
+| `403` | `"Usuario inativo."` · `"Acesso restrito a administradores."` |
 | `400` | e-mail já cadastrado · username já cadastrado — pela checagem prévia ou pelo índice único do MongoDB (cadastros simultâneos); a mensagem é a mesma nos dois casos |
 | `422` | senha fraca · e-mail inválido · username fora do padrão (validação Pydantic) |
 | `503` | MongoDB indisponível |
 
 > ⚠️ Conflito retorna **400**, não `409`. Comportamento verificado em
-> `app/api/v1/routes/auth.py:26`.
+> `app/api/v1/routes/auth.py:28-46`.
 
 ---
 

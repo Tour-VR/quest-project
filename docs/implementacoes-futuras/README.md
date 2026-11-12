@@ -18,7 +18,7 @@ escolhe uma ou mais dívidas, e produz um plano em [`../tasks/`](../tasks/README
 | [DT-005](DT-005-sincronizacao-documentacao-codigo.md) | ~~READMEs dos submódulos divergem do código~~ ✅ Resolvida (plano 002) | P2 | Baixo | Backend, Frontend |
 | [DT-006](DT-006-integridade-dados-mongodb.md) | ~~Sem índices únicos no MongoDB~~ ✅ Resolvida (plano 007) | P0 | Baixo | Backend |
 | [DT-007](DT-007-hardening-autenticacao.md) | Fragilidades na autenticação — ⚠️ parcial (plano 007): faltam refresh token e cookie `httpOnly` | P0 | Médio | Backend, Frontend |
-| [DT-008](DT-008-autorizacao-por-papel.md) | Campo `role` sem autorização efetiva | P1 | Médio | Backend |
+| [DT-008](DT-008-autorizacao-por-papel.md) | ~~Campo `role` sem autorização efetiva~~ ✅ Resolvida (plano 008) | P1 | Médio | Backend |
 | [DT-009](DT-009-observabilidade-e-logging.md) | Sem logging estruturado; vazamento em debug — ⚠️ parcial (plano 007): faltam JSON e `request_id` | P2 | Médio | Backend |
 | [DT-010](DT-010-tratamento-global-erros-frontend.md) | Sem interceptor de resposta 401 | P1 | Baixo | Frontend |
 | [DT-011](DT-011-dashboard-dados-reais.md) | Dashboard com métricas fictícias | P2 | Médio | Frontend, Backend |
@@ -30,6 +30,7 @@ escolhe uma ou mais dívidas, e produz um plano em [`../tasks/`](../tasks/README
 | [DT-017](DT-017-revisao-scripts-ssh.md) | ~~Comentários inadequados nos scripts~~ ✅ Resolvida (plano 001) | P3 | Baixo | Orquestrador |
 | [DT-018](DT-018-duplicacao-backend.md) | Duplicação de código no backend (2,5% do Python) | P3 | Baixo | Backend |
 | [DT-019](DT-019-healthcheck-painel.md) | Painel sem healthcheck no Docker Compose | P3 | Baixo | Orquestrador |
+| [DT-020](DT-020-ci-orquestrador-ponteiro-antigo.md) | CI do orquestrador testa o submódulo no ponteiro antigo | P1 | Baixo | Orquestrador |
 
 **Prioridades:** `P0` bloqueia o avanço ou representa risco real · `P1` alta, resolver na
 fase corrente · `P2` média, planejar · `P3` baixa, oportunidade.

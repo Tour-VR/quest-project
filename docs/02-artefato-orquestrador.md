@@ -138,6 +138,18 @@ Linux do container; por isso `/app/node_modules` fica num volume próprio. Uma p
 Portas 27017, 8000 e 3000 precisam estar livres: um MongoDB ou backend rodando fora do
 Docker impede a subida.
 
+**Primeiro administrador.** O cadastro de usuários (`POST /auth/register`) exige um
+administrador. Depois de subir o ambiente, crie o primeiro pela linha de comando, dentro
+do container do backend:
+
+```bash
+docker compose exec backend python -m app.cli create-admin --email <email> --password <senha>
+```
+
+Se o e-mail já existe, o comando promove o usuário a administrador sem alterar a senha; a
+senha nunca é impressa. Detalhes e códigos de saída em
+[03-artefato-backend.md](03-artefato-backend.md#primeiro-administrador).
+
 ## Validação
 
 `bash scripts/validate.sh` roda todas as verificações do projeto. Ele executa **todas** as
@@ -179,14 +191,16 @@ máquinas sem Docker; o PR deve registrar que o E2E não foi executado.
    (na CI, com `--with-deps`);
 5. `npx playwright test "$@"` e sai com o código do Playwright.
 
-Os testes criam um usuário novo a cada execução (`e2e-<timestamp>@tourvr.dev`) pelo helper
-`createAdminUser()` de `e2e/support/api.ts`, hoje via `POST /auth/register`. Cenários de
+Os testes criam um administrador novo a cada execução (`e2e-<timestamp>@tourvr.dev`) pelo
+helper `createAdminUser()` de `e2e/support/api.ts`, que roda
+`docker compose exec -T backend python -m app.cli create-admin` com `execFileSync` (sem
+`shell`), a partir da raiz do repositório. Por isso o E2E exige a pilha Docker no ar. Cenários de
 caminho principal levam `@golden` no início do título; `bash scripts/e2e.sh --grep @golden`
 roda só eles.
 
 | Cenário (`e2e/tests/login.spec.ts`) | Verifica |
 |---|---|
-| `@golden administrador entra no painel` | Usuário criado pela API faz login e vê "Bem-vindo(a) de volta" no dashboard |
+| `@golden administrador entra no painel` | Administrador criado pelo `create-admin` faz login e vê "Bem-vindo(a) de volta" no dashboard |
 | `credenciais invalidas mostram mensagem` | Mensagem do backend aparece e a URL continua em `/login` |
 
 **Relatório.** Ao falhar, o script indica `cd e2e && npx playwright show-report`, que abre

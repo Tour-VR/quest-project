@@ -71,7 +71,16 @@ O `up.sh` sobe MongoDB, backend e painel com Docker Compose. Na primeira vez ele
 | Painel administrativo | http://localhost:3000 |
 | Documentação da API (Swagger) | http://localhost:8000/docs |
 
-Para entrar no painel, cadastre um usuário pelo Swagger (`POST /auth/register`).
+Para entrar no painel, crie o primeiro administrador (troque e-mail e senha; a senha
+precisa de 8+ caracteres, com letra e número):
+
+```bash
+docker compose exec backend python -m app.cli create-admin --email admin@tourvr.local --password Admin12345
+```
+
+Aparece `Administrador criado: <email>`. Rodar de novo com o mesmo e-mail não duplica:
+promove o usuário a administrador. Novos usuários são cadastrados por um administrador
+(`POST /auth/register` exige o token dele).
 
 | Comando | Faz |
 |---|---|
