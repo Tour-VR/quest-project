@@ -187,7 +187,7 @@ um agente de IA, em branch própria, e integrado por Pull Request revisado pelo 
 | 006 | [Integração contínua](006-integracao-continua.md) | 0 | 005 | Concluído |
 | 007 | [Segurança do backend](007-seguranca-backend.md) | 1 | 006 | Concluído |
 | 008 | [Papéis e administrador](008-papeis-e-administrador.md) | 1 | 007 | Concluído |
-| 009 | [Pontos de interesse no backend](009-pontos-de-interesse-backend.md) | 1 | 008 | Validado |
+| 009 | [Pontos de interesse no backend](009-pontos-de-interesse-backend.md) | 1 | 008 | Concluído |
 | 010 | [Visitas e métricas no backend](010-visitas-e-metricas-backend.md) | 1 | 009 | Validado |
 | 011 | [Base do painel](011-base-do-painel.md) | 2 | 008 | Validado |
 | 012 | [Cadastro de pontos no painel](012-cadastro-de-pontos-painel.md) | 2 | 009, 011 | Validado |
