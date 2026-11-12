@@ -1,7 +1,7 @@
 # 07 — Convenções do Projeto
 
 > Aplicam-se a todos os repositórios do TourVR.
-> Última atualização: 2026-11-11
+> Última atualização: 2026-11-12
 
 ## Idioma
 
@@ -131,8 +131,10 @@ git push --recurse-submodules=on-demand
 - **HTTP.** Toda chamada usa a instância `api` de `services/api.ts`. Nunca `fetch` ou
   `axios` cru — perde `baseURL` e o header de autenticação.
 - **Sessão.** Somente via `useAuth()`. Nenhum componente lê `localStorage` diretamente.
-- **Tipos.** Contratos da API em `src/types/`, espelhando
-  [06-contrato-api.md](06-contrato-api.md).
+- **Tipos.** Os tipos da API vêm de `npm run gen:types` (gera `src/types/api.d.ts` a
+  partir do OpenAPI do backend). **Não escrever interface de contrato à mão**: use os
+  aliases de `src/types/index.ts` e acrescente lá um alias novo quando precisar. A
+  descrição legível do contrato continua em [06-contrato-api.md](06-contrato-api.md).
 - **Estilo.** Tailwind por classes utilitárias no JSX. Sem CSS-in-JS, sem arquivos `.css`
   por componente.
 - **Estado.** `useState` local e Context para estado global. Não introduzir Redux,

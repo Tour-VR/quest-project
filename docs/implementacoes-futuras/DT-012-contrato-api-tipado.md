@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Aberta |
+| **Status** | Resolvida (plano 011) |
 | **Prioridade** | P2 |
 | **Esforço** | Médio |
 | **Artefato** | Frontend, Backend |
@@ -60,13 +60,23 @@ para nada além da documentação interativa.
 
 ## Critérios de aceite
 
-- [ ] `is_verified` presente na interface `User`
-- [ ] Tipos da API gerados a partir do OpenAPI, não escritos à mão
-- [ ] Script de geração documentado
-- [ ] Divergência entre backend e tipos do frontend quebra o build ou a CI
+- [x] `is_verified` presente na interface `User`
+- [x] Tipos da API gerados a partir do OpenAPI, não escritos à mão
+- [x] Script de geração documentado
+- [ ] Divergência entre backend e tipos do frontend quebra o build ou a CI — fora do
+      escopo do plano 011 (ver resolução)
 
 ## Notas
 
 Um passo intermediário barato: um teste no backend que compare o `/openapi.json` gerado
 com um snapshot versionado, tornando qualquer alteração de contrato visível no diff do
 pull request.
+
+**Resolução (2026-11-12, plano 011).** `npm run gen:types` (`scripts/gen-types.mjs`, com
+`openapi-typescript`) gera `src/types/api.d.ts` a partir do `/openapi.json` do backend; o
+arquivo é versionado e `src/types/index.ts` reexporta `User = UserMeResponse` (com
+`is_verified`), `AuthResponse = TokenResponse` e `LoginPayload = UserLogin`. A convenção
+"não escrever interface de contrato à mão" está em
+[07-convencoes.md](../07-convencoes.md). A verificação em CI (item 4 da proposta) ficou
+fora por decisão do plano: o arquivo gerado é versionado e qualquer diferença aparece no
+diff do PR, o que basta nesta fase.

@@ -103,11 +103,12 @@ MongoDB
 main.tsx → App.tsx (BrowserRouter + AuthProvider + Routes)
                 │
                 ├── /login      → pages/Login.tsx
-                └── /dashboard  → components/ProtectedRoute → pages/Dashboard.tsx
+                └── /dashboard  → components/ProtectedRoute (sessão + papel admin)
+                                    → layouts/AdminLayout (menu) → pages/Dashboard.tsx
                                           │
                                   contexts/AuthContext.tsx  (estado de sessão)
                                           │
-                                  services/api.ts  (Axios + interceptor de token)
+                                  services/api.ts  (Axios + interceptores de token e de 401)
 ```
 
 **Invariantes:**
@@ -116,8 +117,8 @@ main.tsx → App.tsx (BrowserRouter + AuthProvider + Routes)
   do `localStorage` diretamente — usa `useAuth()`.
 - Toda chamada HTTP passa pela instância `api` de `services/api.ts`, para herdar
   `baseURL` e o interceptor de `Authorization`.
-- Tipos de resposta da API ficam em `src/types/` e devem espelhar
-  [06-contrato-api.md](06-contrato-api.md).
+- Tipos de resposta da API são gerados do OpenAPI (`npm run gen:types` →
+  `src/types/api.d.ts`); [06-contrato-api.md](06-contrato-api.md) é a descrição legível.
 
 ## Ciclo de vida e resiliência
 
