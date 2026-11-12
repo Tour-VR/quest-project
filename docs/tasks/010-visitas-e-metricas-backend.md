@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em revisão — Heitor Aquino |
+| **Status** | Concluído |
 | **Fase** | 1 — Domínio do campus (backend) |
 | **Depende de** | 009 |
 | **Dívidas atendidas** | DT-011 (parte do backend: endpoint de métricas) · DT-016 (parcial: visitas) |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Backend · Orquestrador (documentação) |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | 2026-11-11 por Heitor Aquino |
+| **Executado em** | 2026-11-11 por Heitor Aquino · PRs: [Tour-VR/backend#7](https://github.com/Tour-VR/backend/pull/7), [Tour-VR/quest-project#10](https://github.com/Tour-VR/quest-project/pull/10) |
 
 ---
 
