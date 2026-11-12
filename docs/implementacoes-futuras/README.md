@@ -21,7 +21,7 @@ escolhe uma ou mais dívidas, e produz um plano em [`../tasks/`](../tasks/README
 | [DT-008](DT-008-autorizacao-por-papel.md) | ~~Campo `role` sem autorização efetiva~~ ✅ Resolvida (plano 008) | P1 | Médio | Backend |
 | [DT-009](DT-009-observabilidade-e-logging.md) | Sem logging estruturado; vazamento em debug — ⚠️ parcial (plano 007): faltam JSON e `request_id` | P2 | Médio | Backend |
 | [DT-010](DT-010-tratamento-global-erros-frontend.md) | Sem interceptor de resposta 401 | P1 | Baixo | Frontend |
-| [DT-011](DT-011-dashboard-dados-reais.md) | Dashboard com métricas fictícias | P2 | Médio | Frontend, Backend |
+| [DT-011](DT-011-dashboard-dados-reais.md) | Dashboard com métricas fictícias — ⚠️ parcial (plano 010): endpoint pronto, falta o painel (plano 015) | P2 | Médio | Frontend, Backend |
 | [DT-012](DT-012-contrato-api-tipado.md) | Contrato da API duplicado manualmente | P2 | Médio | Frontend, Backend |
 | [DT-013](DT-013-qualidade-codigo-frontend.md) | ~~Frontend sem testes, linter ou modo estrito~~ ✅ Resolvida (plano 004) | P2 | Médio | Frontend |
 | [DT-014](DT-014-containerizacao-completa.md) | Containerização parcial e sem `.dockerignore` — ⚠️ parcial (plano 002): falta imagem de produção do frontend | P2 | Baixo | Todos |
@@ -31,6 +31,7 @@ escolhe uma ou mais dívidas, e produz um plano em [`../tasks/`](../tasks/README
 | [DT-018](DT-018-duplicacao-backend.md) | Duplicação de código no backend (2,5% do Python) | P3 | Baixo | Backend |
 | [DT-019](DT-019-healthcheck-painel.md) | Painel sem healthcheck no Docker Compose | P3 | Baixo | Orquestrador |
 | [DT-020](DT-020-ci-orquestrador-ponteiro-antigo.md) | CI do orquestrador testa o submódulo no ponteiro antigo | P1 | Baixo | Orquestrador |
+| [DT-021](DT-021-limite-taxa-registro-visitas.md) | Registro de visitas sem limite de taxa | P3 | Baixo | Backend |
 
 **Prioridades:** `P0` bloqueia o avanço ou representa risco real · `P1` alta, resolver na
 fase corrente · `P2` média, planejar · `P3` baixa, oportunidade.
