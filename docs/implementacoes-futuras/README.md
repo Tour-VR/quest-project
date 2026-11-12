@@ -20,9 +20,9 @@ escolhe uma ou mais dívidas, e produz um plano em [`../tasks/`](../tasks/README
 | [DT-007](DT-007-hardening-autenticacao.md) | Fragilidades na autenticação — ⚠️ parcial (plano 007): faltam refresh token e cookie `httpOnly` | P0 | Médio | Backend, Frontend |
 | [DT-008](DT-008-autorizacao-por-papel.md) | ~~Campo `role` sem autorização efetiva~~ ✅ Resolvida (plano 008) | P1 | Médio | Backend |
 | [DT-009](DT-009-observabilidade-e-logging.md) | Sem logging estruturado; vazamento em debug — ⚠️ parcial (plano 007): faltam JSON e `request_id` | P2 | Médio | Backend |
-| [DT-010](DT-010-tratamento-global-erros-frontend.md) | Sem interceptor de resposta 401 | P1 | Baixo | Frontend |
-| [DT-011](DT-011-dashboard-dados-reais.md) | Dashboard com métricas fictícias — ⚠️ parcial (plano 010): endpoint pronto, falta o painel (plano 015) | P2 | Médio | Frontend, Backend |
-| [DT-012](DT-012-contrato-api-tipado.md) | Contrato da API duplicado manualmente | P2 | Médio | Frontend, Backend |
+| [DT-010](DT-010-tratamento-global-erros-frontend.md) | ~~Sem interceptor de resposta 401~~ ✅ Resolvida (plano 011) | P1 | Baixo | Frontend |
+| [DT-011](DT-011-dashboard-dados-reais.md) | Dashboard com métricas fictícias — ⚠️ parcial (planos 010 e 011): endpoint pronto e painel sem números falsos; falta exibir as métricas reais (plano 015) | P2 | Médio | Frontend, Backend |
+| [DT-012](DT-012-contrato-api-tipado.md) | ~~Contrato da API duplicado manualmente~~ ✅ Resolvida (plano 011) | P2 | Médio | Frontend, Backend |
 | [DT-013](DT-013-qualidade-codigo-frontend.md) | ~~Frontend sem testes, linter ou modo estrito~~ ✅ Resolvida (plano 004) | P2 | Médio | Frontend |
 | [DT-014](DT-014-containerizacao-completa.md) | Containerização parcial e sem `.dockerignore` — ⚠️ parcial (plano 002): falta imagem de produção do frontend | P2 | Baixo | Todos |
 | [DT-015](DT-015-gestao-usuarios-no-painel.md) | Cadastro de usuários só via Swagger | P2 | Médio | Frontend, Backend |

@@ -49,9 +49,12 @@ ambiente VR ou de sessão em lugar algum do sistema.
 
 **Imediato — honestidade da interface (esforço baixo)**
 
-1. Marcar visualmente os cartões como exemplo — rótulo "dados de exemplo" ou estado vazio
-   com "sem dados disponíveis".
-2. Desabilitar visualmente os itens de menu sem destino, ou removê-los até existirem.
+1. ✅ Marcar visualmente os cartões como exemplo — rótulo "dados de exemplo" ou estado vazio
+   com "sem dados disponíveis" — **feito no plano 011**: os cartões saíram; um cartão
+   informativo avisa que as métricas chegam no plano 015.
+2. ✅ Desabilitar visualmente os itens de menu sem destino, ou removê-los até existirem —
+   **feito no plano 011**: menu com `NavLink`; itens futuros cinza, `aria-disabled` e
+   "em breve".
 
 **Quando o domínio existir (depende de DT-016)**
 
@@ -65,8 +68,8 @@ ambiente VR ou de sessão em lugar algum do sistema.
 
 ## Critérios de aceite
 
-- [ ] Nenhum número exibido no painel pode ser confundido com dado real enquanto não for
-- [ ] Itens de menu ou navegam, ou estão visivelmente desabilitados
+- [x] Nenhum número exibido no painel pode ser confundido com dado real enquanto não for
+- [x] Itens de menu ou navegam, ou estão visivelmente desabilitados
 - [ ] Após DT-016: cartões refletem contagens reais, com tratamento de carregando e erro
 
 ## Notas
@@ -77,3 +80,7 @@ pontos e de publicados, total de visitas, visitas dos últimos 7 dias, visitas p
 
 A etapa imediata custa minutos e elimina o risco de má interpretação em apresentação. Não
 esperar pelo domínio para executá-la.
+
+**Andamento (2026-11-12, plano 011).** Etapa imediata concluída no painel: sem números
+fictícios e menu honesto. A dívida continua **parcial** até o plano 015 consumir
+`GET /admin/metrics/overview` no dashboard.

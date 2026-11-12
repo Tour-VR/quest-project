@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em execução — Heitor Aquino — 2026-11-12 |
+| **Status** | Em revisão — Heitor Aquino |
 | **Fase** | 2 — Painel administrativo |
 | **Depende de** | 008 |
 | **Dívidas atendidas** | DT-010, DT-011 (etapa imediata), DT-012 |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Frontend, Orquestrador (docs e E2E) |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | — |
+| **Executado em** | 2026-11-12 por Heitor Aquino (agente Claude Code) |
 
 ---
 
@@ -293,26 +293,26 @@ cd ../.. && bash scripts/validate.sh
 
 ## 8. Documentação a atualizar
 
-- [ ] `docs/04-artefato-frontend.md` — estrutura (`layouts/`, `constants/`, `types/api.d.ts`),
+- [x] `docs/04-artefato-frontend.md` — estrutura (`layouts/`, `constants/`, `types/api.d.ts`),
       rotas, fluxo de 401, guard de papel, script `gen:types`, tabela "fachada × real"
-- [ ] `docs/07-convencoes.md` — seção Frontend: "tipos da API vêm de `npm run gen:types`;
+- [x] `docs/07-convencoes.md` — seção Frontend: "tipos da API vêm de `npm run gen:types`;
       não escrever interface de contrato à mão"
-- [ ] `docs/implementacoes-futuras/DT-010-...md` e `DT-012-...md` — `Resolvida` (plano 011)
-- [ ] `docs/implementacoes-futuras/DT-011-...md` — anotar que a etapa imediata foi feita no
+- [x] `docs/implementacoes-futuras/DT-010-...md` e `DT-012-...md` — `Resolvida` (plano 011)
+- [x] `docs/implementacoes-futuras/DT-011-...md` — anotar que a etapa imediata foi feita no
       011; continua `Aberta` até o 015
-- [ ] `docs/implementacoes-futuras/README.md` — status no índice
+- [x] `docs/implementacoes-futuras/README.md` — status no índice
 
 ## 9. Critérios de aceite
 
-- [ ] Token expirado ou inválido leva ao `/login` com "Sua sessão expirou. Entre novamente."
-- [ ] Senha errada no login continua mostrando a mensagem do backend, sem aviso de sessão
-- [ ] Usuário sem papel admin não acessa nenhuma tela do painel
-- [ ] Menu navega ou está visivelmente desabilitado
-- [ ] Nenhum número fictício na interface
-- [ ] `src/types/api.d.ts` gerado e versionado; `User` inclui `is_verified`
-- [ ] Nenhuma ocorrência de "OculosVR" visível ao usuário
-- [ ] `bash scripts/validate.sh` passando, com os 3 cenários E2E novos
-- [ ] Documentação da seção 8 atualizada
+- [x] Token expirado ou inválido leva ao `/login` com "Sua sessão expirou. Entre novamente."
+- [x] Senha errada no login continua mostrando a mensagem do backend, sem aviso de sessão
+- [x] Usuário sem papel admin não acessa nenhuma tela do painel
+- [x] Menu navega ou está visivelmente desabilitado
+- [x] Nenhum número fictício na interface
+- [x] `src/types/api.d.ts` gerado e versionado; `User` inclui `is_verified`
+- [x] Nenhuma ocorrência de "OculosVR" visível ao usuário
+- [x] `bash scripts/validate.sh` passando, com os 3 cenários E2E novos
+- [x] Documentação da seção 8 atualizada
 
 ## 10. Commits esperados
 
@@ -366,3 +366,89 @@ Execute o plano docs/tasks/011-base-do-painel.md.
 Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o "Prompt 1 — EXECUTAR" etapa por etapa.
 Meu nome, para registrar no plano: <SEU NOME>
 ```
+
+---
+
+## Registro de execução
+
+**2026-11-12 — Heitor Aquino (sessão de execução com Claude Code).**
+
+### O que foi feito
+
+Frontend (`services/frontend`, branch `plano/011-base-do-painel`):
+
+- `src/services/api.ts` — interceptor de resposta: `401` fora de `POST /auth/login` limpa o
+  token e chama o handler registrado com `setUnauthorizedHandler`; `API_DOCS_URL` removido.
+- `src/contexts/AuthContext.tsx` — `isAdmin`, `sessionNotice` e `clearSessionNotice`; o
+  handler é registrado pelo hook interno `useSessionExpiry`, chamado antes do efeito de
+  restauração de sessão, com cleanup.
+- `ProtectedRoute` com guard de papel e nova tela `AccessDenied`.
+- `layouts/AdminLayout.tsx`, `layouts/SidebarNav.tsx` e `constants/navigation.ts`; rotas
+  aninhadas em `App.tsx`. A antiga `components/dashboard/Sidebar.tsx` foi apagada.
+- Login: sem o aviso de `/docs`, com "Não tem acesso? Fale com um administrador do
+  TourVR.", títulos "TourVR" / "Painel administrativo" e caixa amarela `SessionNotice`.
+- Dashboard: sem `dashboardMetrics`, cartões numéricos e bloco JSON; cartão
+  `MetricsPendingCard`. Apagados `MetricCards`, `UserDataPanel`, `FirstAccessNotice` e
+  `constants/dashboard.ts`.
+- `openapi-typescript` 7.13 (devDependency), `scripts/gen-types.mjs`, script `gen:types`,
+  `src/types/api.d.ts` gerado e versionado; `src/types/index.ts` com aliases
+  (`UserMeResponse`, `TokenResponse`, `UserLogin` — nomes sem sufixo).
+- `index.html` — título "TourVR Admin". A única ocorrência restante de "OculosVR" em `src/`
+  é a chave `@OculosVR:token`, mantida por decisão da seção 4.
+
+Orquestrador (branch `plano/011-base-do-painel`):
+
+- `e2e/tests/painel-base.spec.ts` com os 3 cenários; `e2e/support/api.ts` ganhou
+  `createCommonUser` (login do admin pela API + `POST /auth/register`).
+- Documentação da seção 8, mais o diagrama do frontend em `docs/01-arquitetura.md`.
+
+**Verificação:** frontend com 43 testes em 8 arquivos e cobertura de 99,2% de linhas;
+`bash scripts/validate.sh` com todas as etapas `[OK]` (backend 128 testes, frontend,
+duplicação, E2E 5/5).
+
+### Desvios do plano
+
+1. **Ordem de remoção do `API_DOCS_URL`.** O passo 1 pede a remoção, mas o
+   `FirstAccessNotice` ainda o usava até o passo 5. A remoção foi para o commit dos passos 5
+   e 6, para cada commit compilar sozinho. Resultado final idêntico.
+2. **Teste do interceptor.** Em vez de pegar o *rejected handler* de dentro de
+   `api.interceptors.response`, os testes passam um adaptador falso do Axios que responde
+   com o status desejado. Exercita o interceptor real, sem dependência nova e sem acessar
+   campos internos do Axios.
+3. **`useSessionExpiry`.** Com o handler e o aviso dentro do `AuthProvider`, a função
+   passava do limite de 60 linhas do ESLint. A parte do aviso virou um hook interno no
+   mesmo arquivo; a ordem dos efeitos pedida na seção 7 foi mantida.
+4. **ESLint para `scripts/*.mjs`.** O `scripts/gen-types.mjs` fica fora do `tsconfig`;
+   recebeu a mesma configuração já aplicada aos `*.config.js` (sem checagem de tipos) e as
+   globais de Node. Nenhuma regra foi desligada para o código de `src/`. O `eslint.config.js`
+   e o `.prettierignore` já ignoravam `src/types/api.d.ts`.
+5. **Testes extras.** `layouts/AdminLayout.test.tsx` (título, menu, "Sair do sistema", que
+   saiu do `Dashboard.test.tsx`) e casos de borda no interceptor e no contexto.
+6. **Cenário E2E "token inválido".** Uma única navegação depois de trocar o token: uma
+   segunda carga de página apagaria o aviso, que vive só na memória do React.
+7. **Roteiro da seção 12, item 5.** Apagar a chave do `localStorage` e clicar em
+   "Dashboard" **não** mostra o aviso: o dashboard não chama a API (as métricas saíram) e
+   sem token não há sessão a expirar. O roteiro entregue ao aluno troca o valor da chave
+   por `invalido` e recarrega a página, que é o cenário coberto pelo E2E.
+8. **Diagrama em `docs/01-arquitetura.md`.** Atualizado, além da lista da seção 8, porque
+   passaria a descrever rotas que não existem mais.
+
+### Dívidas novas registradas
+
+Nenhuma.
+
+### CI do PR do orquestrador
+
+O check `CI / validacao` do PR do orquestrador fica **vermelho** só na etapa E2E: a CI testa
+o frontend no ponteiro atual da `main`, que ainda não tem as telas deste plano, e os 3
+cenários novos falham. Backend, frontend e duplicação passam. É a
+[DT-020](../implementacoes-futuras/DT-020-ci-orquestrador-ponteiro-antigo.md), já
+registrada. Localmente, com o frontend da branch do plano, `bash scripts/validate.sh`
+terminou com todas as etapas `[OK]`. Caminho para destravar (opção 1 da DT-020): o
+orientador faz o merge do PR do frontend; depois, uma sessão de correção (Prompt 2) aponta
+o submódulo `services/frontend` para a nova `main` na branch do plano, e a CI fica verde.
+
+**Correção (2026-11-12, Prompt 2).** Tour-VR/frontend#4 foi mergeado (`9a2427c`). O
+ponteiro de `services/frontend` foi atualizado para esse commit na branch do plano, como a
+opção 1 da DT-020 prevê. A CI do orquestrador passa a testar o frontend novo. Com isso, o
+Prompt 3 não precisa mais atualizar o ponteiro do frontend para este plano.

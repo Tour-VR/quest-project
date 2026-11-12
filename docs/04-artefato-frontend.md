@@ -1,12 +1,13 @@
 # 04 — Artefato: Frontend (`services/frontend`)
 
 > Repositório: `github.com/Tour-VR/frontend` · Commit fixado: `644647e`
-> Última verificação contra o código: 2026-11-10
+> Última verificação contra o código: 2026-11-12
 
 ## Responsabilidade
 
 Painel administrativo web do TourVR. Autentica administradores contra o backend, mantém
-a sessão entre recarregamentos, protege rotas e exibe o painel inicial.
+a sessão entre recarregamentos, encerra a sessão quando o token expira, restringe o painel
+ao papel `admin` e exibe o painel inicial dentro de um layout com menu (plano 011).
 
 Não possui lógica de negócio própria — é uma casca sobre a API REST.
 
@@ -24,12 +25,13 @@ Não possui lógica de negócio própria — é uma casca sobre a API REST.
 | Lint | ESLint (`typescript-eslint` `strictTypeChecked` + `react-hooks`) | 10 |
 | Formatação | Prettier | 3 |
 | Testes | Vitest + Testing Library (`jsdom`), cobertura v8 | 5 |
+| Tipos da API | `openapi-typescript` (gera `src/types/api.d.ts` do OpenAPI) | 7 |
 
 ## Estrutura
 
 ```
 services/frontend/
-├── index.html              título "OculosVR Admin", lang pt-BR
+├── index.html              título "TourVR Admin", lang pt-BR
 ├── vite.config.ts          plugins react + tailwind, alias "@" → raiz
 ├── vitest.config.ts        jsdom, setup e cobertura mínima de 80%
 ├── eslint.config.js        flat config: regras de tipo, react-hooks, limites de tamanho
@@ -37,38 +39,44 @@ services/frontend/
 ├── .gitattributes          força quebra de linha LF (o Prettier exige LF)
 ├── tsconfig.json           "strict": true, noUnused*, types vite/vitest/jest-dom
 ├── .env.example            VITE_API_URL
-└── src/                    539 linhas de código (sem contar testes)
+├── scripts/
+│   └── gen-types.mjs       npm run gen:types — gera src/types/api.d.ts do /openapi.json
+└── src/                    ~650 linhas de código (sem contar testes e api.d.ts)
     ├── main.tsx            StrictMode + createRoot
-    ├── App.tsx             BrowserRouter > AuthProvider > Routes
+    ├── App.tsx             BrowserRouter > AuthProvider > Routes (rotas aninhadas)
     ├── index.css           @import "tailwindcss"
     ├── vite-env.d.ts       tipo de import.meta.env (VITE_API_URL)
     ├── pages/              só compõem componentes
-    │   ├── Login.tsx       34 linhas — loader, redirecionamento e cartão de login
-    │   └── Dashboard.tsx   33 linhas — painel (⚠️ dados fictícios)
+    │   ├── Login.tsx       aviso de sessão, formulário e "Não tem acesso?"
+    │   └── Dashboard.tsx   saudação + cartão "métricas no plano 015"
+    ├── layouts/
+    │   ├── AdminLayout.tsx barra lateral ("TourVR Admin", menu, "Sair do sistema") + <Outlet />
+    │   └── SidebarNav.tsx  NavLink nos itens habilitados; "em breve" nos demais
     ├── components/
-    │   ├── ProtectedRoute.tsx   guard de rota com estado de loading
+    │   ├── ProtectedRoute.tsx   carregando → loader; sem sessão → /login; sem admin → AccessDenied
+    │   ├── AccessDenied.tsx     "Acesso restrito a administradores." + botão "Sair"
     │   ├── FullScreenLoader.tsx
     │   ├── login/
-    │   │   ├── LoginForm.tsx          mensagem de erro + campos + botão
-    │   │   ├── IconInput.tsx          rótulo + ícone + input (id via useId)
-    │   │   └── FirstAccessNotice.tsx  aviso azul de primeiro acesso
+    │   │   ├── LoginForm.tsx      mensagem de erro + campos + botão
+    │   │   ├── IconInput.tsx      rótulo + ícone + input (id via useId)
+    │   │   └── SessionNotice.tsx  caixa amarela com o aviso de sessão expirada
     │   └── dashboard/
-    │       ├── Sidebar.tsx        título, menu e "Sair do sistema"
-    │       ├── MetricCards.tsx    grade de cartões de métricas
-    │       └── UserDataPanel.tsx  JSON de /users/me
+    │       └── MetricsPendingCard.tsx  cartão informativo no lugar das métricas
     ├── constants/
-    │   └── dashboard.ts    navigationItems e dashboardMetrics
+    │   ├── messages.ts     textos de sessão expirada, acesso restrito e avisos
+    │   └── navigation.ts   NAV_ITEMS (rótulo, rota, ícone, enabled)
     ├── hooks/
     │   └── useLoginForm.ts estado do formulário e envio (POST /auth/login)
     ├── contexts/
-    │   └── AuthContext.tsx  82 linhas — estado de sessão
+    │   └── AuthContext.tsx  sessão, isAdmin, sessionNotice e registro do handler de 401
     ├── services/
-    │   └── api.ts           instância Axios + gestão do token
+    │   └── api.ts           instância Axios, gestão do token, interceptores de request e de 401
     ├── test/
     │   ├── setup.ts         jest-dom + limpa localStorage após cada teste
     │   └── factories.ts     buildUser e buildAuthValue para os testes
     └── types/
-        └── index.ts         User, AuthResponse, LoginPayload
+        ├── api.d.ts         GERADO por npm run gen:types — não editar à mão
+        └── index.ts         aliases: User, AuthResponse, LoginPayload
 ```
 
 Testes ficam ao lado do código, como `Arquivo.test.tsx` (ex.: `pages/Login.test.tsx`).
@@ -79,8 +87,13 @@ A API é sempre mockada com `vi.mock('../services/api')`; não há servidor real
 | Rota | Componente | Proteção |
 |---|---|---|
 | `/login` | `Login` | Pública; redireciona para `/dashboard` se já autenticado |
-| `/dashboard` | `Dashboard` | Protegida por `ProtectedRoute` |
+| `/dashboard` | `Dashboard` dentro de `AdminLayout` | `ProtectedRoute`: sessão **e** papel `admin` |
 | `*` | — | Redireciona para `/dashboard` |
+
+As telas do painel ficam aninhadas em `ProtectedRoute` → `AdminLayout` (`src/App.tsx`). Uma
+tela nova entra como rota filha do `AdminLayout` e ganha um item em
+`constants/navigation.ts`. Itens com `enabled: false` aparecem cinza, com
+`aria-disabled="true"` e o rótulo "em breve", sem link (hoje: "Pontos", plano 012).
 
 ## Fluxo de autenticação
 
@@ -105,8 +118,31 @@ Logout:
 ```
 
 Um interceptor de **request** em `services/api.ts` injeta `Authorization` em toda chamada.
-Não existe interceptor de **response** — token expirado no meio da sessão falha
-silenciosamente. Ver [DT-010](implementacoes-futuras/DT-010-tratamento-global-erros-frontend.md).
+
+**Sessão expirada (401).** Um interceptor de **response** em `services/api.ts` trata o `401`
+de qualquer rota, **exceto** `POST /auth/login` (credencial errada continua mostrando a
+mensagem do backend):
+
+```
+API responde 401
+  └─ clearAuthToken() e chama o handler registrado com setUnauthorizedHandler()
+       └─ AuthContext: setUser(null)
+                       sessionNotice = "Sua sessão expirou. Entre novamente."
+            └─ ProtectedRoute vê isAuthenticated = false → <Navigate to="/login" />
+                 └─ Login mostra o aviso em caixa amarela; enviar o formulário o limpa
+```
+
+O módulo HTTP não conhece o React: o `AuthProvider` registra o handler num `useEffect`
+(com cleanup, por causa do `StrictMode`) declarado **antes** do efeito de restauração de
+sessão, para que um token inválido na recarga também mostre o aviso. O handler não chama
+`navigate` — zerar o `user` basta e evita laço de redirecionamento.
+
+`403` **não** encerra a sessão: em `/admin/...` significa papel insuficiente, e quem trata é
+a tela que chamou.
+
+**Guard de papel.** `ProtectedRoute` só libera o painel para `role === "admin"`
+(`isAdmin` no contexto). Usuário autenticado sem esse papel vê `AccessDenied` ("Acesso
+restrito a administradores.") com o botão "Sair".
 
 ## Endpoints consumidos
 
@@ -124,7 +160,7 @@ consumidas** — não existe tela de perfil.
 |---|---|---|
 | `VITE_API_URL` | `http://127.0.0.1:8000` | URL base do backend |
 
-`API_DOCS_URL` é derivado de `API_BASE_URL + "/docs"` e usado no aviso da tela de login.
+`VITE_API_URL` também é lido por `npm run gen:types` (padrão `http://localhost:8000`).
 
 ## Execução
 
@@ -164,6 +200,7 @@ npm run dev        # http://localhost:3000
 | `npm run test` | Roda os testes com Vitest |
 | `npm run test:coverage` | Testes com cobertura; falha abaixo de 80% em linhas, funções, ramos ou comandos |
 | `npm run clean` | Remove `dist/` |
+| `npm run gen:types` | Gera `src/types/api.d.ts` a partir de `<VITE_API_URL>/openapi.json`; exige o backend no ar (`bash scripts/up.sh`) |
 
 **Integração contínua.** `npm ci`, `lint`, `format:check`, `test:coverage` e `build` rodam
 no GitHub em todo PR e push na `main`, pelo workflow `.github/workflows/ci.yml` (check
@@ -184,13 +221,19 @@ Definidas em `eslint.config.js` (plano 004). Reprovam o `npm run lint`:
 Em `**/*.test.ts(x)` e `src/test/**` ficam desligadas `no-magic-numbers`,
 `max-lines-per-function` e `@typescript-eslint/no-non-null-assertion`.
 
+`src/types/api.d.ts` (gerado) fica fora do ESLint e do Prettier. Os scripts Node em
+`scripts/*.mjs` usam a mesma configuração dos `*.config.js` (sem checagem de tipos) e as
+globais de Node.
+
 ### Problemas comuns
 
 | Sintoma | Causa provável |
 |---|---|
 | `Network Error` ao fazer login | Backend fora do ar ou `VITE_API_URL` apontando para outro endereço |
 | Erro de CORS | A origem do painel não está em `APP_CORS_ORIGINS` do backend |
-| "Credenciais inválidas" com usuário novo | Usuário ainda não cadastrado; usar `POST /auth/register` no Swagger |
+| "Credenciais inválidas" com usuário novo | Usuário ainda não cadastrado; um administrador cadastra via `POST /auth/register` (exige papel admin, plano 008) |
+| "Acesso restrito a administradores." | Login válido, mas o papel não é `admin`; o primeiro admin vem do `create-admin` |
+| `npm run gen:types` falha com `ECONNREFUSED` | Backend fora do ar; rode `bash scripts/up.sh` antes |
 | `useAuth deve ser usado dentro de AuthProvider` | Componente renderizado fora da árvore de `<App>` |
 
 ## O que é fachada e o que é real
@@ -199,22 +242,32 @@ Distinção importante para quem for evoluir o painel:
 
 | Elemento | Status |
 |---|---|
-| Login, sessão, logout, guard de rota | ✅ Real, integrado ao backend |
-| Nome do usuário no cabeçalho | ✅ Real, vem de `/users/me` |
-| Bloco JSON com os dados de `/users/me` | ✅ Real |
-| Cards "124 Usuários Ativos" / "12 Ambientes VR" / "89 Sessões Hoje" | ❌ Constantes literais em `constants/dashboard.ts:9-13` |
-| Menu lateral "Usuários" e "Configurações VR" | ❌ `<div>` sem rota, sem página, sem clique |
-| Aviso "cadastre-se via /docs" na tela de login | ⚠️ Real — não há tela de cadastro |
+| Login, sessão, logout, guard de rota e de papel | ✅ Real, integrado ao backend |
+| Aviso de sessão expirada (401) | ✅ Real (plano 011) |
+| Nome do usuário na saudação | ✅ Real, vem de `/users/me` |
+| Menu lateral "Dashboard" | ✅ Real, `NavLink` para `/dashboard` |
+| Menu lateral "Pontos" | ⏳ Desabilitado, "em breve" (plano 012) |
+| Métricas do dashboard | ⏳ Cartão informativo; números reais no plano 015. Nenhum número fictício na tela |
+| Cadastro de usuários | ⏳ Sem tela; o login orienta a falar com um administrador (plano 015) |
 
 Ver [DT-011](implementacoes-futuras/DT-011-dashboard-dados-reais.md) e
 [DT-015](implementacoes-futuras/DT-015-gestao-usuarios-no-painel.md).
 
-## Divergência de contrato
+## Tipos da API
 
-`src/types/index.ts` define `User` sem o campo `is_verified`, que o backend retorna em
-`/users/me`. Não quebra em runtime (TypeScript apaga tipos na compilação), mas o contrato
-está fora de sincronia e não há mecanismo que force o alinhamento. Ver
-[DT-012](implementacoes-futuras/DT-012-contrato-api-tipado.md).
+Os tipos do contrato são **gerados** do OpenAPI do backend por `npm run gen:types`
+(`scripts/gen-types.mjs` → `openapi-typescript`), gravados em `src/types/api.d.ts` e
+**versionados**. `src/types/index.ts` só reexporta aliases legíveis:
+
+| Alias | Schema do OpenAPI |
+|---|---|
+| `User` | `UserMeResponse` (inclui `is_verified`) |
+| `AuthResponse` | `TokenResponse` |
+| `LoginPayload` | `UserLogin` |
+
+Quando o backend mudar um schema, rode `npm run gen:types` com a pilha no ar e commite o
+`api.d.ts` junto: a diferença aparece no diff do PR e o `tsc` aponta o que quebrou. Não há
+verificação automática em CI de que o arquivo está atualizado (fora do escopo do plano 011).
 
 ## Nota sobre o README do submódulo
 

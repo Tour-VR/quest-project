@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Aberta |
+| **Status** | Resolvida (plano 011) |
 | **Prioridade** | P1 |
 | **Esforço** | Baixo |
 | **Artefato** | Frontend |
@@ -49,13 +49,21 @@ O tratamento de erro existe apenas dentro do `handleLogin` de `Login.tsx`, que l
 
 ## Critérios de aceite
 
-- [ ] Com token expirado, a próxima chamada redireciona para `/login` automaticamente
-- [ ] O usuário vê uma mensagem explicando o motivo
-- [ ] Erro de credenciais no login continua exibindo a mensagem do backend, sem
+- [x] Com token expirado, a próxima chamada redireciona para `/login` automaticamente
+- [x] O usuário vê uma mensagem explicando o motivo
+- [x] Erro de credenciais no login continua exibindo a mensagem do backend, sem
       redirecionamento indevido
-- [ ] `403` de conta inativa é distinguível de sessão expirada
+- [x] `403` de conta inativa é distinguível de sessão expirada
 
 ## Notas
 
 Resolve-se em poucas dezenas de linhas e elimina o defeito mais perceptível do painel.
 Bom candidato para o primeiro plano de execução do frontend.
+
+**Resolução (2026-11-12, plano 011).** `src/services/api.ts` registra um interceptor de
+resposta: `401` fora de `POST /auth/login` limpa o token e chama o handler que o
+`AuthProvider` registra com `setUnauthorizedHandler` — o módulo HTTP não importa React. O
+contexto zera o usuário e expõe `sessionNotice` ("Sua sessão expirou. Entre novamente."),
+exibido pela tela de login. `403` não derruba a sessão: fica com a tela que chamou. Erros
+`500` e de rede seguem sem tratamento global (cada tela trata os seus). Detalhes em
+[04-artefato-frontend.md](../04-artefato-frontend.md#fluxo-de-autenticação).
