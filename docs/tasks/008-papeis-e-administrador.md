@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em revisão — Heitor Aquino |
+| **Status** | Concluído |
 | **Fase** | 1 — Domínio do campus (backend) |
 | **Depende de** | 007 |
 | **Dívidas atendidas** | DT-008 |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Backend · Orquestrador (E2E e documentação) |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | 2026-11-11 por Heitor Aquino (PRs na seção Registro de execução) |
+| **Executado em** | 2026-11-11 por Heitor Aquino · PRs: [Tour-VR/backend#5](https://github.com/Tour-VR/backend/pull/5), [Tour-VR/quest-project#8](https://github.com/Tour-VR/quest-project/pull/8) |
 
 ---
 
