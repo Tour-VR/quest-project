@@ -60,3 +60,7 @@ Escolher uma das opções e ajustar protocolo e documentação:
 
 A opção 1 não muda a CI e mantém a garantia "ponteiro sempre na `main`", mas exige a
 ordem de merge: submódulos primeiro, depois atualizar o ponteiro, depois o orquestrador.
+
+**Ocorrência (2026-11-12, plano 012).** PR Tour-VR/quest-project#14: os 3 cenários de
+`e2e/tests/pontos.spec.ts` falham na CI porque o painel no ponteiro da `main` ainda não tem
+a tela de pontos; passam localmente com o frontend da branch do plano.

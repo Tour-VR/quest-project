@@ -29,7 +29,7 @@ export async function createAdminUser(_request: APIRequestContext): Promise<Test
 }
 
 /** Entra pela API e devolve o token de acesso do usuario. */
-async function loginPelaApi(request: APIRequestContext, user: TestUser): Promise<string> {
+export async function loginPelaApi(request: APIRequestContext, user: TestUser): Promise<string> {
   const response = await request.post(`${URLS.api}/auth/login`, { data: user });
   if (!response.ok()) throw new Error(`login pela API falhou: ${response.status()}`);
   const body = (await response.json()) as { access_token: string };
@@ -49,4 +49,32 @@ export async function createCommonUser(
   });
   if (!response.ok()) throw new Error(`cadastro do usuario comum falhou: ${response.status()}`);
   return user;
+}
+
+export interface PointOverrides {
+  slug?: string;
+  name?: string;
+  summary?: string;
+  history?: string;
+}
+
+/** Cria um ponto (rascunho) via POST /admin/points e devolve o corpo da resposta. */
+export async function createPoint(
+  request: APIRequestContext,
+  token: string,
+  overrides: PointOverrides = {},
+): Promise<{ id: string; slug: string; name: string }> {
+  const stamp = Date.now();
+  const response = await request.post(`${URLS.api}/admin/points`, {
+    data: {
+      slug: `ponto-e2e-${stamp}`,
+      name: `Ponto E2E ${stamp}`,
+      summary: 'Resumo criado pelo teste E2E.',
+      history: 'Historia criada pelo teste E2E.',
+      ...overrides,
+    },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok()) throw new Error(`criacao do ponto falhou: ${response.status()}`);
+  return (await response.json()) as { id: string; slug: string; name: string };
 }

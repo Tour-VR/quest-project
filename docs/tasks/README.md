@@ -103,7 +103,7 @@ reserva o plano com o seu nome antes de começar.
 | [009](009-pontos-de-interesse-backend.md) | Pontos de interesse no backend | 1 | 008 | DT-016 (parcial) | Concluído |
 | [010](010-visitas-e-metricas-backend.md) | Visitas e métricas no backend | 1 | 009 | DT-011 (backend) | Concluído |
 | [011](011-base-do-painel.md) | Base do painel | 2 | 008 | DT-010, DT-012 | Concluído |
-| [012](012-cadastro-de-pontos-painel.md) | Cadastro de pontos no painel | 2 | 009, 011 | — | Em execução — Heitor Aquino |
+| [012](012-cadastro-de-pontos-painel.md) | Cadastro de pontos no painel | 2 | 009, 011 | — | Em revisão — Heitor Aquino |
 | [013](013-upload-de-midia.md) | Upload de mídia | 2 | 012 | — | Validado |
 | [014](014-qr-codes.md) | QR Codes imprimíveis | 2 | 012 | — | Validado |
 | [015](015-metricas-perfil-usuarios.md) | Métricas, perfil e usuários no painel | 2 | 010, 011 | DT-011, DT-015 | Validado |
