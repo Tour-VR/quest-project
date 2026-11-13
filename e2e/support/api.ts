@@ -78,3 +78,15 @@ export async function createPoint(
   if (!response.ok()) throw new Error(`criacao do ponto falhou: ${response.status()}`);
   return (await response.json()) as { id: string; slug: string; name: string };
 }
+
+/** Publica o ponto via POST /admin/points/{id}/publish. */
+export async function publishPoint(
+  request: APIRequestContext,
+  token: string,
+  pointId: string,
+): Promise<void> {
+  const response = await request.post(`${URLS.api}/admin/points/${pointId}/publish`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok()) throw new Error(`publicacao do ponto falhou: ${response.status()}`);
+}
