@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em execução — Heitor Aquino — 2026-11-12 |
+| **Status** | Em revisão — Heitor Aquino |
 | **Fase** | 2 — Painel administrativo |
 | **Depende de** | 012 |
 | **Dívidas atendidas** | DT-016 (parcial — mídia) |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Backend, Frontend, Orquestrador (compose, docs, E2E) |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | — |
+| **Executado em** | 2026-11-13 por Heitor Aquino |
 
 ---
 
@@ -276,28 +276,28 @@ cd ../.. && bash scripts/validate.sh
 
 ## 8. Documentação a atualizar
 
-- [ ] `docs/08-decisoes-arquiteturais.md` — ADR-0008 com o texto da seção 5; índice com
+- [x] `docs/08-decisoes-arquiteturais.md` — ADR-0008 com o texto da seção 5; índice com
       estado "Aceita"
-- [ ] `docs/06-contrato-api.md` — `POST /admin/media` (201, 400, 401, 403, 413, 415) e
+- [x] `docs/06-contrato-api.md` — `POST /admin/media` (201, 400, 401, 403, 413, 415) e
       `GET /media/{arquivo}`
-- [ ] `docs/03-artefato-backend.md` — `media_types`, `MediaStorage`, `MediaService`,
+- [x] `docs/03-artefato-backend.md` — `media_types`, `MediaStorage`, `MediaService`,
       variáveis `MEDIA_DIR` e limite
-- [ ] `docs/04-artefato-frontend.md` — seção de fotos, `mediaUrl`
-- [ ] `docs/02-artefato-orquestrador.md` — volume `media-data` e como apagá-lo
-- [ ] `docs/tasks/000-visao-macro-opcao-b.md` — nenhuma alteração (o desvio já está registrado)
-- [ ] `docs/implementacoes-futuras/README.md` — nova dívida no índice
+- [x] `docs/04-artefato-frontend.md` — seção de fotos, `mediaUrl`
+- [x] `docs/02-artefato-orquestrador.md` — volume `media-data` e como apagá-lo
+- [x] `docs/tasks/000-visao-macro-opcao-b.md` — nenhuma alteração (o desvio já está registrado)
+- [x] `docs/implementacoes-futuras/README.md` — nova dívida no índice
 
 ## 9. Critérios de aceite
 
-- [ ] Admin envia JPEG, PNG ou WebP de até 20 MB e vê a miniatura no formulário
-- [ ] Arquivo com conteúdo que não é imagem recebe 415, mesmo com extensão `.jpg`
-- [ ] Arquivo acima de 20 MB recebe 413 e nunca é gravado
-- [ ] Imagem acessível em `http://localhost:8000/media/<arquivo>`
-- [ ] Fotos persistem após `bash scripts/down.sh` e `bash scripts/up.sh`
-- [ ] Legenda, texto alternativo e ordem salvos no ponto
-- [ ] ADR-0008 registrada como Aceita
-- [ ] `bash scripts/validate.sh` passando com os 2 cenários E2E novos
-- [ ] Documentação da seção 8 atualizada
+- [x] Admin envia JPEG, PNG ou WebP de até 20 MB e vê a miniatura no formulário
+- [x] Arquivo com conteúdo que não é imagem recebe 415, mesmo com extensão `.jpg`
+- [x] Arquivo acima de 20 MB recebe 413 e nunca é gravado
+- [x] Imagem acessível em `http://localhost:8000/media/<arquivo>`
+- [x] Fotos persistem após `bash scripts/down.sh` e `bash scripts/up.sh`
+- [x] Legenda, texto alternativo e ordem salvos no ponto
+- [x] ADR-0008 registrada como Aceita
+- [x] `bash scripts/validate.sh` passando com os 2 cenários E2E novos
+- [x] Documentação da seção 8 atualizada
 
 ## 10. Commits esperados
 
@@ -357,3 +357,63 @@ Execute o plano docs/tasks/013-upload-de-midia.md.
 Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o "Prompt 1 — EXECUTAR" etapa por etapa.
 Meu nome, para registrar no plano: <SEU NOME>
 ```
+
+---
+
+## Registro de execução
+
+**Executado por:** Heitor Aquino, com agente de IA, em 2026-11-12 e 2026-11-13.
+
+**O que foi feito**
+
+- Backend: `app/core/media_types.py` (tipo pela assinatura dos bytes: JPEG, PNG, WebP);
+  `MediaStorage` grava `uuid4().hex.<ext>` em `MEDIA_DIR`; `MediaService` lê em blocos de
+  1 MB e para no limite de 20 MB (413), recusa vazio (400) e formato desconhecido (415);
+  rota `POST /admin/media` (só admin); `StaticFiles` em `/media` montado depois das rotas;
+  configurações `MEDIA_DIR` e `MEDIA_MAX_BYTES`; `Dockerfile` cria `/app/media` com dono
+  `appuser` (seção 11). 149 testes, cobertura 94%.
+- Frontend: tipos regenerados; `uploadMedia`, `mediaUrl`, constantes de mídia; hook
+  `useMediaList`; seção "Fotos" no formulário do ponto (`MediaSection`, `MediaItemCard`,
+  `MediaUploadButton`) com envio, miniatura, legenda, texto alternativo, ordem (↑/↓) e
+  remoção, limite de 20 fotos. 127 testes, cobertura ~99%.
+- Orquestrador: volume nomeado `media-data` no `docker-compose.yml`; aviso em
+  `scripts/reset-db.sh` (o volume não é apagado); `MEDIA_DIR` no `.env.example`;
+  `e2e/tests/midia.spec.ts` com os 2 cenários e a foto `e2e/fixtures/foto-teste.jpg`.
+- Validação: `bash scripts/validate.sh` com saída 0 — backend, frontend, duplicação e
+  E2E (10 cenários). Conferido à mão na pilha real: foto enviada responde 200
+  `image/jpeg` em `/media/<arquivo>` antes e depois de `down.sh` + `up.sh`; arquivo de
+  21 MB recebe 413 e nenhum arquivo novo aparece em `/app/media`.
+
+**Desvios do plano**
+
+1. **Texto alternativo provisório (decisão do orientador, via Heitor).** O plano manda
+   gravar a foto nova com texto alternativo vazio, mas o contrato exige `alt_text` com ao
+   menos 1 caractere (`services/backend/app/schemas/point.py:64`) e o `PUT` seria recusado com 422. A
+   foto nova é gravada com `ALT_TEXT_PLACEHOLDER = 'Foto sem descrição'`
+   (`src/constants/media.ts`). O campo aparece vazio e o aviso "Preencha o texto
+   alternativo" continua enquanto o texto for vazio ou o provisório; sair do campo vazio
+   grava o provisório de novo.
+2. **Tipos gerados sem backend no ar.** `npm run gen:types` lê o OpenAPI do backend em
+   execução; o Docker não estava disponível no momento. O `api.d.ts` foi gerado com
+   `openapi-typescript` a partir do `app.openapi()` exportado — mesmo conteúdo.
+3. **Numeração das dívidas.** O plano cita DT-018 para a mídia órfã, mas DT-018 já existia;
+   a nova dívida ficou como DT-022.
+4. **Dívida extra DT-023** (mídia sem redimensionamento nem miniatura), percebida ao servir
+   a foto original como miniatura.
+5. **Teste extra** `tests/test_media_service.py` (serviço isolado, sem HTTP), para cobrir a
+   leitura em blocos e o limite.
+6. **Mensagem 415 com acento** ("Formato não suportado. Envie JPEG, PNG ou WebP."), igual
+   ao texto do plano, porque o painel exibe o `detail` do backend.
+7. **Local dos componentes.** Seguido o plano (`src/pages/points/media/`), embora
+   `docs/07-convencoes.md` peça `src/components/<pagina>/` para subcomponentes de página.
+8. **`docs/04-artefato-frontend.md`:** contagem de linhas do frontend corrigida para ~2200.
+
+**Dívidas novas registradas:** DT-022 (mídia órfã no disco), DT-023 (mídia sem
+redimensionamento), DT-024 (e-mail de teste repetido quando o E2E roda em paralelo — a
+primeira execução completa do `validate.sh` falhou em 3 cenários por isso, inclusive 2
+antigos; a segunda passou).
+
+**CI do orquestrador (DT-020).** O PR do orquestrador roda o E2E com os submódulos no
+ponteiro da `main`, sem a rota de mídia e sem a seção de fotos; os cenários de
+`midia.spec.ts` devem falhar ali até os PRs do backend e do frontend serem mesclados e os
+ponteiros atualizados.

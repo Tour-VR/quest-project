@@ -32,6 +32,9 @@ escolhe uma ou mais dívidas, e produz um plano em [`../tasks/`](../tasks/README
 | [DT-019](DT-019-healthcheck-painel.md) | Painel sem healthcheck no Docker Compose | P3 | Baixo | Orquestrador |
 | [DT-020](DT-020-ci-orquestrador-ponteiro-antigo.md) | CI do orquestrador testa o submódulo no ponteiro antigo | P1 | Baixo | Orquestrador |
 | [DT-021](DT-021-limite-taxa-registro-visitas.md) | Registro de visitas sem limite de taxa | P3 | Baixo | Backend |
+| [DT-022](DT-022-midia-orfa-em-disco.md) | Arquivos de mídia órfãos no disco | P3 | Baixo | Backend |
+| [DT-023](DT-023-midia-sem-redimensionamento.md) | Mídia servida sem redimensionamento nem miniatura | P3 | Médio | Backend, Frontend |
+| [DT-024](DT-024-e2e-email-repetido-em-paralelo.md) | E-mail de teste repetido quando cenários E2E rodam em paralelo | P2 | Baixo | Orquestrador |
 
 **Prioridades:** `P0` bloqueia o avanço ou representa risco real · `P1` alta, resolver na
 fase corrente · `P2` média, planejar · `P3` baixa, oportunidade.

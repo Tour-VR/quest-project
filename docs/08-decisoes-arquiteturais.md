@@ -16,7 +16,7 @@ registrada aqui só é revertida por outra ADR que a supersede — nunca por edi
 | [0005](#adr-0005--separação-entre-sessão-de-planejamento-e-sessão-de-execução) | Separação entre planejamento e execução | Aceita |
 | [0006](#adr-0006--stack-de-desenvolvimento-do-vr-app) | Stack do app do visitante — produto dividido por dispositivo | Aceita |
 | [0007](#adr-0007--modelo-de-domínio-do-campus) | Modelo de domínio do campus | Aceita |
-| [0008](#adr-0008--estratégia-de-mídia-imersiva) | Estratégia de mídia imersiva | Em aberto |
+| [0008](#adr-0008--estratégia-de-mídia) | Estratégia de mídia | Aceita |
 | [0009](#adr-0009--autenticação-do-dispositivo-quest) | Autenticação do dispositivo Quest | Em aberto |
 
 ---
@@ -254,14 +254,33 @@ impressos. Roteiros foram descartados até que um ponto funcione de ponta a pont
 
 ---
 
-## ADR-0008 — Estratégia de mídia imersiva
+## ADR-0008 — Estratégia de mídia
 
-**Estado:** 🔴 Em aberto · **Depende de:** ADR-0006
+**Data:** 2026-11-05 · **Estado:** Aceita · **Plano:** [013](tasks/013-upload-de-midia.md)
 
-Turismo virtual é, na prática, um problema de entrega de mídia pesada. Em aberto: formato
-(vídeo 360° equirretangular, fotogrametria, modelos 3D), storage (banco, objeto/S3, CDN,
-empacotamento no APK), transcodificação, streaming adaptativo e cache no dispositivo.
-Nada disso existe hoje.
+**Contexto.** Cada ponto do tour tem fotos (modo AR) e, a partir do plano 019, um
+panorama 360° (modo VR). Só aceitar URLs externas exigiria que os alunos hospedassem
+imagens em outro serviço, e texturas WebGL carregadas de outra origem falham sem
+cabeçalhos CORS. O volume esperado é pequeno: dezenas de pontos, poucas imagens cada.
+
+**Decisão.** O backend recebe o arquivo em `POST /admin/media` (somente admin), valida
+tipo pela assinatura dos bytes (JPEG, PNG, WebP) e tamanho (até 20 MB), grava em disco com
+nome `<uuid>.<ext>` no diretório `MEDIA_DIR` e serve em `/media/<arquivo>`. No Docker, o
+diretório é o volume `media-data`. O ponto guarda apenas a URL relativa.
+
+**Justificativa.** Nenhum serviço novo; mesma origem da API, o que elimina CORS no painel
+e, via proxy, no app do visitante; persistência garantida pelo volume.
+
+**Consequências.**
+
+- ➕ Upload pelo painel, sem conhecimento técnico.
+- ➕ Panoramas do modo VR funcionam como textura sem configuração extra.
+- ➖ Escala de uma máquina só; migrar para armazenamento de objeto exige trocar o
+  `MediaStorage` e reescrever URLs.
+- ➖ Sem redimensionamento: a imagem é servida como enviada.
+- ➖ Arquivos retirados de um ponto ficam órfãos no disco (dívida registrada).
+
+**Alteração em relação à visão macro.** Antecipada da Fase 4 para a Fase 2.
 
 ---
 

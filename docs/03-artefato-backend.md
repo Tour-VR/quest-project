@@ -1,17 +1,19 @@
 # 03 — Artefato: Backend (`services/backend`)
 
 > Repositório: `github.com/Tour-VR/backend` · Commit fixado: `d3f1449`
-> Última verificação contra o código: 2026-11-11
+> Última verificação contra o código: 2026-11-13
 
 ## Responsabilidade
 
 Expor a API REST do sistema: autenticação de administradores, gestão de perfil de usuário,
 cadastro e publicação de **pontos de interesse** do campus (rotas `/admin/points`) e leitura
-pública desses pontos para o app do visitante (rotas `/public/points`), além do diagnóstico
-de saúde. É a única camada com acesso ao banco de dados.
+pública desses pontos para o app do visitante (rotas `/public/points`), recebimento e
+entrega das fotos enviadas pelo painel (`POST /admin/media` e `/media/...`), além do
+diagnóstico de saúde. É a única camada com acesso ao banco de dados.
 
 O domínio do campus segue a [ADR-0007](08-decisoes-arquiteturais.md#adr-0007--modelo-de-domínio-do-campus).
-Ainda não existem visitas (plano 010), upload de mídia (plano 013) nem panoramas (plano 019).
+A mídia segue a [ADR-0008](08-decisoes-arquiteturais.md#adr-0008--estratégia-de-mídia):
+arquivos em disco, servidos pela mesma origem da API. Ainda não existem panoramas (plano 019).
 
 ## Stack
 
@@ -39,28 +41,33 @@ services/backend/
 ├── requirements.txt        dependências de execução
 ├── requirements-dev.txt    + pytest, pytest-cov, ruff, mypy (desenvolvimento)
 ├── pyproject.toml          configuração de Ruff, mypy, pytest e coverage
-├── Dockerfile                  python:3.11-slim, expõe uvicorn na 8000
+├── Dockerfile                  python:3.11-slim, expõe uvicorn na 8000; cria /app/media
+│                               com dono appuser (o volume media-data herda o dono)
 ├── .env.example
 └── app/
     ├── main.py                 create_app(): fail-fast, logging, lifespan (+ índices),
-    │                           limitador de login, CORS, router, rota "/"
+    │                           limitador de login, CORS, router, montagem de /media,
+    │                           rota "/"
     ├── core/
     │   ├── config.py           Settings + ensure_secure_settings (fail-fast da chave JWT)
     │   ├── database.py         MongoManager, get_mongo_manager, get_database
     │   ├── indexes.py          ensure_indexes: índices de `users`, `points` e `visits`
+    │   ├── media_types.py      detect_image_type: JPEG, PNG e WebP pela assinatura dos bytes
     │   ├── logging.py          configure_logging (biblioteca padrão, nível por LOG_LEVEL)
     │   ├── rate_limit.py       LoginRateLimiter (janela deslizante em memória)
     │   ├── roles.py            ROLE_ADMIN, ROLE_USER, VALID_ROLES
     │   └── security.py         hash/verify senha, create/decode JWT, força de senha
     ├── api/
     │   ├── deps.py             get_user_service, get_point_service, get_visit_service,
-    │                           get_metrics_service, get_current_user, require_admin,
+    │                           get_metrics_service, get_media_service, get_current_user,
+    │                           require_admin,
     │                           get_login_rate_limiter, erro 503 padrão
     │   └── v1/
     │       ├── router.py       agrega health + auth + users + admin_points + public_points
-    │       │                   + admin_metrics
+    │       │                   + admin_metrics + admin_media
     │       └── routes/         auth.py · users.py · health.py · admin_points.py ·
-    │                           public_points.py (+ registro de visita) · admin_metrics.py
+    │                           public_points.py (+ registro de visita) · admin_metrics.py ·
+    │                           admin_media.py
     ├── models/
     │   ├── user.py             UserModel (dataclass, slots)
     │   ├── point.py            PointModel + constantes de status e tipo de mídia
@@ -69,8 +76,10 @@ services/backend/
     │   ├── user.py             9 schemas Pydantic
     │   ├── point.py            7 schemas + limites do contrato (fonte única)
     │   ├── visit.py            VisitCreate, VisitRecordedResponse
-    │   └── metrics.py          MetricsOverviewResponse, VisitsByMode, TopPoint
+    │   ├── metrics.py          MetricsOverviewResponse, VisitsByMode, TopPoint
+    │   └── media.py            MediaUploadResponse
     ├── repositories/
+    │   ├── media_storage.py    MediaStorage: grava `<uuid>.<ext>` em MEDIA_DIR (OSError → ConnectionError)
     │   ├── errors.py           UniqueConstraintError + duplicated_field (chave duplicada)
     │   ├── user_repository.py  5 métodos de acesso à collection `users`
     │   ├── point_repository.py 10 métodos de acesso à collection `points`
@@ -79,9 +88,10 @@ services/backend/
     │   ├── user_service.py     regras de usuário + 4 exceções de domínio
     │   ├── point_service.py    regras de publicação e slug + 3 exceções de domínio
     │   ├── visit_service.py    registro anônimo de visita a ponto publicado
-    │   └── metrics_service.py  resumo de pontos e visitas (janela de 7 dias, top 5)
+    │   ├── metrics_service.py  resumo de pontos e visitas (janela de 7 dias, top 5)
+    │   └── media_service.py    MediaService: leitura em blocos, limite, tipo real + 3 exceções
     └── cli.py                  comando `create-admin` (python -m app.cli)
-└── tests/                      conftest.py + 128 testes
+└── tests/                      conftest.py + 149 testes
 ```
 
 ## Endpoints
@@ -109,10 +119,14 @@ Contrato completo, com payloads e códigos de erro, em
 | `GET` | `/public/points/{slug}` | — |
 | `POST` | `/public/points/{slug}/visits` | — |
 | `GET` | `/admin/metrics/overview` | Bearer (admin) |
+| `POST` | `/admin/media` | Bearer (admin) |
+| `GET` | `/media/{arquivo}` | — |
 
 Prefixos: `/admin/...` exige papel `admin` (o roteador inteiro depende de `require_admin`,
 `app/api/v1/routes/admin_points.py:18-22` e `app/api/v1/routes/admin_metrics.py:14-18`);
-`/public/...` não pede token e só devolve pontos publicados.
+`/public/...` não pede token e só devolve pontos publicados. `/admin/media` exige admin
+pela dependência da própria rota (`app/api/v1/routes/admin_media.py:27-32`); `/media/...` é
+estático e público.
 
 ## Modelo de dados
 
@@ -243,6 +257,26 @@ Exceções de domínio: `PointInputError` (→ `400`), `PointConflictError` (→
 - **Capa pública:** `cover_url` é a `url` da primeira mídia `photo`, ou `null`.
 - **Ordem:** listas por `name` crescente, sem paginação.
 
+### Mídia (plano 013)
+
+Fluxo: rota `app/api/v1/routes/admin_media.py` → `MediaService`
+(`app/services/media_service.py`) → `MediaStorage` (`app/repositories/media_storage.py`).
+
+- **Leitura limitada:** blocos de 1 MB (`CHUNK_SIZE`); ao passar de `MEDIA_MAX_BYTES` a
+  leitura para e `MediaTooLargeError` vira `413` — nada é gravado.
+- **Tipo real:** `detect_image_type` olha os 12 primeiros bytes
+  (`app/core/media_types.py:16-28`). Fora de JPEG/PNG/WebP → `MediaTypeError` → `415`.
+  Arquivo vazio → `MediaEmptyError` → `400`.
+- **Nome:** `uuid4().hex` + extensão detectada; o nome original nunca é usado.
+- **Erro de disco:** `OSError` vira `ConnectionError` no `MediaStorage` e a rota responde o
+  `503` padrão.
+- **Servir:** `app.mount("/media", StaticFiles(...))` em `app/main.py:70-73`, **depois**
+  do `include_router` para não sombrear rotas; o `mkdir` antes evita falha na subida.
+- **Associação:** o backend não liga o arquivo ao ponto. O painel grava a URL na lista
+  `media` com `PUT /admin/points/{id}`. Arquivos retirados ficam no disco
+  ([DT-022](implementacoes-futuras/DT-022-midia-orfa-em-disco.md)); não há
+  redimensionamento ([DT-023](implementacoes-futuras/DT-023-midia-sem-redimensionamento.md)).
+
 ### Visitas e métricas
 
 Implementadas em `app/services/visit_service.py` e `app/services/metrics_service.py`.
@@ -342,6 +376,8 @@ orquestrador, e `MONGODB_URL` e `APP_CORS_ORIGINS` são fixadas no `docker-compo
 | `LOG_LEVEL` | `INFO` | Nível do logging (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |
 | `LOGIN_MAX_FAILURES` | `5` | Falhas de login permitidas na janela antes do `429` |
 | `LOGIN_WINDOW_SECONDS` | `900` | Janela deslizante do limite de login (15 min) |
+| `MEDIA_DIR` | `media` | Diretório das fotos enviadas, relativo ao diretório de trabalho; no Docker é `/app/media`, o volume `media-data` |
+| `MEDIA_MAX_BYTES` | `20971520` (20 MB) | Tamanho máximo do arquivo em `POST /admin/media` |
 
 **Fail-fast da chave JWT.** A primeira linha de `create_app()` chama
 `ensure_secure_settings(settings)` (`app/main.py:24`; regra em
@@ -442,9 +478,9 @@ pytest --cov=app --cov-fail-under=80      # testes + cobertura mínima de 80%
 Regras e limites em `pyproject.toml`: linha de 100 colunas, complexidade máx. 10, máx. 50
 comandos por função; `PLR2004`, `ARG001` e `PLR0913` desligadas só em `tests/`. O `B008`
 aceita `Depends`/`Query`/etc. do FastAPI como valor padrão. `jose` e `passlib` não têm
-tipos: o mypy ignora só os imports delas. Cobertura atual: 93%.
+tipos: o mypy ignora só os imports delas. Cobertura atual: 94%.
 
-**128 testes**, todos com MongoDB mockado (sem dependência de banco real):
+**149 testes**, todos com MongoDB mockado (sem dependência de banco real):
 
 - `tests/test_health.py` — 6 testes: import do app, rota raiz, preflight CORS,
   health com banco up/down, detecção de placeholder de senha sem chamada de rede.
@@ -492,6 +528,15 @@ tipos: o mypy ignora só os imports delas. Cobertura atual: 93%.
   `401` sem token e `403` para papel `user`, `503`.
 - `tests/test_metrics_service.py` — 3 testes com repositories falsos: janela de 7 dias a
   partir do `now` informado, ponto excluído some do ranking, base vazia toda zerada.
+- `tests/test_media_types.py` — 7 testes: JPEG, PNG e WebP reconhecidos; texto, GIF,
+  RIFF que não é WebP e vazio → `None`.
+- `tests/test_media_service.py` — 5 testes com upload falso e `tmp_path`: grava e devolve
+  URL relativa, para de ler ao passar do limite sem gravar, vazio, conteúdo que não é
+  imagem, erro de disco vira `ConnectionError`.
+- `tests/test_media_upload.py` — 9 testes da rota com `settings.media_dir` em `tmp_path`:
+  JPEG `201` com arquivo gravado, acima do limite `413` sem gravar, texto com `.jpg` `415`,
+  vazio `400`, sem campo `422`, disco `503`, sem token `401`, papel `user` `403`, e
+  `GET /media/<arquivo>` `200` com `image/jpeg`.
 - `tests/test_visit_repository.py` — 8 testes com collection falsa (`aggregate`
   assíncrono): `count_by_mode` preenche o modo ausente, pipeline do ranking, filtros de
   contagem e inserção, `PyMongoError` vira `ConnectionError`, banco ausente.

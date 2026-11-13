@@ -2,7 +2,7 @@
 
 > **Fonte de verdade da integração backend ↔ frontend ↔ vr-app.**
 > Extraído por leitura direta do código, não do README do submódulo.
-> Última verificação: 2026-11-11 · Base: `http://127.0.0.1:8000`
+> Última verificação: 2026-11-13 · Base: `http://127.0.0.1:8000`
 
 ## Regra de manutenção
 
@@ -13,7 +13,7 @@ mesmo commit. Divergência aqui é bug, não detalhe.
 
 Apesar de o código estar organizado em `app/api/v1/`, **as rotas não têm prefixo `/api/v1`**.
 O `api_router` é incluído sem prefixo em `app/main.py`, e os caminhos efetivos são
-`/auth/...`, `/users/...`, `/admin/...`, `/public/...` e `/health/`. A estrutura de pastas antecipa o versionamento;
+`/auth/...`, `/users/...`, `/admin/...`, `/public/...`, `/media/...` e `/health/`. A estrutura de pastas antecipa o versionamento;
 a exposição HTTP ainda não o adotou.
 
 ## Autenticação
@@ -62,6 +62,7 @@ payload inválido.
 | `/auth`, `/users/me` | Usuários do painel | Ver cada rota |
 | `/admin/...` | Somente papel `admin` | `require_admin` aplicado ao roteador inteiro; erros na tabela de [Papéis e autorização](#papéis-e-autorização) |
 | `/public/...` | Qualquer pessoa (app do visitante) | **Sem token**; só devolve conteúdo publicado |
+| `/media/...` | Qualquer pessoa | **Sem token**; arquivos enviados por `POST /admin/media` (plano 013) |
 
 ---
 
@@ -289,7 +290,7 @@ Rotas administrativas em `app/api/v1/routes/admin_points.py`; públicas em
 | `media` | não | lista com até 20 itens; padrão `[]` |
 | `media[].id` | não | se ausente, o servidor gera um UUID |
 | `media[].kind` | não | apenas `"photo"` (padrão) |
-| `media[].url` | sim | 1–500 caracteres (texto; upload de arquivos chega no plano 013) |
+| `media[].url` | sim | 1–500 caracteres; relativa (`/media/...`, devolvida por `POST /admin/media`) ou absoluta |
 | `media[].caption` | não | ≤ 200 caracteres |
 | `media[].alt_text` | sim | 1–200 caracteres |
 
@@ -553,6 +554,47 @@ Resumo com contagens reais de pontos e visitas, para o painel (plano 015). Exige
 
 ---
 
+## `POST /admin/media`
+
+Envia uma imagem para o disco do backend (ADR-0008, plano 013). Exige papel `admin`. O
+arquivo **não** é associado a nenhum ponto: o painel recebe a URL e grava a lista `media`
+com [`PUT /admin/points/{point_id}`](#put-adminpointspoint_id).
+
+**Request** — `multipart/form-data` com o campo `file`.
+
+- Tipo aceito: JPEG, PNG ou WebP, detectado pela **assinatura dos bytes**
+  (`app/core/media_types.py`). Extensão e `Content-Type` enviados pelo cliente são ignorados.
+- Tamanho máximo: `MEDIA_MAX_BYTES` (20 MB). O arquivo é lido em blocos de 1 MB e a
+  leitura para assim que o limite é ultrapassado; nada é gravado.
+- Nome gravado: `<uuid4 hex>.<jpg|png|webp>`; o nome original é descartado.
+
+**201** — `MediaUploadResponse`:
+```json
+{ "url": "/media/3f2b9c0d8e1a4b7c9d6e5f4a3b2c1d0e.jpg", "content_type": "image/jpeg", "size_bytes": 482133 }
+```
+
+`url` é **relativa**: o painel a prefixa com `VITE_API_URL` (`mediaUrl`), e o app do
+visitante a usa pelo proxy `/media`.
+
+| Erro | Quando |
+|---|---|
+| `400` | `"Arquivo vazio."` |
+| `401` / `403` | Sem token / papel diferente de `admin` — ver [Papéis e autorização](#papéis-e-autorização) |
+| `413` | `"Arquivo maior que 20 MB."` |
+| `415` | `"Formato não suportado. Envie JPEG, PNG ou WebP."` — inclusive texto com extensão `.jpg` |
+| `422` | Campo `file` ausente |
+| `503` | Falha ao gravar no disco (mesma resposta de banco indisponível) |
+
+---
+
+## `GET /media/{arquivo}`
+
+Serve o arquivo enviado, **sem token**, via `StaticFiles` montado em `app/main.py:70-73`
+depois das rotas da API. Responde com o `Content-Type` da extensão (`image/jpeg`,
+`image/png`, `image/webp`). Arquivo inexistente → `404` `{"detail": "Not Found"}`.
+
+---
+
 ## Formato de erro
 
 Todos os erros seguem o padrão do FastAPI:
@@ -563,7 +605,7 @@ Todos os erros seguem o padrão do FastAPI:
 
 Erros de validação (`422`) usam a estrutura de lista do Pydantic, com `loc`, `msg` e `type`.
 
-**Erro `503`:** produzido por `build_database_http_exception` em `app/api/deps.py:63-70`.
+**Erro `503`:** produzido por `build_database_http_exception` em `app/api/deps.py:73-80`.
 O `detail` é **sempre** exatamente `"Banco de dados indisponivel."` e nunca traz o texto
 da exceção, em qualquer ambiente e mesmo com `APP_DEBUG=true`. O detalhe técnico fica
 apenas no log do servidor (`ERROR app.api.deps Falha de acesso ao banco: ...`).
@@ -579,6 +621,6 @@ liberados, e origens restritas à lista de `APP_CORS_ORIGINS`. O frontend em
 ## Endpoints ausentes
 
 O `vr-app` e as telas planejadas do painel exigirão rotas que **ainda não existem**:
-listagem e gestão de usuários, upload de mídia (plano 013), panoramas e conexões entre
+listagem e gestão de usuários, panoramas e conexões entre
 pontos (plano 019). Ver
 [DT-016](implementacoes-futuras/DT-016-modelagem-dominio-turismo.md).

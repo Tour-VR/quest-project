@@ -1,7 +1,7 @@
 # 02 — Artefato: Repositório Orquestrador (`quest-project`)
 
 > Repositório: `github.com/Tour-VR/quest-project` · Branch principal: `main`
-> Última verificação contra o código: 2026-11-11
+> Última verificação contra o código: 2026-11-13
 
 ## Responsabilidade
 
@@ -111,8 +111,8 @@ este ambiente; não há `docker-compose.override.yml`.
 | Serviço | Imagem | Porta | Detalhes |
 |---|---|---|---|
 | `mongo` | `mongo:7` | 27017 | Volume `mongo-data`; healthcheck com `mongosh` ping (`docker-compose.yml:4-14`) |
-| `backend` | `services/backend/Dockerfile` | 8000 | Bind mount `./services/backend:/app` e `uvicorn --reload`; espera o `mongo` ficar saudável; usa o `HEALTHCHECK` da imagem (`docker-compose.yml:16-29`) |
-| `frontend` | `services/frontend/Dockerfile.dev` | 3000 | Bind mount do código + volume `frontend-node-modules` em `/app/node_modules`; `npm ci && npm run dev`; espera o `backend` ficar saudável (`docker-compose.yml:31-46`) |
+| `backend` | `services/backend/Dockerfile` | 8000 | Bind mount `./services/backend:/app`, volume `media-data` em `/app/media` (fotos enviadas, ADR-0008) e `uvicorn --reload`; espera o `mongo` ficar saudável; usa o `HEALTHCHECK` da imagem (`docker-compose.yml:16-31`) |
+| `frontend` | `services/frontend/Dockerfile.dev` | 3000 | Bind mount do código + volume `frontend-node-modules` em `/app/node_modules`; `npm ci && npm run dev`; espera o `backend` ficar saudável (`docker-compose.yml:33-48`) |
 
 **Variáveis.** Um único `.env` na raiz, criado a partir do `.env.example`, é lido pelo
 `backend` e pelo `frontend` (`env_file`). Duas variáveis são fixadas no próprio compose e
@@ -133,7 +133,19 @@ Linux do container; por isso `/app/node_modules` fica num volume próprio. Uma p
 | `bash scripts/up.sh` | Sai com erro se o Docker não estiver rodando; cria `.env` se faltar; `docker compose up -d --build --wait`; mostra os endereços |
 | `bash scripts/down.sh` | `docker compose down` — os volumes (dados) são preservados |
 | `bash scripts/logs.sh [servico]` | `docker compose logs -f`, opcionalmente de um serviço |
-| `bash scripts/reset-db.sh` | Pede que se digite `APAGAR`; então `docker compose down` e remove o volume `tourvr_mongo-data` |
+| `bash scripts/reset-db.sh` | Pede que se digite `APAGAR`; então `docker compose down` e remove o volume `tourvr_mongo-data`. **Não** apaga as fotos (`tourvr_media-data`) |
+
+**Fotos enviadas (volume `media-data`).** As imagens recebidas por `POST /admin/media`
+ficam no volume nomeado `tourvr_media-data`, montado em `/app/media` no `backend`. Ele
+sobrevive a `down`/`up` e ao `reset-db.sh` — mídia não é banco. Para apagar as fotos à mão:
+
+```bash
+docker compose down
+docker volume rm tourvr_media-data
+```
+
+Depois de apagar o volume, os pontos que apontavam para essas fotos mostram imagem quebrada;
+rode também o `reset-db.sh` se quiser começar do zero.
 
 Portas 27017, 8000 e 3000 precisam estar livres: um MongoDB ou backend rodando fora do
 Docker impede a subida.
@@ -202,6 +214,11 @@ roda só eles.
 |---|---|
 | `@golden administrador entra no painel` | Administrador criado pelo `create-admin` faz login e vê "Bem-vindo(a) de volta" no dashboard |
 | `credenciais invalidas mostram mensagem` | Mensagem do backend aparece e a URL continua em `/login` |
+
+| Cenário (`e2e/tests/midia.spec.ts`) | Verifica |
+|---|---|
+| `@golden admin envia foto para um ponto` | Ponto criado pela API; na edição, envia `e2e/fixtures/foto-teste.jpg` (JPEG de 3,5 KB), preenche o texto alternativo, recarrega e vê a miniatura carregada; `GET` da URL da imagem responde `200` com `image/jpeg` |
+| `arquivo que não é imagem é recusado` | Texto com nome `.jpg` mostra "Formato não suportado" e nenhuma foto entra na lista |
 
 **Relatório.** Ao falhar, o script indica `cd e2e && npx playwright show-report`, que abre
 no navegador o relatório HTML com os passos e o *trace* de cada teste. Resultados ficam em
