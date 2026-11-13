@@ -24,6 +24,8 @@ services:
       - "8000:8000"
     volumes:
       - ./services/backend:/app
+      # Fotos enviadas pelo painel (ADR-0008); sobrevive a down/up.
+      - media-data:/app/media
     depends_on:
       mongo:
         condition: service_healthy
@@ -47,4 +49,5 @@ services:
 
 volumes:
   mongo-data:
+  media-data:
   frontend-node-modules:
