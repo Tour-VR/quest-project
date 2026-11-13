@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em execução — Heitor Aquino — 2026-11-13 |
+| **Status** | Em revisão — Heitor Aquino |
 | **Fase** | 2 — Painel administrativo |
 | **Depende de** | 012 |
 | **Dívidas atendidas** | nenhuma |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Frontend, Orquestrador (compose, docs, E2E) |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | — |
+| **Executado em** | 2026-11-13 por Heitor Aquino (sessão de execução com Claude Code) |
 
 ---
 
@@ -216,12 +216,12 @@ cd ../.. && bash scripts/validate.sh
 
 ## 8. Documentação a atualizar
 
-- [ ] `docs/04-artefato-frontend.md` — rota `/qrcodes`, variável `VITE_VISITOR_APP_URL`,
+- [x] `docs/04-artefato-frontend.md` — rota `/qrcodes`, variável `VITE_VISITOR_APP_URL`,
       dependência `qrcode`, como imprimir
-- [ ] `docs/02-artefato-orquestrador.md` — variável no `.env.example` da raiz e como
+- [x] `docs/02-artefato-orquestrador.md` — variável no `.env.example` da raiz e como
       apontar para o IP da máquina
-- [ ] `docs/00-visao-geral.md` — estado: "Geração de QR Codes ✅"
-- [ ] `docs/09-glossario.md` — termo "QR Code do ponto" (URL `/p/<slug>`)
+- [x] `docs/00-visao-geral.md` — estado: "Geração de QR Codes ✅"
+- [x] `docs/09-glossario.md` — termo "QR Code do ponto" (URL `/p/<slug>`)
 
 ## 9. Critérios de aceite
 
@@ -272,6 +272,48 @@ docs: documenta a geracao e impressao de QR Codes
    do visitante não existir — é esperado.)
 5. Clique "Imprimir" e escolha "Salvar como PDF". O PDF tem só os cartões, sem menu.
 6. Clique "Baixar PNG" em um cartão: um arquivo `qr-....png` é salvo.
+
+
+---
+
+## Registro de execução
+
+**Executado em 2026-11-13 por Heitor Aquino**, com Claude Code, seguindo o
+`protocolo-execucao.md`.
+
+**O que foi feito**
+
+- Frontend: `VITE_VISITOR_APP_URL` em `.env.example` e `vite-env.d.ts`;
+  `constants/qr.ts`, `utils/visitorUrl.ts`, `utils/qrCode.ts` (biblioteca `qrcode`) e
+  `hooks/useQrDataUrl.ts`; página `/qrcodes` em `pages/qrcodes/` (`QrCodesPage`, `QrCard`,
+  `QrDownloadLink`, `LocalUrlWarning`) com `?slug=`; CSS de impressão A4 em `index.css` e
+  `print:hidden`/`print:p-0` no `AdminLayout`; item "QR Codes" no menu; atalho "QR Code"
+  (`components/points/QrCodeLink.tsx`) na lista e no formulário de pontos publicados.
+- Orquestrador: `VITE_VISITOR_APP_URL` no `.env.example` da raiz e repassada ao serviço
+  `frontend` no `docker-compose.yml`; `e2e/tests/qrcodes.spec.ts` com os 2 cenários e o
+  helper `publishPoint` em `e2e/support/api.ts`; documentação da seção 8.
+
+**Desvios do plano**
+
+- Passo 7 cita `PointRow` (plano 012), que não existe: a lista de pontos usa
+  `components/points/pointColumns.tsx` (tabela do plano 022). O atalho "QR Code" entrou na
+  coluna de ações, ao lado do menu "⋯", só para ponto publicado. O mesmo componente
+  `QrCodeLink` é usado no `PointFormActions`.
+- Passo 6: além da barra lateral, a `MobileTopBar` (tela estreita, plano 022) também ganhou
+  `print:hidden`, para a folha sair limpa em qualquer largura de janela.
+- Teste `visitorUrl.test.ts` "base padrão" compara com `VISITOR_APP_URL` (e não com a
+  constante fixa), para não quebrar em máquina com `VITE_VISITOR_APP_URL` no `.env`.
+
+- E2E: os dois cenários esperam a resposta de `GET /admin/points?status=published` antes de
+  conferir os cartões; com os 12 cenários em paralelo a lista passou dos 5 s do `expect`.
+
+**Validação:** backend, frontend (145 testes, ~99% de cobertura), duplicação e build
+passando. No E2E, os 2 cenários novos passaram em todas as rodadas finais. Uma rodada
+falhou num cenário antigo por e-mail de administrador repetido entre testes paralelos —
+já registrado como [DT-024](../implementacoes-futuras/DT-024-e2e-email-repetido-em-paralelo.md);
+a rodada seguinte passou com 12/12.
+
+**Dívidas novas registradas:** nenhuma (a instabilidade observada já é a DT-024).
 
 ---
 
