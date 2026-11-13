@@ -104,7 +104,7 @@ reserva o plano com o seu nome antes de começar.
 | [010](010-visitas-e-metricas-backend.md) | Visitas e métricas no backend | 1 | 009 | DT-011 (backend) | Concluído |
 | [011](011-base-do-painel.md) | Base do painel | 2 | 008 | DT-010, DT-012 | Concluído |
 | [012](012-cadastro-de-pontos-painel.md) | Cadastro de pontos no painel | 2 | 009, 011 | — | Concluído |
-| [013](013-upload-de-midia.md) | Upload de mídia | 2 | 012 | — | Validado |
+| [013](013-upload-de-midia.md) | Upload de mídia | 2 | 012 | — | Em execução — Heitor Aquino |
 | [014](014-qr-codes.md) | QR Codes imprimíveis | 2 | 012 | — | Validado |
 | [015](015-metricas-perfil-usuarios.md) | Métricas, perfil e usuários no painel | 2 | 010, 011 | DT-011, DT-015 | Validado |
 | [016](016-fundacao-app-visitante.md) | Fundação do app do visitante | 3 | 006 | — | Validado |
