@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em revisão — Heitor Aquino |
+| **Status** | Concluído |
 | **Fase** | 2 — Painel administrativo |
 | **Depende de** | 012 |
 | **Dívidas atendidas** | DT-016 (parcial — mídia) |
