@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Backend, Frontend, Orquestrador (compose, docs, E2E) |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | 2026-11-13 por Heitor Aquino |
+| **Executado em** | 2026-11-13 por Heitor Aquino — [Tour-VR/backend#8](https://github.com/Tour-VR/backend/pull/8), [Tour-VR/frontend#7](https://github.com/Tour-VR/frontend/pull/7), [Tour-VR/quest-project#15](https://github.com/Tour-VR/quest-project/pull/15) |
 
 ---
 
