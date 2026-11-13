@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em revisão — Heitor Aquino |
+| **Status** | Concluído |
 | **Fase** | 2 — Painel administrativo |
 | **Depende de** | 009, 011 |
 | **Dívidas atendidas** | DT-016 (parcial — gestão do domínio no painel) |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Frontend, Orquestrador (docs e E2E) |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | 2026-11-12 por Heitor Aquino (PRs em revisão) |
+| **Executado em** | 2026-11-12 por Heitor Aquino — [Tour-VR/frontend#6](https://github.com/Tour-VR/frontend/pull/6), [Tour-VR/quest-project#14](https://github.com/Tour-VR/quest-project/pull/14) |
 
 ---
 

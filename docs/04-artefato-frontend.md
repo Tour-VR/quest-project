@@ -1,6 +1,6 @@
 # 04 — Artefato: Frontend (`services/frontend`)
 
-> Repositório: `github.com/Tour-VR/frontend` · Commit fixado: `36c7a5c` (branch `plano/012-cadastro-de-pontos-painel`)
+> Repositório: `github.com/Tour-VR/frontend` · Commit fixado: `48283e8`
 > Última verificação contra o código: 2026-11-12
 
 ## Responsabilidade
