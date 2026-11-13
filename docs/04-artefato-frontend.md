@@ -9,6 +9,7 @@ Painel administrativo web do TourVR. Autentica administradores contra o backend,
 a sessão entre recarregamentos, encerra a sessão quando o token expira, restringe o painel
 ao papel `admin` e exibe o painel inicial dentro de um layout com menu (plano 011). Gerencia
 os pontos de interesse do tour: criar, editar, publicar, despublicar e excluir (plano 012).
+Gera o QR Code imprimível de cada ponto publicado (plano 014).
 
 Não possui lógica de negócio própria — é uma casca sobre a API REST.
 
@@ -23,6 +24,7 @@ Não possui lógica de negócio própria — é uma casca sobre a API REST.
 | Roteamento | React Router | 7.13 |
 | HTTP | Axios | 1.13 |
 | Ícones | lucide-react | 0.546 |
+| QR Code | `qrcode` (gerado no navegador, `toDataURL`) | 1.5 |
 | Diálogo e menu acessíveis | `@radix-ui/react-dialog`, `@radix-ui/react-dropdown-menu` | 1.3 / 2.2 |
 | Lint | ESLint (`typescript-eslint` `strictTypeChecked` + `react-hooks`) | 10 |
 | Formatação | Prettier | 3 |
@@ -40,25 +42,30 @@ services/frontend/
 ├── .prettierrc             aspas simples, ponto e vírgula, vírgula final, 100 colunas
 ├── .gitattributes          força quebra de linha LF (o Prettier exige LF)
 ├── tsconfig.json           "strict": true, noUnused*, types vite/vitest/jest-dom
-├── .env.example            VITE_API_URL
+├── .env.example            VITE_API_URL e VITE_VISITOR_APP_URL
 ├── scripts/
 │   └── gen-types.mjs       npm run gen:types — gera src/types/api.d.ts do /openapi.json
 └── src/                    ~2200 linhas de código (sem contar testes e api.d.ts)
     ├── main.tsx            StrictMode + createRoot
     ├── App.tsx             BrowserRouter > AuthProvider > Routes (rotas aninhadas)
     ├── index.css           Tailwind + tokens de sombra, camadas e animação (plano 022)
-    ├── vite-env.d.ts       tipo de import.meta.env (VITE_API_URL)
+    ├── vite-env.d.ts       tipo de import.meta.env (VITE_API_URL, VITE_VISITOR_APP_URL)
     ├── pages/              só compõem componentes
     │   ├── Login.tsx       aviso de sessão, formulário e "Não tem acesso?"
     │   ├── Dashboard.tsx   PageHeader com saudação + cartão "métricas no plano 015"
-    │   └── points/
-    │       ├── PointsList.tsx  /pontos — PageHeader, filtro por status, DataTable e ações
-    │       ├── PointForm.tsx   /pontos/novo e /pontos/:pointId — carrega o ponto, monta o PointEditor
-    │       │                   e, só na edição, a MediaSection
-    │       └── media/          seção "Fotos" da edição do ponto (plano 013)
-    │           ├── MediaSection.tsx      título, erro, lista de fotos e botão de envio
-    │           ├── MediaItemCard.tsx     miniatura 120 px, Legenda, Texto alternativo, ↑ ↓ Remover
-    │           └── MediaUploadButton.tsx input de arquivo (JPEG/PNG/WebP), limite de 20 MB e de 20 fotos
+    │   ├── points/
+    │   │   ├── PointsList.tsx  /pontos — PageHeader, filtro por status, DataTable e ações
+    │   │   ├── PointForm.tsx   /pontos/novo e /pontos/:pointId — carrega o ponto, monta o PointEditor
+    │   │   │                   e, só na edição, a MediaSection
+    │   │   └── media/          seção "Fotos" da edição do ponto (plano 013)
+    │   │       ├── MediaSection.tsx      título, erro, lista de fotos e botão de envio
+    │   │       ├── MediaItemCard.tsx     miniatura 120 px, Legenda, Texto alternativo, ↑ ↓ Remover
+    │   │       └── MediaUploadButton.tsx input de arquivo (JPEG/PNG/WebP), limite de 20 MB e de 20 fotos
+    │   └── qrcodes/            /qrcodes — QR Codes dos pontos publicados (plano 014)
+    │       ├── QrCodesPage.tsx     cabeçalho com "Imprimir", aviso, grade de cartões; ?slug= filtra
+    │       ├── QrCard.tsx          cartão: "TourVR", nome, QR 6 cm × 6 cm, instrução, URL, Baixar PNG
+    │       ├── QrDownloadLink.tsx  <a download="qr-<slug>.png">
+    │       └── LocalUrlWarning.tsx faixa amarela quando a URL começa com http://localhost
     ├── layouts/
     │   ├── AdminLayout.tsx barra lateral fixa (≥ md) ou MobileTopBar (< md) + <Outlet />
     │   ├── SidebarPanel.tsx "TourVR Admin", menu e "Sair do sistema" (usado nos dois modos)
@@ -74,7 +81,8 @@ services/frontend/
     │   │   ├── NewPointLink.tsx   botão "Novo ponto"
     │   │   ├── PointEditor.tsx    formulário: avisos, campos e ações
     │   │   ├── PointFields.tsx    Nome, Identificador, Resumo (x/280) e História (x/10000)
-    │   │   ├── PointFormActions.tsx Salvar; na edição, Publicar/Despublicar e Excluir
+    │   │   ├── PointFormActions.tsx Salvar; na edição, Publicar/Despublicar, Excluir e, se publicado, QR Code
+    │   │   ├── QrCodeLink.tsx     atalho "QR Code" → /qrcodes?slug=<slug> (lista e formulário)
     │   │   └── FormField.tsx      rótulo, dica, contador e erro de um campo
     │   ├── ProtectedRoute.tsx   carregando → loader; sem sessão → /login; sem admin → AccessDenied
     │   ├── AccessDenied.tsx     "Acesso restrito a administradores." + botão "Sair"
@@ -89,6 +97,7 @@ services/frontend/
     │   ├── messages.ts     textos de sessão expirada, acesso restrito e avisos
     │   ├── points.ts       limites espelhados do backend, STATUS_LABEL e mensagens dos pontos
     │   ├── media.ts        tipos aceitos, 20 MB, 20 fotos, texto alternativo provisório e mensagens
+    │   ├── qr.ts           VISITOR_APP_URL, largura 512 px, correção de erro M, prefixo localhost
     │   └── navigation.ts   NAV_ITEMS (rótulo, rota, ícone, enabled)
     ├── hooks/
     │   ├── useLoginForm.ts estado do formulário e envio (POST /auth/login)
@@ -97,7 +106,8 @@ services/frontend/
     │   ├── usePoint.ts     um ponto pelo id; sem id (criação) não chama a API
     │   ├── usePointForm.ts estado, validação e envio (cria ou atualiza; PUT sem `media`)
     │   ├── useMediaList.ts lista de fotos: add, update, move, remove; cada mudança grava `media`
-    │   └── usePointActions.ts publicar, despublicar e excluir (com window.confirm)
+    │   ├── usePointActions.ts publicar, despublicar e excluir (com window.confirm)
+    │   └── useQrDataUrl.ts  gera o QR de um texto: { dataUrl, error }, ignora resposta após desmontar
     ├── contexts/
     │   └── AuthContext.tsx  sessão, isAdmin, sessionNotice e registro do handler de 401
     ├── services/
@@ -107,6 +117,8 @@ services/frontend/
     ├── utils/
     │   ├── mediaUrl.ts      URL relativa (`/media/...`) recebe o prefixo de VITE_API_URL
     │   ├── slugify.ts       sugere o slug: sem acentos, minúsculas, hífens, até 60 caracteres
+    │   ├── visitorUrl.ts    visitorPointUrl(slug): <VITE_VISITOR_APP_URL sem barra final>/p/<slug>
+    │   ├── qrCode.ts        qrDataUrl(texto): PNG em data URL (512 px, nível M, margem 2)
     │   ├── validatePoint.ts mensagem por campo com os limites do backend
     │   └── apiError.ts      apiErrorMessage (detail ou 1ª mensagem do 422) e apiErrorStatus
     ├── test/
@@ -169,13 +181,14 @@ um dos dois evita duplicar "TourVR Admin" e o menu na página.
 | `/pontos` | `PointsList` dentro de `AdminLayout` | idem |
 | `/pontos/novo` | `PointForm` (criação) dentro de `AdminLayout` | idem |
 | `/pontos/:pointId` | `PointForm` (edição) dentro de `AdminLayout` | idem |
+| `/qrcodes` | `QrCodesPage` dentro de `AdminLayout`; `?slug=<slug>` mostra só um ponto | idem |
 | `*` | — | Redireciona para `/dashboard` |
 
 As telas do painel ficam aninhadas em `ProtectedRoute` → `AdminLayout` (`src/App.tsx`). Uma
 tela nova entra como rota filha do `AdminLayout` e ganha um item em
 `constants/navigation.ts`. Itens com `enabled: false` aparecem cinza, com
 `aria-disabled="true"` e o rótulo "em breve", sem link. Hoje todos os itens estão
-habilitados ("Dashboard" e "Pontos").
+habilitados ("Dashboard", "Pontos" e "QR Codes").
 
 ## Cadastro de pontos (plano 012)
 
@@ -216,6 +229,28 @@ A seção "Fotos" (`pages/points/media/MediaSection.tsx`) aparece só na ediçã
 - **Limite:** com 20 fotos o envio fica desabilitado, com a dica "Limite de 20 fotos".
 - **`mediaUrl`** (`utils/mediaUrl.ts`): URL que começa com `/` recebe o prefixo de
   `API_BASE_URL`; URL absoluta segue intocada.
+
+## QR Codes (plano 014)
+
+A página `/qrcodes` (`pages/qrcodes/QrCodesPage.tsx`, item "QR Codes" no menu) busca
+`listPoints('published')` e mostra um cartão por ponto **publicado** — rascunho não tem QR,
+porque a URL daria 404 até a publicação.
+
+- **Conteúdo do QR:** só a URL pública do ponto, `visitorPointUrl(slug)` →
+  `<VITE_VISITOR_APP_URL sem barra final>/p/<slug>` (ADR-0006). Gerado no navegador por
+  `qrDataUrl` com a biblioteca `qrcode`: PNG de 512 px, correção de erro nível `M`.
+- **Cartão:** título "TourVR", nome do ponto, QR em 6 cm × 6 cm, "Aponte a câmera do
+  celular" e a URL em texto pequeno. "Baixar PNG" salva `qr-<slug>.png`.
+- **Atalho:** na lista (`/pontos`, coluna de ações) e no formulário de um ponto publicado,
+  o link "QR Code" abre `/qrcodes?slug=<slug>`, só com aquele cartão.
+- **Aviso:** se `VITE_VISITOR_APP_URL` começa com `http://localhost`, uma faixa amarela
+  avisa que os QR Codes apontam para este computador.
+- **Imprimir:** o botão chama `window.print()`. O CSS de impressão (`src/index.css`) usa
+  folha A4 com margem de 1,2 cm e cartões de 12,5 cm de altura em 2 colunas — 4 por página.
+  Menu lateral, barra do topo, cabeçalho da página, aviso e botões levam `print:hidden`;
+  o `<main>` do `AdminLayout` perde o espaçamento (`print:p-0`). Para gerar PDF, escolha
+  "Salvar como PDF" na janela de impressão e **desmarque "Cabeçalhos e rodapés"**, senão o
+  navegador acrescenta data e endereço nas margens.
 
 ## Fluxo de autenticação
 
@@ -290,6 +325,7 @@ consumidas** — não existe tela de perfil.
 | Variável | Padrão | Descrição |
 |---|---|---|
 | `VITE_API_URL` | `http://127.0.0.1:8000` | URL base do backend |
+| `VITE_VISITOR_APP_URL` | `http://localhost:3001` | Endereço do app do visitante; vai dentro dos QR Codes (`constants/qr.ts`). Lido na subida do Vite: alterou, reinicie (`docker compose restart frontend`) |
 
 `VITE_API_URL` também é lido por `npm run gen:types` (padrão `http://localhost:8000`).
 
@@ -378,6 +414,7 @@ Distinção importante para quem for evoluir o painel:
 | Nome do usuário na saudação | ✅ Real, vem de `/users/me` |
 | Menu lateral "Dashboard" | ✅ Real, `NavLink` para `/dashboard` |
 | Menu lateral "Pontos" e cadastro de pontos | ✅ Real (plano 012) |
+| QR Codes dos pontos publicados, folha A4 e PNG | ✅ Real (plano 014) |
 | Mídia dos pontos (fotos, panorama) | ⏳ Sem seção no formulário (planos 013 e 019) |
 | Métricas do dashboard | ⏳ Cartão informativo; números reais no plano 015. Nenhum número fictício na tela |
 | Cadastro de usuários | ⏳ Sem tela; o login orienta a falar com um administrador (plano 015) |

@@ -13,6 +13,7 @@ sessões de planejamento e de execução.
 | **Aplicação VR** | O `vr-app`, executado no headset. É o produto entregue ao usuário final. Ainda não existe. |
 | **Ponto de interesse** | Lugar do campus com conteúdo próprio (biblioteca, auditório, cantina...): `slug`, nome, resumo, história e mídias embutidas. Entidade central do domínio (`PointOfInterest`, collection `points`), definida na [ADR-0007](08-decisoes-arquiteturais.md#adr-0007--modelo-de-domínio-do-campus). |
 | **Slug** | Identificador público e legível de um ponto (ex.: `biblioteca-central`): letras minúsculas, números e hifens, único. Vai no QR Code (`/p/<slug>`) e **não muda** depois da primeira publicação. |
+| **QR Code do ponto** | Código impresso e afixado no local, gerado pelo painel em `/qrcodes` (plano 014). Contém só a URL pública do ponto no app do visitante: `<VITE_VISITOR_APP_URL>/p/<slug>` ([ADR-0006](08-decisoes-arquiteturais.md)). Só pontos publicados têm QR Code. |
 | **Rascunho / Publicado** | Os dois estados (`status`) de um ponto: `draft` (só o painel vê) e `published` (o visitante vê). Muda só pelas ações explícitas de publicar e despublicar. |
 | **Mídia (item)** | Foto embutida num ponto (`MediaItem`: `id`, `kind`, `url`, `caption`, `alt_text`), no máximo 20 por ponto. Hoje só `kind="photo"`; panoramas chegam no plano 019. |
 | **Roteiro** | Sequência curada de pontos que compõem uma visita. **Fora do escopo atual (ADR-0007).** |

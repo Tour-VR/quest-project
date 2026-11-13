@@ -112,13 +112,21 @@ este ambiente; não há `docker-compose.override.yml`.
 |---|---|---|---|
 | `mongo` | `mongo:7` | 27017 | Volume `mongo-data`; healthcheck com `mongosh` ping (`docker-compose.yml:4-14`) |
 | `backend` | `services/backend/Dockerfile` | 8000 | Bind mount `./services/backend:/app`, volume `media-data` em `/app/media` (fotos enviadas, ADR-0008) e `uvicorn --reload`; espera o `mongo` ficar saudável; usa o `HEALTHCHECK` da imagem (`docker-compose.yml:16-31`) |
-| `frontend` | `services/frontend/Dockerfile.dev` | 3000 | Bind mount do código + volume `frontend-node-modules` em `/app/node_modules`; `npm ci && npm run dev`; espera o `backend` ficar saudável (`docker-compose.yml:33-48`) |
+| `frontend` | `services/frontend/Dockerfile.dev` | 3000 | Bind mount do código + volume `frontend-node-modules` em `/app/node_modules`; `npm ci && npm run dev`; espera o `backend` ficar saudável (`docker-compose.yml:33-49`) |
 
 **Variáveis.** Um único `.env` na raiz, criado a partir do `.env.example`, é lido pelo
 `backend` e pelo `frontend` (`env_file`). Duas variáveis são fixadas no próprio compose e
 não dependem do `.env`: `MONGODB_URL=mongodb://mongo:27017` (endereço interno do Docker) e
 `APP_CORS_ORIGINS`, que já inclui a porta 3001 do futuro app do visitante.
 `VITE_API_URL` usa `localhost`, porque quem chama a API é o navegador, fora do Docker.
+
+`VITE_VISITOR_APP_URL` (plano 014) é o endereço do app do visitante que o painel grava
+dentro dos QR Codes. O compose repassa a variável ao `frontend` com o padrão
+`http://localhost:3001` (`docker-compose.yml:41`). Um QR com `localhost` só abre no próprio
+computador: para testar no celular, troque `localhost` pelo IP desta máquina na rede
+(ex.: `https://192.168.0.10:3001`) no `.env` e rode `docker compose restart frontend` — o
+Vite só lê a variável ao subir. Enquanto a URL começar com `http://localhost`, a página
+`/qrcodes` mostra um aviso amarelo.
 
 **Recarga automática.** Editar código em `services/backend` ou `services/frontend`
 recarrega o serviço sem rebuild. No frontend, `CHOKIDAR_USEPOLLING=true` faz o Vite
@@ -219,6 +227,14 @@ roda só eles.
 |---|---|
 | `@golden admin envia foto para um ponto` | Ponto criado pela API; na edição, envia `e2e/fixtures/foto-teste.jpg` (JPEG de 3,5 KB), preenche o texto alternativo, recarrega e vê a miniatura carregada; `GET` da URL da imagem responde `200` com `image/jpeg` |
 | `arquivo que não é imagem é recusado` | Texto com nome `.jpg` mostra "Formato não suportado" e nenhuma foto entra na lista |
+
+| Cenário (`e2e/tests/qrcodes.spec.ts`) | Verifica |
+|---|---|
+| `@golden QR Code do ponto publicado aponta para /p/<slug>` | Ponto criado e publicado pela API (`publishPoint` em `e2e/support/api.ts`); pelo menu "QR Codes", o cartão com o nome existe, a URL termina em `/p/<slug>` e o `img` tem `src` `data:image/png...` |
+| `rascunho não aparece` | Ponto em rascunho criado pela API não tem cartão em `/qrcodes` |
+
+A leitura real do QR (decodificar a imagem) não é testada no E2E; os parâmetros de geração
+ficam no teste unitário `src/utils/qrCode.test.ts` do frontend.
 
 **Relatório.** Ao falhar, o script indica `cd e2e && npx playwright show-report`, que abre
 no navegador o relatório HTML com os passos e o *trace* de cada teste. Resultados ficam em
