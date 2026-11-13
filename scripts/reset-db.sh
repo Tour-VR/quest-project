@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Apaga TODOS os dados do MongoDB local, apos confirmacao.
 # Uso: bash scripts/reset-db.sh
+# As fotos enviadas (volume media-data) NAO sao apagadas: midia nao e banco.
+# Para apagar tambem as fotos: docker compose down && docker volume rm tourvr_media-data
 
 set -euo pipefail
 
@@ -24,3 +26,4 @@ fi
 docker compose down
 docker volume rm tourvr_mongo-data
 ok "Banco local apagado. Rode bash scripts/up.sh para subir um banco vazio."
+info "As fotos enviadas continuam no volume tourvr_media-data (docker volume rm para apagar)."

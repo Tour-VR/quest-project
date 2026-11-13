@@ -1,7 +1,7 @@
 # 04 — Artefato: Frontend (`services/frontend`)
 
 > Repositório: `github.com/Tour-VR/frontend` · Commit fixado: `48283e8`
-> Última verificação contra o código: 2026-11-12
+> Última verificação contra o código: 2026-11-13
 
 ## Responsabilidade
 
@@ -43,7 +43,7 @@ services/frontend/
 ├── .env.example            VITE_API_URL
 ├── scripts/
 │   └── gen-types.mjs       npm run gen:types — gera src/types/api.d.ts do /openapi.json
-└── src/                    ~650 linhas de código (sem contar testes e api.d.ts)
+└── src/                    ~2200 linhas de código (sem contar testes e api.d.ts)
     ├── main.tsx            StrictMode + createRoot
     ├── App.tsx             BrowserRouter > AuthProvider > Routes (rotas aninhadas)
     ├── index.css           Tailwind + tokens de sombra, camadas e animação (plano 022)
@@ -53,7 +53,12 @@ services/frontend/
     │   ├── Dashboard.tsx   PageHeader com saudação + cartão "métricas no plano 015"
     │   └── points/
     │       ├── PointsList.tsx  /pontos — PageHeader, filtro por status, DataTable e ações
-    │       └── PointForm.tsx   /pontos/novo e /pontos/:pointId — carrega o ponto e monta o PointEditor
+    │       ├── PointForm.tsx   /pontos/novo e /pontos/:pointId — carrega o ponto, monta o PointEditor
+    │       │                   e, só na edição, a MediaSection
+    │       └── media/          seção "Fotos" da edição do ponto (plano 013)
+    │           ├── MediaSection.tsx      título, erro, lista de fotos e botão de envio
+    │           ├── MediaItemCard.tsx     miniatura 120 px, Legenda, Texto alternativo, ↑ ↓ Remover
+    │           └── MediaUploadButton.tsx input de arquivo (JPEG/PNG/WebP), limite de 20 MB e de 20 fotos
     ├── layouts/
     │   ├── AdminLayout.tsx barra lateral fixa (≥ md) ou MobileTopBar (< md) + <Outlet />
     │   ├── SidebarPanel.tsx "TourVR Admin", menu e "Sair do sistema" (usado nos dois modos)
@@ -83,6 +88,7 @@ services/frontend/
     ├── constants/
     │   ├── messages.ts     textos de sessão expirada, acesso restrito e avisos
     │   ├── points.ts       limites espelhados do backend, STATUS_LABEL e mensagens dos pontos
+    │   ├── media.ts        tipos aceitos, 20 MB, 20 fotos, texto alternativo provisório e mensagens
     │   └── navigation.ts   NAV_ITEMS (rótulo, rota, ícone, enabled)
     ├── hooks/
     │   ├── useLoginForm.ts estado do formulário e envio (POST /auth/login)
@@ -90,13 +96,16 @@ services/frontend/
     │   ├── usePoints.ts    lista com filtro: { points, loading, error, reload }
     │   ├── usePoint.ts     um ponto pelo id; sem id (criação) não chama a API
     │   ├── usePointForm.ts estado, validação e envio (cria ou atualiza; PUT sem `media`)
+    │   ├── useMediaList.ts lista de fotos: add, update, move, remove; cada mudança grava `media`
     │   └── usePointActions.ts publicar, despublicar e excluir (com window.confirm)
     ├── contexts/
     │   └── AuthContext.tsx  sessão, isAdmin, sessionNotice e registro do handler de 401
     ├── services/
     │   ├── api.ts           instância Axios, gestão do token, interceptores de request e de 401
-    │   └── points.ts        7 funções finas sobre `api` para /admin/points
+    │   ├── points.ts        7 funções finas sobre `api` para /admin/points
+    │   └── media.ts         uploadMedia: FormData (campo `file`) para POST /admin/media
     ├── utils/
+    │   ├── mediaUrl.ts      URL relativa (`/media/...`) recebe o prefixo de VITE_API_URL
     │   ├── slugify.ts       sugere o slug: sem acentos, minúsculas, hífens, até 60 caracteres
     │   ├── validatePoint.ts mensagem por campo com os limites do backend
     │   └── apiError.ts      apiErrorMessage (detail ou 1ª mensagem do 422) e apiErrorStatus
@@ -106,7 +115,8 @@ services/frontend/
     │   └── matchMedia.ts    stubMatchMedia: simula tela estreita/larga (o jsdom não tem)
     └── types/
         ├── api.d.ts         GERADO por npm run gen:types — não editar à mão
-        └── index.ts         aliases: User, AuthResponse, LoginPayload, Point, PointCreate, PointUpdate, PointStatus
+        └── index.ts         aliases: User, AuthResponse, LoginPayload, Point, PointCreate, PointUpdate,
+                             PointStatus, MediaItem, MediaItemInput, MediaUpload
 ```
 
 Testes ficam ao lado do código, como `Arquivo.test.tsx` (ex.: `pages/Login.test.tsx`).
@@ -183,6 +193,30 @@ habilitados ("Dashboard" e "Pontos").
   "Ponto criado."; salvar a edição mostra "Alterações salvas.".
 - **Exclusão** pede `window.confirm` com o nome do ponto.
 
+## Fotos do ponto (plano 013)
+
+A seção "Fotos" (`pages/points/media/MediaSection.tsx`) aparece só na edição
+(`/pontos/:pointId`), fora do `<form>` do ponto. Cada mudança é gravada na hora, com
+`PUT /admin/points/{id}` levando a lista `media` **inteira** (`hooks/useMediaList.ts`).
+
+- **Enviar foto:** `<input type="file" accept="image/jpeg,image/png,image/webp">`. Arquivo
+  acima de 20 MB é recusado no cliente ("Arquivo maior que 20 MB."), sem chamar a API.
+  Durante o envio o botão mostra "Enviando...". O arquivo vai por `uploadMedia`; a URL
+  devolvida entra no fim da lista e a lista é gravada. Erro do backend (ex.: `415`
+  "Formato não suportado. Envie JPEG, PNG ou WebP.") aparece no topo da seção.
+- **Texto alternativo provisório.** O backend exige `alt_text` com 1 caractere ou mais, então
+  a foto recém-enviada é gravada com `ALT_TEXT_PLACEHOLDER` ("Foto sem descrição",
+  `constants/media.ts`). Enquanto o texto for vazio ou o provisório, o campo aparece vazio e
+  o cartão mostra o aviso amarelo "Preencha o texto alternativo" — o aviso não bloqueia
+  nada. Apagar o texto e sair do campo grava o provisório de novo.
+- **Cartão da foto:** miniatura de 120 px com `src={mediaUrl(url)}` e `alt` do texto
+  alternativo; campos Legenda e Texto alternativo ("Descreva a imagem para quem não pode
+  vê-la") gravados ao sair do campo (`onBlur`), só se o valor mudou; botões "↑" e "↓"
+  (desabilitados nas pontas) e "Remover". Item novo vai sem `id`; o backend gera.
+- **Limite:** com 20 fotos o envio fica desabilitado, com a dica "Limite de 20 fotos".
+- **`mediaUrl`** (`utils/mediaUrl.ts`): URL que começa com `/` recebe o prefixo de
+  `API_BASE_URL`; URL absoluta segue intocada.
+
 ## Fluxo de autenticação
 
 ```
@@ -241,7 +275,9 @@ restrito a administradores.") com o botão "Sair".
 | `GET` | `/admin/points?status=` | `services/points.ts` → `listPoints` (lista e filtro) |
 | `GET` | `/admin/points/{id}` | `getPoint` (tela de edição) |
 | `POST` | `/admin/points` | `createPoint` (Salvar na criação) |
-| `PUT` | `/admin/points/{id}` | `updatePoint` — só nome, slug, resumo e história; `media` nunca é enviada; slug omitido em ponto publicado |
+| `PUT` | `/admin/points/{id}` | `updatePoint` — pelo formulário, só nome, slug, resumo e história (slug omitido em ponto publicado); pela seção "Fotos" (`useMediaList`), só `media` |
+| `POST` | `/admin/media` | `services/media.ts` → `uploadMedia` (seção "Fotos") |
+| `GET` | `/media/{arquivo}` | `<img src={mediaUrl(url)}>` na miniatura (fora do Axios) |
 | `DELETE` | `/admin/points/{id}` | `deletePoint` (após `window.confirm`) |
 | `POST` | `/admin/points/{id}/publish` | `publishPoint` |
 | `POST` | `/admin/points/{id}/unpublish` | `unpublishPoint` |
