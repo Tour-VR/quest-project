@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em revisão — Heitor Aquino |
+| **Status** | Concluído |
 | **Fase** | 2 — Painel administrativo |
 | **Depende de** | 012 |
 | **Dívidas atendidas** | nenhuma |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Frontend, Orquestrador (compose, docs, E2E) |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | 2026-11-13 por Heitor Aquino (sessão de execução com Claude Code) |
+| **Executado em** | 2026-11-13 por Heitor Aquino · PRs: [frontend#8](https://github.com/Tour-VR/frontend/pull/8), [quest-project#16](https://github.com/Tour-VR/quest-project/pull/16) · concluído em 2026-11-14 |
 
 ---
 
