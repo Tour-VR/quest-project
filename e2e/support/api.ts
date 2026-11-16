@@ -3,6 +3,11 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { URLS } from './urls';
 
+/** Sufixo unico: so o horario colide quando dois testes rodam no mesmo milissegundo. */
+export function uniqueSuffix(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 export interface TestUser {
   email: string;
   password: string;
@@ -16,7 +21,7 @@ const REPO_ROOT = fileURLToPath(new URL('../..', import.meta.url));
  * O parametro `request` fica para manter a assinatura do plano 005 e nao alterar quem chama.
  */
 export async function createAdminUser(_request: APIRequestContext): Promise<TestUser> {
-  const user = { email: `e2e-${Date.now()}@tourvr.dev`, password: 'senhaE2E123' };
+  const user = { email: `e2e-${uniqueSuffix()}@tourvr.dev`, password: 'senhaE2E123' };
   execFileSync(
     'docker',
     [
@@ -42,7 +47,7 @@ export async function createCommonUser(
   admin: TestUser,
 ): Promise<TestUser> {
   const token = await loginPelaApi(request, admin);
-  const user = { email: `e2e-comum-${Date.now()}@tourvr.dev`, password: 'senhaE2E123' };
+  const user = { email: `e2e-comum-${uniqueSuffix()}@tourvr.dev`, password: 'senhaE2E123' };
   const response = await request.post(`${URLS.api}/auth/register`, {
     data: user,
     headers: { Authorization: `Bearer ${token}` },

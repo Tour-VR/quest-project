@@ -1,5 +1,11 @@
 import { expect, test } from '@playwright/test';
-import { createAdminUser, createPoint, loginPelaApi, publishPoint } from '../support/api';
+import {
+  createAdminUser,
+  createPoint,
+  loginPelaApi,
+  publishPoint,
+  uniqueSuffix,
+} from '../support/api';
 import { loginNoPainel } from '../support/painel';
 import { URLS } from '../support/urls';
 
@@ -27,7 +33,7 @@ test('@golden dashboard conta a visita registrada', async ({ page, request }) =>
 
 test('admin desativa usuário e ele não entra mais', async ({ page, request }) => {
   const admin = await createAdminUser(request);
-  const novo = { email: `e2e-novo-${Date.now()}@tourvr.dev`, password: 'senhaE2E123' };
+  const novo = { email: `e2e-novo-${uniqueSuffix()}@tourvr.dev`, password: 'senhaE2E123' };
   await loginNoPainel(page, admin);
   await expect(page).toHaveURL(/\/dashboard$/);
 
