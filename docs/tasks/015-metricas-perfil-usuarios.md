@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em execução — Heitor Aquino — 2026-11-16 |
+| **Status** | Em revisão — Heitor Aquino |
 | **Fase** | 2 — Painel administrativo |
 | **Depende de** | 010, 011 |
 | **Dívidas atendidas** | DT-011, DT-015 |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Backend, Frontend, Orquestrador (docs e E2E) |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | — |
+| **Executado em** | 2026-11-16 por Heitor Aquino (sessão de execução com Claude Code) |
 
 ---
 
@@ -333,3 +333,52 @@ Execute o plano docs/tasks/015-metricas-perfil-usuarios.md.
 Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o "Prompt 1 — EXECUTAR" etapa por etapa.
 Meu nome, para registrar no plano: <SEU NOME>
 ```
+
+---
+
+## Registro de execução
+
+**Executado em 2026-11-16 por Heitor Aquino.** Branch `plano/015-metricas-perfil-usuarios`
+no backend, no frontend e no orquestrador.
+
+**O que foi feito**
+
+- Backend: schemas `UserAdminResponse`, `UserListResponse` e `UserAdminUpdate`;
+  repositório com `list_users`, `count_users`, `find_by_id` e `update_user_by_id`; serviço
+  com `serialize_admin_user`, `list_users` e `update_user_admin` (autoproteção do admin);
+  rotas `GET /admin/users` e `PATCH /admin/users/{user_id}` em `admin_users.py`. 22 testes
+  novos (171 no total, cobertura 95%).
+- Frontend: tipos regenerados e aliases novos; serviços `metrics`, `users` e `profile`;
+  `validatePassword`; `AuthContext.updateUser`; dashboard com 5 cartões, ranking e
+  "Atualizar"; `/perfil` (dados e troca de senha); `/usuarios` (tabela, papel, situação,
+  "Novo usuário", paginação); menu com "Usuários" e "Meu perfil". 175 testes (cobertura
+  99%); cartão provisório do plano 011 removido.
+- E2E: `e2e/tests/painel-gestao.spec.ts` com os três cenários do plano.
+- Documentação da seção 8 atualizada; DT-011 e DT-015 resolvidas.
+
+**Desvios do plano**
+
+- `src/hooks/useUserCreateForm.ts` (estado do formulário "Novo usuário") e
+  `src/components/ui/FormCard.tsx` (cartão de formulário usado pelo perfil e pela criação
+  de usuário) não estavam listados: seguem a convenção "lógica de formulário em
+  `src/hooks/`" e evitam duplicação.
+- `FormField` ganhou a propriedade opcional `type` (`text`/`email`/`password`) para os
+  campos de senha.
+- A linha do próprio admin na tabela é reconhecida pelo **e-mail**, porque `GET /users/me`
+  não devolve `id`.
+- As rotas de `/admin/users` aplicam `require_admin` em cada rota (não no roteador),
+  porque o `PATCH` precisa do admin logado para a autoproteção. O comportamento é o mesmo.
+- `e2e/support/api.ts` ganhou `uniqueSuffix()`. Os e-mails de teste usavam só
+  `Date.now()`, e com 15 cenários em paralelo dois administradores colidiram no mesmo
+  milissegundo ("Ja existe um usuario com este email."), derrubando 3 testes antigos.
+
+**Validação.** `bash scripts/validate.sh` terminou com código 0: backend, frontend,
+duplicação e E2E (15 cenários, incluindo os 3 novos). Numa das três rodadas, o cenário
+antigo "token inválido" falhou uma vez e passou 5 de 5 vezes isolado: registrado como DT-024.
+
+**Dívidas novas registradas**
+
+- [DT-023](../implementacoes-futuras/DT-023-visao-geral-desatualizada.md) — visão geral com
+  estado e números desatualizados (fora do escopo deste plano).
+- [DT-024](../implementacoes-futuras/DT-024-e2e-token-invalido-instavel.md) — cenário E2E
+  "token inválido" instável sob carga.

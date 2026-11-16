@@ -42,18 +42,18 @@ produto — a experiência de realidade virtual — ainda não foi iniciado.
 | Frente | Estado |
 |---|---|
 | Autenticação (registro, login, JWT, perfil) | ✅ Implementada e testada |
-| Painel administrativo web (login + dashboard) | ✅ Implementado (dashboard com dados fictícios) |
+| Painel administrativo web | ✅ Completo (plano 015) — login, dashboard com métricas reais, pontos, QR Codes, "Meu perfil" e gestão de usuários |
 | Cadastro de pontos no painel | ✅ Implementado (plano 012) — criar, editar, publicar, despublicar e excluir |
 | Geração de QR Codes | ✅ Implementada (plano 014) — `/qrcodes` no painel: um cartão por ponto publicado, folha A4 e PNG |
 | Health check e diagnóstico de banco | ✅ Implementado |
 | **App do visitante (AR e VR)** | 🔴 **Não iniciado** — repositório vazio; stack decidida na ADR-0006 |
-| **Modelo de domínio do campus** | 🟡 Parcial — pontos e visitas no backend (ADR-0007); cadastro de pontos no painel (plano 012); QR Codes no painel (plano 014); métricas no painel pendentes |
+| **Modelo de domínio do campus** | 🟡 Parcial — pontos e visitas no backend (ADR-0007); cadastro de pontos no painel (plano 012); QR Codes no painel (plano 014); métricas no painel (plano 015) |
 | Pipeline de mídia 360° / storage | 🔴 Não existe |
 | Orquestração de ambiente (compose, scripts) | 🔴 Não existe |
 | CI/CD | 🔴 Não existe |
 
-O dashboard exibe "12 Ambientes VR" e "89 Sessões Hoje" como constantes literais no
-código-fonte. Não há entidade de ambiente VR nem de sessão em lugar algum do sistema.
+O dashboard mostra contagens reais de pontos e visitas (`GET /admin/metrics/overview`).
+Nenhuma tarefa de rotina do painel exige Swagger ou acesso direto ao banco.
 
 ## Escopo em números
 

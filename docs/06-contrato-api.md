@@ -2,7 +2,7 @@
 
 > **Fonte de verdade da integração backend ↔ frontend ↔ vr-app.**
 > Extraído por leitura direta do código, não do README do submódulo.
-> Última verificação: 2026-11-13 · Base: `http://127.0.0.1:8000`
+> Última verificação: 2026-11-16 · Base: `http://127.0.0.1:8000`
 
 ## Regra de manutenção
 
@@ -554,6 +554,74 @@ Resumo com contagens reais de pontos e visitas, para o painel (plano 015). Exige
 
 ---
 
+## `GET /admin/users`
+
+Lista os usuários do painel, do cadastro mais recente para o mais antigo, paginada
+(plano 015). Exige papel `admin`.
+
+**Query** — `page` (padrão `1`, mínimo `1`) e `page_size` (padrão `20`, de `1` a `100`).
+
+**200** — `UserListResponse`. Nenhum item tem senha ou hash:
+```json
+{
+  "items": [
+    {
+      "id": "665f1c2e9b1e8a0012340001",
+      "email": "bruno@exemplo.com",
+      "username": "bruno",
+      "full_name": "Bruno Lima",
+      "role": "user",
+      "is_active": true,
+      "created_at": "2026-11-10T12:00:00Z"
+    }
+  ],
+  "total": 42,
+  "page": 1,
+  "page_size": 20
+}
+```
+
+`created_at` pode ser `null` em documentos antigos; esses aparecem no fim da ordenação.
+
+| Erro | Quando |
+|---|---|
+| `400` | `page < 1` · `page_size` fora de 1–100 (`"Parametros de paginacao invalidos."`) |
+| `401` / `403` | Sem token / papel diferente de `admin` — ver [Papéis e autorização](#papéis-e-autorização) |
+| `503` | MongoDB indisponível |
+
+---
+
+## `PATCH /admin/users/{user_id}`
+
+Ativa, desativa ou muda o papel de um usuário (plano 015). Exige papel `admin`.
+
+**Request** — envie um ou os dois campos:
+```json
+{ "is_active": false, "role": "admin" }
+```
+
+**200** — o usuário atualizado, na mesma forma de um item de `GET /admin/users`.
+
+- **Desativar** vale na hora: `get_current_user` recusa usuário inativo com `403`, e o
+  login devolve `"Credenciais invalidas."`.
+- **Mudar o papel** vale no próximo login: o papel viaja no token, mas `require_admin` lê o
+  papel do banco a cada requisição, então um rebaixado perde o acesso admin na hora.
+- **Autoproteção:** o admin não pode desativar nem rebaixar a si mesmo — evita o painel
+  ficar sem administrador.
+
+| Erro | Quando |
+|---|---|
+| `400` | corpo vazio (`"Nenhum campo valido para atualizacao."`) · admin tentando desativar ou rebaixar a si mesmo (`"Você não pode remover o próprio acesso de administrador."`) |
+| `401` / `403` | Sem token / papel diferente de `admin` |
+| `404` | `user_id` inválido ou inexistente (`"Usuário não encontrado."`) |
+| `422` | `role` diferente de `"admin"`/`"user"` · `is_active` não booleano |
+| `503` | MongoDB indisponível |
+
+Não há rota de exclusão: desativar preserva o histórico. A criação continua em
+`POST /auth/register`, que exige admin e cria o usuário com papel `user`.
+
+---
+
 ## `POST /admin/media`
 
 Envia uma imagem para o disco do backend (ADR-0008, plano 013). Exige papel `admin`. O
@@ -620,7 +688,6 @@ liberados, e origens restritas à lista de `APP_CORS_ORIGINS`. O frontend em
 
 ## Endpoints ausentes
 
-O `vr-app` e as telas planejadas do painel exigirão rotas que **ainda não existem**:
-listagem e gestão de usuários, panoramas e conexões entre
-pontos (plano 019). Ver
+O `vr-app` exigirá rotas que **ainda não existem**: panoramas e conexões entre pontos
+(plano 019). Ver
 [DT-016](implementacoes-futuras/DT-016-modelagem-dominio-turismo.md).

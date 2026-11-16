@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Parcial — endpoint de métricas pronto (plano 010); consumo no painel pendente (plano 015) |
+| **Status** | Resolvida — 2026-11-16 — [plano 015](../tasks/015-metricas-perfil-usuarios.md) |
 | **Prioridade** | P2 |
 | **Esforço** | Médio |
 | **Artefato** | Frontend, Backend |
@@ -70,7 +70,7 @@ ambiente VR ou de sessão em lugar algum do sistema.
 
 - [x] Nenhum número exibido no painel pode ser confundido com dado real enquanto não for
 - [x] Itens de menu ou navegam, ou estão visivelmente desabilitados
-- [ ] Após DT-016: cartões refletem contagens reais, com tratamento de carregando e erro
+- [x] Após DT-016: cartões refletem contagens reais, com tratamento de carregando e erro
 
 ## Notas
 
@@ -84,3 +84,8 @@ esperar pelo domínio para executá-la.
 **Andamento (2026-11-12, plano 011).** Etapa imediata concluída no painel: sem números
 fictícios e menu honesto. A dívida continua **parcial** até o plano 015 consumir
 `GET /admin/metrics/overview` no dashboard.
+
+**Resolvida (2026-11-16, [plano 015](../tasks/015-metricas-perfil-usuarios.md)).** O dashboard consome `GET /admin/metrics/overview`:
+cinco cartões (pontos, publicados, visitas, últimos 7 dias, AR / VR), lista "Pontos mais
+visitados", estados de carregando e erro e botão "Atualizar". O menu ganhou "Usuários" e
+"Meu perfil"; nenhum item fica desabilitado.

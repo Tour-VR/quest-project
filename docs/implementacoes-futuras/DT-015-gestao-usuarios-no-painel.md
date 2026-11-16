@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Aberta |
+| **Status** | Resolvida — 2026-11-16 — [plano 015](../tasks/015-metricas-perfil-usuarios.md); item 5 da proposta (`/docs` fora de desenvolvimento) permanece pendente |
 | **Prioridade** | P2 |
 | **Esforço** | Médio |
 | **Artefato** | Frontend, Backend |
@@ -54,11 +54,11 @@ uma tela de listagem de usuários expõe dados de todos a qualquer conta.
 
 ## Critérios de aceite
 
-- [ ] Usuário autenticado consegue editar nome e username pelo painel
-- [ ] Usuário autenticado consegue trocar a própria senha pelo painel
-- [ ] Administrador consegue listar e desativar usuários
-- [ ] Endpoint de listagem é paginado e exige papel de administrador
-- [ ] Tela de login não instrui mais o uso do Swagger
+- [x] Usuário autenticado consegue editar nome e username pelo painel
+- [x] Usuário autenticado consegue trocar a própria senha pelo painel
+- [x] Administrador consegue listar e desativar usuários
+- [x] Endpoint de listagem é paginado e exige papel de administrador
+- [x] Tela de login não instrui mais o uso do Swagger (plano 011)
 
 ## Notas
 
@@ -70,3 +70,11 @@ curto de execução.
 `require_admin` para proteger as rotas de gestão, e `POST /auth/register` já exige token de
 administrador. O aviso da tela de login que manda usar o Swagger ficou desatualizado — o
 primeiro administrador agora é criado com `create-admin` — e é removido no plano 011.
+
+**Resolvida (2026-11-16, [plano 015](../tasks/015-metricas-perfil-usuarios.md)).** Itens 1 e 2 entregues: `/perfil` (nome, username e
+troca de senha) e `/usuarios` (listar paginado, criar via `POST /auth/register`, ativar,
+desativar e mudar papel), com `GET /admin/users` e `PATCH /admin/users/{user_id}` no
+backend e autoproteção contra o admin remover o próprio acesso. O item 3 ficou decidido
+como criação pelo administrador com senha inicial (sem servidor de e-mail). **Pendência
+remanescente:** item 5 — desabilitar `/docs` e `/redoc` fora de desenvolvimento — ficou
+fora do escopo do plano 015.

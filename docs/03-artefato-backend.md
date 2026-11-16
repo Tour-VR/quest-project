@@ -1,7 +1,7 @@
 # 03 — Artefato: Backend (`services/backend`)
 
 > Repositório: `github.com/Tour-VR/backend` · Commit fixado: `d3f1449`
-> Última verificação contra o código: 2026-11-13
+> Última verificação contra o código: 2026-11-16
 
 ## Responsabilidade
 
@@ -64,16 +64,16 @@ services/backend/
     │                           get_login_rate_limiter, erro 503 padrão
     │   └── v1/
     │       ├── router.py       agrega health + auth + users + admin_points + public_points
-    │       │                   + admin_metrics + admin_media
+    │       │                   + admin_metrics + admin_media + admin_users
     │       └── routes/         auth.py · users.py · health.py · admin_points.py ·
     │                           public_points.py (+ registro de visita) · admin_metrics.py ·
-    │                           admin_media.py
+    │                           admin_media.py · admin_users.py
     ├── models/
     │   ├── user.py             UserModel (dataclass, slots)
     │   ├── point.py            PointModel + constantes de status e tipo de mídia
     │   └── visit.py            VisitModel + constantes de modo (`ar`, `vr`)
     ├── schemas/
-    │   ├── user.py             9 schemas Pydantic
+    │   ├── user.py             12 schemas Pydantic (inclui UserAdminResponse, UserListResponse, UserAdminUpdate)
     │   ├── point.py            7 schemas + limites do contrato (fonte única)
     │   ├── visit.py            VisitCreate, VisitRecordedResponse
     │   ├── metrics.py          MetricsOverviewResponse, VisitsByMode, TopPoint
@@ -81,17 +81,17 @@ services/backend/
     ├── repositories/
     │   ├── media_storage.py    MediaStorage: grava `<uuid>.<ext>` em MEDIA_DIR (OSError → ConnectionError)
     │   ├── errors.py           UniqueConstraintError + duplicated_field (chave duplicada)
-    │   ├── user_repository.py  5 métodos de acesso à collection `users`
+    │   ├── user_repository.py  9 métodos de acesso à collection `users` (inclui listagem, contagem e busca por id)
     │   ├── point_repository.py 10 métodos de acesso à collection `points`
     │   └── visit_repository.py 5 métodos de acesso à collection `visits` (contagens e `$group`)
     ├── services/
-    │   ├── user_service.py     regras de usuário + 4 exceções de domínio
+    │   ├── user_service.py     regras de usuário, gestão pelo admin + 4 exceções de domínio
     │   ├── point_service.py    regras de publicação e slug + 3 exceções de domínio
     │   ├── visit_service.py    registro anônimo de visita a ponto publicado
     │   ├── metrics_service.py  resumo de pontos e visitas (janela de 7 dias, top 5)
     │   └── media_service.py    MediaService: leitura em blocos, limite, tipo real + 3 exceções
     └── cli.py                  comando `create-admin` (python -m app.cli)
-└── tests/                      conftest.py + 149 testes
+└── tests/                      conftest.py + 171 testes
 ```
 
 ## Endpoints
@@ -121,12 +121,16 @@ Contrato completo, com payloads e códigos de erro, em
 | `GET` | `/admin/metrics/overview` | Bearer (admin) |
 | `POST` | `/admin/media` | Bearer (admin) |
 | `GET` | `/media/{arquivo}` | — |
+| `GET` | `/admin/users` | Bearer (admin) |
+| `PATCH` | `/admin/users/{user_id}` | Bearer (admin) |
 
 Prefixos: `/admin/...` exige papel `admin` (o roteador inteiro depende de `require_admin`,
 `app/api/v1/routes/admin_points.py:18-22` e `app/api/v1/routes/admin_metrics.py:14-18`);
 `/public/...` não pede token e só devolve pontos publicados. `/admin/media` exige admin
 pela dependência da própria rota (`app/api/v1/routes/admin_media.py:27-32`); `/media/...` é
-estático e público.
+estático e público. `/admin/users` também exige admin pela dependência de cada rota
+(`app/api/v1/routes/admin_users.py:33-55`): o `PATCH` precisa do admin logado para a
+autoproteção.
 
 ## Modelo de dados
 
@@ -229,6 +233,24 @@ e [app/core/security.py](../services/backend/app/core/security.py):
   em `create_app()` e guardado em `app.state`: **zera quando o backend reinicia**
   (inclusive no `--reload`) e só vale para uma instância. É preocupação HTTP, por isso
   fica na rota e não no service.
+
+### Gestão de usuários pelo painel (plano 015)
+
+Implementada em `app/services/user_service.py:68-121`; rotas em
+`app/api/v1/routes/admin_users.py`.
+
+- **Listagem paginada:** `list_users(page, page_size)` valida `page >= 1` e
+  `1 <= page_size <= MAX_PAGE_SIZE` (100; padrão `DEFAULT_PAGE_SIZE` = 20), senão
+  `UserInputError` (→ `400`). O repositório ordena por `created_at` decrescente
+  (`app/repositories/user_repository.py:89-95`); documentos sem `created_at` ficam no fim.
+- **Serialização sem senha:** `serialize_admin_user` devolve `id`, `email`, `username`,
+  `full_name`, `role`, `is_active` e `created_at` — nunca `hashed_password`.
+- **Alteração:** `update_user_admin` aceita `is_active` e/ou `role`; corpo vazio →
+  `UserInputError`; id malformado ou inexistente → `UserNotFoundError` (→ `404`,
+  `find_by_id` devolve `None` quando `ObjectId.is_valid` é falso).
+- **Autoproteção:** o admin não desativa nem rebaixa a si mesmo
+  (`app/services/user_service.py:107-114`), comparando `str(current_user.get("_id"))` com o
+  `user_id`. A regra fica no service, não só no botão do painel.
 
 ### Pontos de interesse
 
@@ -499,9 +521,17 @@ tipos: o mypy ignora só os imports delas. Cobertura atual: 94%.
   após 5 falhas, desbloqueio após a janela, `reset` e `clear`.
 - `tests/test_indexes.py` — 4 testes: nomes e opções dos índices de `users`, `points` e
   `visits`; o `lifespan` sobrevive a falha na criação dos índices.
-- `tests/test_user_repository.py` — 3 testes: `DuplicateKeyError` vira
+- `tests/test_user_repository.py` — 7 testes: `DuplicateKeyError` vira
   `UniqueConstraintError` na inserção e na atualização; campo `desconhecido` sem
-  `keyPattern`.
+  `keyPattern`; listagem ordenada por `created_at` com `skip`/`limit`; contagem e busca
+  por id; id malformado devolve `None` sem consultar; `PyMongoError` vira
+  `ConnectionError` nos quatro métodos novos.
+- `tests/test_admin_users.py` — 18 testes (com `parametrize`): lista paginada sem senha,
+  tamanho padrão 20, `page=0`/`page_size=0`/`page_size=101` → `400`, desativar outro
+  usuário, promover a admin, autoproteção (desativar e rebaixar a si mesmo → `400`;
+  manter-se admin é permitido), id inválido e inexistente → `404`, usuário removido no
+  meio → `404`, corpo vazio → `400`, `role` `"root"` → `422`, sem token `401` e papel
+  `user` `403` nas duas rotas, `503` nas duas rotas.
 - `tests/test_user_service.py` — 4 testes de `create_or_promote_admin` com repository
   falso: cria quando não existe, promove sem alterar a senha, conflito de índice vira
   `UserConflictError`, usuário que some durante a promoção.
