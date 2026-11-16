@@ -64,3 +64,9 @@ ordem de merge: submódulos primeiro, depois atualizar o ponteiro, depois o orqu
 **Ocorrência (2026-11-12, plano 012).** PR Tour-VR/quest-project#14: os 3 cenários de
 `e2e/tests/pontos.spec.ts` falham na CI porque o painel no ponteiro da `main` ainda não tem
 a tela de pontos; passam localmente com o frontend da branch do plano.
+
+**Ocorrência (2026-11-16, plano 015).** PR Tour-VR/quest-project#17: os 3 cenários de
+`e2e/tests/painel-gestao.spec.ts` falham na CI (backend com 149 testes e painel sem as
+telas novas, isto é, ponteiros da `main`); localmente, com as branches do plano, os 15
+cenários passam. Mesmo contorno do plano 013: após o merge dos PRs do backend e do
+frontend, atualizar os ponteiros na branch do plano para a nova `main`.
