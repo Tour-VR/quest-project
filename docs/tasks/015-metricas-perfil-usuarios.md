@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Validado |
+| **Status** | Em execução — Heitor Aquino — 2026-11-16 |
 | **Fase** | 2 — Painel administrativo |
 | **Depende de** | 010, 011 |
 | **Dívidas atendidas** | DT-011, DT-015 |
