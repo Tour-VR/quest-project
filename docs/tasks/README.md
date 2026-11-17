@@ -107,7 +107,7 @@ reserva o plano com o seu nome antes de começar.
 | [013](013-upload-de-midia.md) | Upload de mídia | 2 | 012 | — | Concluído |
 | [014](014-qr-codes.md) | QR Codes imprimíveis | 2 | 012 | — | Concluído |
 | [015](015-metricas-perfil-usuarios.md) | Métricas, perfil e usuários no painel | 2 | 010, 011 | DT-011, DT-015 | Concluído |
-| [016](016-fundacao-app-visitante.md) | Fundação do app do visitante | 3 | 006 | — | Validado |
+| [016](016-fundacao-app-visitante.md) | Fundação do app do visitante | 3 | 006 | — | Em execução — Heitor Aquino |
 | [017](017-pagina-do-ponto.md) | Página do ponto (modo AR) | 3 | 010, 016 | — | Validado |
 | [018](018-leitor-qr-golden-path.md) | Leitor de QR e golden path completo | 3 | 014, 017 | — | Validado |
 | [019](019-panoramas-e-conexoes.md) | Panoramas e conexões | 4 | 013, 017 | — | Validado |

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Validado |
+| **Status** | Em execução — Heitor Aquino — 2026-11-17 |
 | **Fase** | 3 — App do visitante, modo AR |
 | **Depende de** | 006 |
 | **Dívidas atendidas** | DT-016 (parcial: o consumidor do domínio passa a existir) |
