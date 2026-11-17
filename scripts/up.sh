@@ -31,5 +31,6 @@ info "Subindo os servicos (a primeira vez demora alguns minutos)..."
 docker compose up -d --build --wait
 
 ok "Ambiente no ar."
-echo "  Painel: http://localhost:3000"
-echo "  API:    http://localhost:8000/docs"
+echo "  Painel:            http://localhost:3000"
+echo "  App do visitante:  http://localhost:3001"
+echo "  API:               http://localhost:8000/docs"

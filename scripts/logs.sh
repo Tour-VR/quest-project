@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Acompanha os logs do ambiente local. Aceita o nome de um servico.
-# Uso: bash scripts/logs.sh [backend|frontend|mongo]
+# Uso: bash scripts/logs.sh [backend|frontend|vr-app|mongo]
 
 set -euo pipefail
 
