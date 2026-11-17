@@ -21,11 +21,11 @@ escolhe uma ou mais dívidas, e produz um plano em [`../tasks/`](../tasks/README
 | [DT-008](DT-008-autorizacao-por-papel.md) | ~~Campo `role` sem autorização efetiva~~ ✅ Resolvida (plano 008) | P1 | Médio | Backend |
 | [DT-009](DT-009-observabilidade-e-logging.md) | Sem logging estruturado; vazamento em debug — ⚠️ parcial (plano 007): faltam JSON e `request_id` | P2 | Médio | Backend |
 | [DT-010](DT-010-tratamento-global-erros-frontend.md) | ~~Sem interceptor de resposta 401~~ ✅ Resolvida (plano 011) | P1 | Baixo | Frontend |
-| [DT-011](DT-011-dashboard-dados-reais.md) | Dashboard com métricas fictícias — ⚠️ parcial (planos 010 e 011): endpoint pronto e painel sem números falsos; falta exibir as métricas reais (plano 015) | P2 | Médio | Frontend, Backend |
+| [DT-011](DT-011-dashboard-dados-reais.md) | ~~Dashboard com métricas fictícias~~ ✅ Resolvida (plano 015) | P2 | Médio | Frontend, Backend |
 | [DT-012](DT-012-contrato-api-tipado.md) | ~~Contrato da API duplicado manualmente~~ ✅ Resolvida (plano 011) | P2 | Médio | Frontend, Backend |
 | [DT-013](DT-013-qualidade-codigo-frontend.md) | ~~Frontend sem testes, linter ou modo estrito~~ ✅ Resolvida (plano 004) | P2 | Médio | Frontend |
 | [DT-014](DT-014-containerizacao-completa.md) | Containerização parcial e sem `.dockerignore` — ⚠️ parcial (plano 002): falta imagem de produção do frontend | P2 | Baixo | Todos |
-| [DT-015](DT-015-gestao-usuarios-no-painel.md) | Cadastro de usuários só via Swagger | P2 | Médio | Frontend, Backend |
+| [DT-015](DT-015-gestao-usuarios-no-painel.md) | ~~Cadastro de usuários só via Swagger~~ ✅ Resolvida (plano 015); pendente só desabilitar `/docs` fora de desenvolvimento | P2 | Médio | Frontend, Backend |
 | [DT-016](DT-016-modelagem-dominio-turismo.md) | **Domínio de turismo não modelado** | **P0** | **Alto** | Backend, Frontend, VR |
 | [DT-017](DT-017-revisao-scripts-ssh.md) | ~~Comentários inadequados nos scripts~~ ✅ Resolvida (plano 001) | P3 | Baixo | Orquestrador |
 | [DT-018](DT-018-duplicacao-backend.md) | Duplicação de código no backend (2,5% do Python) | P3 | Baixo | Backend |
@@ -33,6 +33,8 @@ escolhe uma ou mais dívidas, e produz um plano em [`../tasks/`](../tasks/README
 | [DT-020](DT-020-ci-orquestrador-ponteiro-antigo.md) | CI do orquestrador testa o submódulo no ponteiro antigo | P1 | Baixo | Orquestrador |
 | [DT-021](DT-021-limite-taxa-registro-visitas.md) | Registro de visitas sem limite de taxa | P3 | Baixo | Backend |
 | [DT-022](DT-022-midia-orfa-em-disco.md) | Arquivos de mídia órfãos no disco | P3 | Baixo | Backend |
+| [DT-023](DT-023-visao-geral-desatualizada.md) | Visão geral com estado e números desatualizados | P3 | Baixo | Orquestrador |
+| [DT-024](DT-024-e2e-token-invalido-instavel.md) | Cenário E2E "token inválido" instável sob carga | P3 | Baixo | Orquestrador |
 | [DT-023](DT-023-midia-sem-redimensionamento.md) | Mídia servida sem redimensionamento nem miniatura | P3 | Médio | Backend, Frontend |
 | [DT-024](DT-024-e2e-email-repetido-em-paralelo.md) | E-mail de teste repetido quando cenários E2E rodam em paralelo | P2 | Baixo | Orquestrador |
 

@@ -1,7 +1,7 @@
 # 04 — Artefato: Frontend (`services/frontend`)
 
 > Repositório: `github.com/Tour-VR/frontend` · Commit fixado: `48283e8`
-> Última verificação contra o código: 2026-11-13
+> Última verificação contra o código: 2026-11-16
 
 ## Responsabilidade
 
@@ -52,7 +52,21 @@ services/frontend/
     ├── vite-env.d.ts       tipo de import.meta.env (VITE_API_URL, VITE_VISITOR_APP_URL)
     ├── pages/              só compõem componentes
     │   ├── Login.tsx       aviso de sessão, formulário e "Não tem acesso?"
-    │   ├── Dashboard.tsx   PageHeader com saudação + cartão "métricas no plano 015"
+    │   ├── Dashboard.tsx   saudação, botão "Atualizar" e métricas reais (plano 015)
+    │   ├── dashboard/
+    │   │   ├── MetricsGrid.tsx   5 cartões: pontos, publicados, visitas, últimos 7 dias, AR / VR
+    │   │   ├── MetricCard.tsx    cartão (role="group" com o rótulo como nome acessível)
+    │   │   └── TopPointsList.tsx "Pontos mais visitados" ou "Ainda não há visitas registradas."
+    │   ├── profile/            /perfil — "Meu perfil" (plano 015)
+    │   │   ├── ProfilePage.tsx   dois cartões lado a lado
+    │   │   ├── ProfileForm.tsx   e-mail (somente leitura), nome completo, username, Salvar
+    │   │   └── PasswordForm.tsx  senha atual, nova, confirmar, Trocar senha
+    │   ├── users/              /usuarios — gestão de usuários (plano 015)
+    │   │   ├── UsersPage.tsx     cabeçalho, Novo usuário, alerta de ação, tabela e paginação
+    │   │   ├── UsersTable.tsx    Nome, E-mail, Papel, Situação; linha própria reconhecida pelo e-mail
+    │   │   ├── UserRow.tsx       select de papel, selo Ativo/Inativo, Desativar/Reativar; "Você"
+    │   │   ├── UserCreateForm.tsx botão "Novo usuário" que abre o formulário (POST /auth/register)
+    │   │   └── Pagination.tsx    Anterior / Próxima e "Página X de Y"
     │   ├── points/
     │   │   ├── PointsList.tsx  /pontos — PageHeader, filtro por status, DataTable e ações
     │   │   ├── PointForm.tsx   /pontos/novo e /pontos/:pointId — carrega o ponto, monta o PointEditor
@@ -72,7 +86,8 @@ services/frontend/
     │   ├── MobileTopBar.tsx botão "Abrir menu" → gaveta (Radix Dialog) com o SidebarPanel
     │   └── SidebarNav.tsx  NavLink nos itens habilitados; "em breve" nos demais
     ├── components/
-    │   ├── ui/                  componentes base do painel (ver "Componentes base e movimento")
+    │   ├── ui/                  componentes base do painel (ver "Componentes base e movimento");
+    │   │                        FormCard: formulário em cartão com envio, erro e sucesso
     │   ├── feedback/            LoadingState, ErrorState ("Tentar novamente"), EmptyState (ação opcional)
     │   ├── points/
     │   │   ├── pointColumns.tsx   colunas da tabela (nome com link, identificador, selo, data, RowActions)
@@ -83,7 +98,7 @@ services/frontend/
     │   │   ├── PointFields.tsx    Nome, Identificador, Resumo (x/280) e História (x/10000)
     │   │   ├── PointFormActions.tsx Salvar; na edição, Publicar/Despublicar, Excluir e, se publicado, QR Code
     │   │   ├── QrCodeLink.tsx     atalho "QR Code" → /qrcodes?slug=<slug> (lista e formulário)
-    │   │   └── FormField.tsx      rótulo, dica, contador e erro de um campo
+    │   │   └── FormField.tsx      rótulo, dica, contador e erro de um campo; `type` text/email/password
     │   ├── ProtectedRoute.tsx   carregando → loader; sem sessão → /login; sem admin → AccessDenied
     │   ├── AccessDenied.tsx     "Acesso restrito a administradores." + botão "Sair"
     │   ├── FullScreenLoader.tsx
@@ -91,13 +106,14 @@ services/frontend/
     │   │   ├── LoginForm.tsx      mensagem de erro + campos + botão
     │   │   ├── IconInput.tsx      rótulo + ícone + input (id via useId)
     │   │   └── SessionNotice.tsx  caixa amarela com o aviso de sessão expirada
-    │   └── dashboard/
-    │       └── MetricsPendingCard.tsx  cartão informativo no lugar das métricas
     ├── constants/
     │   ├── messages.ts     textos de sessão expirada, acesso restrito e avisos
     │   ├── points.ts       limites espelhados do backend, STATUS_LABEL e mensagens dos pontos
     │   ├── media.ts        tipos aceitos, 20 MB, 20 fotos, texto alternativo provisório e mensagens
     │   ├── qr.ts           VISITOR_APP_URL, largura 512 px, correção de erro M, prefixo localhost
+    │   ├── metrics.ts      rótulos dos cartões e do ranking do dashboard
+    │   ├── profile.ts      mensagens do perfil e da troca de senha
+    │   ├── users.ts        20 por página, opções de papel, confirmação e mensagens
     │   └── navigation.ts   NAV_ITEMS (rótulo, rota, ícone, enabled)
     ├── hooks/
     │   ├── useLoginForm.ts estado do formulário e envio (POST /auth/login)
@@ -107,28 +123,39 @@ services/frontend/
     │   ├── usePointForm.ts estado, validação e envio (cria ou atualiza; PUT sem `media`)
     │   ├── useMediaList.ts lista de fotos: add, update, move, remove; cada mudança grava `media`
     │   ├── usePointActions.ts publicar, despublicar e excluir (com window.confirm)
-    │   └── useQrDataUrl.ts  gera o QR de um texto: { dataUrl, error }, ignora resposta após desmontar
+    │   ├── useQrDataUrl.ts  gera o QR de um texto: { dataUrl, error }, ignora resposta após desmontar
+    │   ├── useMetrics.ts    GET /admin/metrics/overview: { metrics, loading, error, reload }
+    │   ├── useProfileForm.ts nome e username; ao salvar chama updateUser do AuthContext
+    │   ├── usePasswordForm.ts validação local; 400 do backend vai para o campo senha atual
+    │   ├── useUsers.ts      página atual, total de páginas, desativar/reativar, mudar papel
+    │   └── useUserCreateForm.ts estado do formulário "Novo usuário"
     ├── contexts/
-    │   └── AuthContext.tsx  sessão, isAdmin, sessionNotice e registro do handler de 401
+    │   └── AuthContext.tsx  sessão, isAdmin, sessionNotice, updateUser e registro do handler de 401
     ├── services/
     │   ├── api.ts           instância Axios, gestão do token, interceptores de request e de 401
     │   ├── points.ts        7 funções finas sobre `api` para /admin/points
-    │   └── media.ts         uploadMedia: FormData (campo `file`) para POST /admin/media
+    │   ├── media.ts         uploadMedia: FormData (campo `file`) para POST /admin/media
+    │   ├── metrics.ts       getMetricsOverview
+    │   ├── users.ts         listUsers, updateUserAdmin, createUser (POST /auth/register)
+    │   └── profile.ts       updateMe, changeMyPassword
     ├── utils/
     │   ├── mediaUrl.ts      URL relativa (`/media/...`) recebe o prefixo de VITE_API_URL
     │   ├── slugify.ts       sugere o slug: sem acentos, minúsculas, hífens, até 60 caracteres
     │   ├── visitorUrl.ts    visitorPointUrl(slug): <VITE_VISITOR_APP_URL sem barra final>/p/<slug>
     │   ├── qrCode.ts        qrDataUrl(texto): PNG em data URL (512 px, nível M, margem 2)
     │   ├── validatePoint.ts mensagem por campo com os limites do backend
+    │   ├── validatePassword.ts 8+ caracteres, letra e número (mesma regra do backend)
     │   └── apiError.ts      apiErrorMessage (detail ou 1ª mensagem do 422) e apiErrorStatus
     ├── test/
     │   ├── setup.ts         jest-dom + limpa localStorage após cada teste
-    │   ├── factories.ts     buildUser e buildAuthValue para os testes
+    │   ├── factories.ts     buildUser, buildAuthValue, buildPoint, buildAdminUser e buildMetrics
     │   └── matchMedia.ts    stubMatchMedia: simula tela estreita/larga (o jsdom não tem)
     └── types/
         ├── api.d.ts         GERADO por npm run gen:types — não editar à mão
         └── index.ts         aliases: User, AuthResponse, LoginPayload, Point, PointCreate, PointUpdate,
-                             PointStatus, MediaItem, MediaItemInput, MediaUpload
+                             PointStatus, MediaItem, MediaItemInput, MediaUpload, MetricsOverview,
+                             AdminUser, UserList, UserAdminUpdate, UserRole, UserUpdateMe,
+                             UserChangePassword, UserCreate, MessageResponse
 ```
 
 Testes ficam ao lado do código, como `Arquivo.test.tsx` (ex.: `pages/Login.test.tsx`).
@@ -182,13 +209,15 @@ um dos dois evita duplicar "TourVR Admin" e o menu na página.
 | `/pontos/novo` | `PointForm` (criação) dentro de `AdminLayout` | idem |
 | `/pontos/:pointId` | `PointForm` (edição) dentro de `AdminLayout` | idem |
 | `/qrcodes` | `QrCodesPage` dentro de `AdminLayout`; `?slug=<slug>` mostra só um ponto | idem |
+| `/usuarios` | `UsersPage` dentro de `AdminLayout` | idem |
+| `/perfil` | `ProfilePage` dentro de `AdminLayout` | idem |
 | `*` | — | Redireciona para `/dashboard` |
 
 As telas do painel ficam aninhadas em `ProtectedRoute` → `AdminLayout` (`src/App.tsx`). Uma
 tela nova entra como rota filha do `AdminLayout` e ganha um item em
 `constants/navigation.ts`. Itens com `enabled: false` aparecem cinza, com
 `aria-disabled="true"` e o rótulo "em breve", sem link. Hoje todos os itens estão
-habilitados ("Dashboard", "Pontos" e "QR Codes").
+habilitados ("Dashboard", "Pontos", "QR Codes", "Usuários" e "Meu perfil").
 
 ## Cadastro de pontos (plano 012)
 
@@ -251,6 +280,27 @@ porque a URL daria 404 até a publicação.
   o `<main>` do `AdminLayout` perde o espaçamento (`print:p-0`). Para gerar PDF, escolha
   "Salvar como PDF" na janela de impressão e **desmarque "Cabeçalhos e rodapés"**, senão o
   navegador acrescenta data e endereço nas margens.
+
+## Dashboard, perfil e usuários (plano 015)
+
+- **Dashboard** (`pages/Dashboard.tsx`): `useMetrics` busca `GET /admin/metrics/overview` e
+  mostra os cartões "Pontos cadastrados", "Pontos publicados", "Visitas (total)", "Visitas
+  nos últimos 7 dias" e "Visitas AR / VR", mais a lista "Pontos mais visitados". O botão
+  "Atualizar" busca de novo. Carregando e erro usam `LoadingState`/`ErrorState`. Sem
+  gráficos: números e lista bastam.
+- **Meu perfil** (`/perfil`): "Salvar" chama `PUT /users/me` e passa a resposta a
+  `updateUser` do `AuthContext`, então a saudação do dashboard muda na hora. A troca de
+  senha valida no navegador a mesma regra do backend (`utils/validatePassword.ts`) e a
+  confirmação; o `400` "Senha atual invalida." aparece no campo da senha atual. Sucesso
+  limpa os campos.
+- **Usuários** (`/usuarios`): `GET /admin/users` paginado, 20 por página. O papel muda
+  pelo `select`, depois de `window.confirm` ("A mudança vale no próximo login."); a situação
+  muda pelo botão "Desativar"/"Reativar". Na linha do próprio admin (comparada pelo
+  e-mail, pois `/users/me` não devolve `id`) o `select` e o botão ficam desabilitados com a
+  dica "Você"; o backend recusa a mesma ação com `400`. "Novo usuário" abre o formulário
+  (e-mail, nome, username, senha inicial) que chama `POST /auth/register`; o usuário nasce
+  com papel `user`, a lista volta à página 1 e aparece "Usuário criado. Informe a senha
+  inicial à pessoa.". Não há exclusão: desativar basta.
 
 ## Fluxo de autenticação
 
@@ -316,9 +366,13 @@ restrito a administradores.") com o botão "Sair".
 | `DELETE` | `/admin/points/{id}` | `deletePoint` (após `window.confirm`) |
 | `POST` | `/admin/points/{id}/publish` | `publishPoint` |
 | `POST` | `/admin/points/{id}/unpublish` | `unpublishPoint` |
+| `GET` | `/admin/metrics/overview` | `services/metrics.ts` → `getMetricsOverview` (dashboard) |
+| `GET` | `/admin/users?page=&page_size=` | `services/users.ts` → `listUsers` |
+| `PATCH` | `/admin/users/{id}` | `updateUserAdmin` (papel e situação) |
+| `POST` | `/auth/register` | `createUser` ("Novo usuário") |
+| `PUT` | `/users/me` | `services/profile.ts` → `updateMe` (Meu perfil) |
+| `PUT` | `/users/me/password` | `changeMyPassword` (Trocar senha) |
 
-As rotas `PUT /users/me` e `PUT /users/me/password`, já disponíveis no backend, **não são
-consumidas** — não existe tela de perfil.
 
 ## Configuração
 
@@ -398,7 +452,7 @@ globais de Node.
 |---|---|
 | `Network Error` ao fazer login | Backend fora do ar ou `VITE_API_URL` apontando para outro endereço |
 | Erro de CORS | A origem do painel não está em `APP_CORS_ORIGINS` do backend |
-| "Credenciais inválidas" com usuário novo | Usuário ainda não cadastrado; um administrador cadastra via `POST /auth/register` (exige papel admin, plano 008) |
+| "Credenciais inválidas" com usuário novo | Usuário não cadastrado ou desativado; um administrador cadastra ou reativa em "Usuários" |
 | "Acesso restrito a administradores." | Login válido, mas o papel não é `admin`; o primeiro admin vem do `create-admin` |
 | `npm run gen:types` falha com `ECONNREFUSED` | Backend fora do ar; rode `bash scripts/up.sh` antes |
 | `useAuth deve ser usado dentro de AuthProvider` | Componente renderizado fora da árvore de `<App>` |
@@ -415,9 +469,10 @@ Distinção importante para quem for evoluir o painel:
 | Menu lateral "Dashboard" | ✅ Real, `NavLink` para `/dashboard` |
 | Menu lateral "Pontos" e cadastro de pontos | ✅ Real (plano 012) |
 | QR Codes dos pontos publicados, folha A4 e PNG | ✅ Real (plano 014) |
-| Mídia dos pontos (fotos, panorama) | ⏳ Sem seção no formulário (planos 013 e 019) |
-| Métricas do dashboard | ⏳ Cartão informativo; números reais no plano 015. Nenhum número fictício na tela |
-| Cadastro de usuários | ⏳ Sem tela; o login orienta a falar com um administrador (plano 015) |
+| Fotos dos pontos | ✅ Real (plano 013); panorama ⏳ no plano 019 |
+| Métricas do dashboard | ✅ Real, `GET /admin/metrics/overview` (plano 015) |
+| Meu perfil e troca de senha | ✅ Real (plano 015) |
+| Gestão de usuários (listar, criar, ativar/desativar, papel) | ✅ Real (plano 015) |
 
 Ver [DT-011](implementacoes-futuras/DT-011-dashboard-dados-reais.md) e
 [DT-015](implementacoes-futuras/DT-015-gestao-usuarios-no-painel.md).
@@ -437,6 +492,13 @@ Os tipos do contrato são **gerados** do OpenAPI do backend por `npm run gen:typ
 | `PointCreate` | `PointCreate` |
 | `PointUpdate` | `PointUpdate` |
 | `PointStatus` | `Point['status']` (`draft` ou `published`) |
+| `MetricsOverview` | `MetricsOverviewResponse` |
+| `AdminUser` | `UserAdminResponse` |
+| `UserList` | `UserListResponse` |
+| `UserAdminUpdate` | `UserAdminUpdate` |
+| `UserRole` | `UserAdminUpdate['role']` sem `null` (`admin` ou `user`) |
+| `UserUpdateMe` / `UserChangePassword` / `UserCreate` | schemas de mesmo nome |
+| `MessageResponse` | `MessageResponse` |
 
 Quando o backend mudar um schema, rode `npm run gen:types` com a pilha no ar e commite o
 `api.d.ts` junto: a diferença aparece no diff do PR e o `tsc` aponta o que quebrou. Não há
