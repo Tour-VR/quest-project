@@ -25,7 +25,7 @@ quest-project/
 ├── LICENSE                MIT, "Copyright (c) 2026 Tour VR"
 ├── README.md              porta de entrada do projeto
 ├── CLAUDE.md              instruções de carga de contexto para agentes de IA
-├── docker-compose.yml     ambiente local: mongo + backend + frontend
+├── docker-compose.yml     ambiente local: mongo + backend + frontend + vr-app
 ├── .env.example           variáveis do ambiente local (copiar para .env)
 ├── .jscpd.json            configuração da detecção de duplicação (limite 3%, 50 tokens)
 ├── docs/                  base de conhecimento (este diretório)
@@ -37,7 +37,7 @@ quest-project/
 │   ├── setup.sh               (54 linhas) — preparação principal
 │   ├── validate.sh            (91 linhas) — portão único de qualidade
 │   ├── e2e.sh                 (52 linhas) — sobe a pilha e roda o Playwright
-│   ├── up.sh                  (35 linhas) — sobe o ambiente local
+│   ├── up.sh                  (36 linhas) — sobe o ambiente local
 │   ├── down.sh                (19 linhas) — para o ambiente, preserva os dados
 │   ├── logs.sh                (19 linhas) — acompanha os logs
 │   ├── reset-db.sh            (26 linhas) — apaga o banco local, com confirmação
@@ -113,11 +113,13 @@ este ambiente; não há `docker-compose.override.yml`.
 | `mongo` | `mongo:7` | 27017 | Volume `mongo-data`; healthcheck com `mongosh` ping (`docker-compose.yml:4-14`) |
 | `backend` | `services/backend/Dockerfile` | 8000 | Bind mount `./services/backend:/app`, volume `media-data` em `/app/media` (fotos enviadas, ADR-0008) e `uvicorn --reload`; espera o `mongo` ficar saudável; usa o `HEALTHCHECK` da imagem (`docker-compose.yml:16-31`) |
 | `frontend` | `services/frontend/Dockerfile.dev` | 3000 | Bind mount do código + volume `frontend-node-modules` em `/app/node_modules`; `npm ci && npm run dev`; espera o `backend` ficar saudável (`docker-compose.yml:33-49`) |
+| `vr-app` | `services/vr-app/Dockerfile.dev` | 3001 | App do visitante (plano 016). Bind mount do código + volume `vr-app-node-modules`; `npm ci && npm run dev`; `VITE_PROXY_TARGET=http://backend:8000`, para o *proxy* do Vite encaminhar `/api` e `/media` ao backend pela rede do compose; espera o `backend` ficar saudável (`docker-compose.yml:51-67`) |
 
 **Variáveis.** Um único `.env` na raiz, criado a partir do `.env.example`, é lido pelo
 `backend` e pelo `frontend` (`env_file`). Duas variáveis são fixadas no próprio compose e
 não dependem do `.env`: `MONGODB_URL=mongodb://mongo:27017` (endereço interno do Docker) e
-`APP_CORS_ORIGINS`, que já inclui a porta 3001 do futuro app do visitante.
+`APP_CORS_ORIGINS`, que já inclui a porta 3001 do app do visitante. O `vr-app` não usa
+o `.env`: a única variável dele, `VITE_PROXY_TARGET`, vem do próprio compose.
 `VITE_API_URL` usa `localhost`, porque quem chama a API é o navegador, fora do Docker.
 
 `VITE_VISITOR_APP_URL` (plano 014) é o endereço do app do visitante que o painel grava
@@ -128,13 +130,14 @@ computador: para testar no celular, troque `localhost` pelo IP desta máquina na
 Vite só lê a variável ao subir. Enquanto a URL começar com `http://localhost`, a página
 `/qrcodes` mostra um aviso amarelo.
 
-**Recarga automática.** Editar código em `services/backend` ou `services/frontend`
-recarrega o serviço sem rebuild. No frontend, `CHOKIDAR_USEPOLLING=true` faz o Vite
+**Recarga automática.** Editar código em `services/backend`, `services/frontend` ou
+`services/vr-app` recarrega o serviço sem rebuild. Nos dois apps Node, `CHOKIDAR_USEPOLLING=true` faz o Vite
 perceber alterações vindas do Windows pelo bind mount.
 
 **`node_modules` em volume nomeado.** Os pacotes instalados no Windows não funcionam no
 Linux do container; por isso `/app/node_modules` fica num volume próprio. Uma pasta
-`node_modules` vazia pode aparecer em `services/frontend` — é o ponto de montagem.
+`node_modules` vazia pode aparecer em `services/frontend` e `services/vr-app` — é o ponto de
+montagem.
 
 | Comando | Faz |
 |---|---|
@@ -180,7 +183,7 @@ etapas mesmo que uma falhe, imprime um resumo e sai com código 1 se alguma falh
 |---|---|---|
 | `backend` | `ruff check .`, `ruff format --check .`, `mypy app`, `pytest --cov=app --cov-fail-under=80` | Usa `services/backend/.venv`; se não existir, cria e instala `requirements-dev.txt` |
 | `frontend` | `npm run lint`, `format:check`, `test:coverage`, `build` | `npm ci` se não houver `node_modules` |
-| `vr-app` | O mesmo do frontend | `[PULADO]` enquanto `services/vr-app/package.json` não existir (plano 016) |
+| `vr-app` | O mesmo do frontend, em `services/vr-app` | Roda desde o plano 016; só é `[PULADO]` se `services/vr-app/package.json` não existir |
 | `duplicacao` | `npx --yes jscpd@4 --config .jscpd.json` sobre `services/backend/app`, `services/frontend/src` e `services/vr-app/src` (se existir) | Reprova acima de 3% |
 | `e2e` | `bash scripts/e2e.sh` | Exige Docker; `--skip-e2e` pula |
 
@@ -190,7 +193,7 @@ Resumo ao final:
 ===== Resumo =====
 [OK]    backend
 [OK]    frontend
-[PULADO] vr-app (ainda nao iniciado)
+[OK]    vr-app
 [OK]    duplicacao
 [OK]    e2e
 ```
@@ -242,7 +245,7 @@ no navegador o relatório HTML com os passos e o *trace* de cada teste. Resultad
 
 ## Integração contínua
 
-Os três repositórios com código têm `.github/workflows/ci.yml` (plano 006). Todos usam
+Os quatro repositórios com código têm `.github/workflows/ci.yml` (plano 006; no `vr-app`, plano 016). Todos usam
 `ubuntu-latest`, disparam em `push` na `main` e em `pull_request` para a `main`, e cancelam
 a execução anterior da mesma branch (`concurrency`). O job se chama `validacao`; no PR o
 *status check* aparece como **`CI / validacao`** — é ele que a proteção de branch exige.
@@ -251,6 +254,7 @@ a execução anterior da mesma branch (`concurrency`). O job se chama `validacao
 |---|---|---|
 | `Tour-VR/backend` | Python 3.11 com cache de `pip`; `pip install -r requirements-dev.txt`, `ruff check .`, `ruff format --check .`, `mypy app`, `pytest --cov=app --cov-fail-under=80` | 10 min |
 | `Tour-VR/frontend` | Node 22 com cache de `npm`; `npm ci`, `npm run lint`, `format:check`, `test:coverage`, `build` | 10 min |
+| `Tour-VR/vr-app` | Igual ao `frontend` (cópia do workflow, plano 016) | 10 min |
 | `Tour-VR/quest-project` | Checkout com submódulos; ponteiros na `main`; links internos; `bash scripts/validate.sh` completo (com E2E) | 30 min |
 
 **Orquestrador, passo a passo** (`.github/workflows/ci.yml`):

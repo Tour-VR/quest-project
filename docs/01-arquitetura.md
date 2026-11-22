@@ -5,12 +5,15 @@
 ## Visão de topologia
 
 ```
-                        ┌──────────────────────────┐
-                        │   Meta Quest 3 (vr-app)  │
-                        │   🔴 não implementado     │
-                        └────────────┬─────────────┘
-                                     │  (contrato ainda não definido)
-                                     ▼
+                              ┌──────────────────────────────┐
+                              │  vr-app — app do visitante   │
+                              │  React 19 + Vite · :3001     │
+                              │  celular (AR) · Quest 3 (VR) │
+                              │  🟡 fundação (plano 016)      │
+                              └──────────────┬───────────────┘
+                                             │ /api/... e /media/... (mesma origem)
+                                             │ proxy do Vite → backend, sem o prefixo /api
+                                             ▼
 ┌────────────────────┐   HTTPS/JSON   ┌────────────────────────────┐
 │  frontend          │ ─────────────► │  backend                   │
 │  React 19 + Vite   │   Bearer JWT   │  FastAPI (ASGI/Uvicorn)    │
@@ -119,6 +122,25 @@ main.tsx → App.tsx (BrowserRouter + AuthProvider + Routes)
   `baseURL` e o interceptor de `Authorization`.
 - Tipos de resposta da API são gerados do OpenAPI (`npm run gen:types` →
   `src/types/api.d.ts`); [06-contrato-api.md](06-contrato-api.md) é a descrição legível.
+
+## Arquitetura do app do visitante
+
+O `vr-app` (plano 016) nunca chama o backend pelo endereço dele. Todo pedido sai por
+caminho relativo, na mesma origem da página:
+
+```
+navegador ──► http(s)://<host>:3001/api/health/ ──► proxy do Vite ──► <VITE_PROXY_TARGET>/health/
+          └─► http(s)://<host>:3001/media/x.jpg  ──► proxy do Vite ──► <VITE_PROXY_TARGET>/media/x.jpg
+```
+
+- O *proxy* fica em `services/vr-app/vite.config.ts` (`server.proxy`); `/api` é removido
+  do caminho, `/media` passa como está.
+- `VITE_PROXY_TARGET` vale `http://localhost:8000` por padrão e `http://backend:8000` no
+  Docker Compose.
+- Mesma origem significa sem CORS e sem bloqueio de conteúdo misto quando a página roda em
+  HTTPS (`npm run dev:https`, necessário para câmera e WebXR na rede local).
+- O cliente HTTP é `apiClient` em `src/core/api/client.ts` (`baseURL: '/api'`). Detalhes
+  em [05-artefato-vr-app.md](05-artefato-vr-app.md).
 
 ## Ciclo de vida e resiliência
 
