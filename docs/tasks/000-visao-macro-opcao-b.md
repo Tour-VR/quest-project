@@ -194,7 +194,7 @@ um agente de IA, em branch própria, e integrado por Pull Request revisado pelo 
 | 013 | [Upload de mídia](013-upload-de-midia.md) | 2 | 012 | Concluído |
 | 014 | [QR Codes imprimíveis](014-qr-codes.md) | 2 | 012 | Concluído |
 | 015 | [Métricas, perfil e usuários no painel](015-metricas-perfil-usuarios.md) | 2 | 010, 011 | Concluído |
-| 016 | [Fundação do app do visitante](016-fundacao-app-visitante.md) | 3 | 006 | Validado |
+| 016 | [Fundação do app do visitante](016-fundacao-app-visitante.md) | 3 | 006 | Concluído |
 | 017 | [Página do ponto (modo AR)](017-pagina-do-ponto.md) | 3 | 010, 016 | Validado |
 | 018 | [Leitor de QR e golden path completo](018-leitor-qr-golden-path.md) | 3 | 014, 017 | Validado |
 | 019 | [Panoramas e conexões](019-panoramas-e-conexoes.md) | 4 | 013, 017 | Validado |

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em revisão — Heitor Aquino |
+| **Status** | Concluído |
 | **Fase** | 3 — App do visitante, modo AR |
 | **Depende de** | 006 |
 | **Dívidas atendidas** | DT-016 (parcial: o consumidor do domínio passa a existir) |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | VR App · Orquestrador |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | 2026-11-22 por Heitor Aquino |
+| **Executado em** | 2026-11-22 por Heitor Aquino · PRs: [vr-app#1](https://github.com/Tour-VR/vr-app/pull/1), [quest-project#18](https://github.com/Tour-VR/quest-project/pull/18) · concluído em 2026-11-22 |
 
 ---
 
@@ -435,7 +435,9 @@ mostrou "API conectada"; com o backend parado, "API indisponível" (depois de at
 tempo-limite da chamada). `npm run dev:https` respondeu em `https://<IP>:3001` pelos IPs da
 rede local; o acesso de outro aparelho fica para a verificação do aluno.
 
-**Dívidas novas.** Nenhuma.
+**Dívidas novas.** Nenhuma. A CI do PR do orquestrador falhou pela DT-020 (ponteiro do
+`vr-app` ainda no commit vazio); a ocorrência ficou registrada na própria DT-020 e o
+fechamento do plano atualizou o ponteiro.
 
 ---
 

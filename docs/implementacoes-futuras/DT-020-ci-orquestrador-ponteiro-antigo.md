@@ -70,3 +70,11 @@ a tela de pontos; passam localmente com o frontend da branch do plano.
 telas novas, isto é, ponteiros da `main`); localmente, com as branches do plano, os 15
 cenários passam. Mesmo contorno do plano 013: após o merge dos PRs do backend e do
 frontend, atualizar os ponteiros na branch do plano para a nova `main`.
+
+**Ocorrência (2026-11-22, plano 016).** PR Tour-VR/quest-project#18: a etapa `e2e` falha na
+CI porque o compose passa a montar o serviço `vr-app`, mas o ponteiro da `main` ainda é o
+commit vazio `4e6f85f`, sem `Dockerfile.dev` ("failed to read dockerfile: open
+Dockerfile.dev: no such file or directory"). O PR foi mergeado com a CI vermelha e a
+`main` do orquestrador ficou quebrada até o fechamento do plano atualizar o ponteiro.
+Mostra que o problema não é só de testes novos: qualquer serviço novo no compose quebra a
+`main` entre o merge e o fechamento.
