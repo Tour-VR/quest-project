@@ -18,7 +18,7 @@ base de conhecimento do projeto e centraliza a automação de ambiente.
 |---|---|---|
 | [`services/backend`](services/backend) | [Tour-VR/backend](https://github.com/Tour-VR/backend) | API REST — FastAPI + MongoDB |
 | [`services/frontend`](services/frontend) | [Tour-VR/frontend](https://github.com/Tour-VR/frontend) | Painel administrativo — React + Vite |
-| [`services/vr-app`](services/vr-app) | [Tour-VR/vr-app](https://github.com/Tour-VR/vr-app) | App do visitante — modo AR (celular) e modo VR (Quest 3) — **ainda não iniciado** |
+| [`services/vr-app`](services/vr-app) | [Tour-VR/vr-app](https://github.com/Tour-VR/vr-app) | App do visitante — modo AR (celular) e modo VR (Quest 3) — React + Vite, porta 3001 — **fundação criada** (plano 016) |
 
 ---
 

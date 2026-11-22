@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em execução — Heitor Aquino — 2026-11-17 |
+| **Status** | Em revisão — Heitor Aquino |
 | **Fase** | 3 — App do visitante, modo AR |
 | **Depende de** | 006 |
 | **Dívidas atendidas** | DT-016 (parcial: o consumidor do domínio passa a existir) |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | VR App · Orquestrador |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | — |
+| **Executado em** | 2026-11-22 por Heitor Aquino |
 
 ---
 
@@ -332,23 +332,23 @@ bash scripts/validate.sh
 
 ## 8. Documentação a atualizar
 
-- [ ] `docs/05-artefato-vr-app.md`: status "🟡 Em construção, fundação criada"; árvore
+- [x] `docs/05-artefato-vr-app.md`: status "🟡 Em construção, fundação criada"; árvore
       real de arquivos; comandos; seção "Testar no celular e no Quest"
-- [ ] `docs/01-arquitetura.md`: o `vr-app` na topologia, porta 3001, *proxy* `/api`
-- [ ] `docs/02-artefato-orquestrador.md`: serviço `vr-app` no compose
-- [ ] `docs/00-visao-geral.md`: linha "App do visitante" passa a "🟡 Fundação criada"
-- [ ] `README.md` (raiz): tabela "Composição", linha do `vr-app`
+- [x] `docs/01-arquitetura.md`: o `vr-app` na topologia, porta 3001, *proxy* `/api`
+- [x] `docs/02-artefato-orquestrador.md`: serviço `vr-app` no compose
+- [x] `docs/00-visao-geral.md`: linha "App do visitante" passa a "🟡 Fundação criada"
+- [x] `README.md` (raiz): tabela "Composição", linha do `vr-app`
 
 ## 9. Critérios de aceite
 
-- [ ] `docker compose up` sobe também o `vr-app`, e `http://localhost:3001` mostra "API conectada"
-- [ ] `curl http://localhost:3001/api/health/` responde pelo *proxy*
-- [ ] `npm run dev:https` serve `https://<IP>:3001`, acessível de outro aparelho na rede
-- [ ] Lint, formatação, testes (≥ 80%) e build passam no `vr-app`
-- [ ] Nenhum limite de qualidade diferente do painel
-- [ ] `bash scripts/validate.sh` passa e executa a etapa `vr-app`
-- [ ] CI do `vr-app` roda no PR
-- [ ] Documentação da seção 8 atualizada
+- [x] `docker compose up` sobe também o `vr-app`, e `http://localhost:3001` mostra "API conectada"
+- [x] `curl http://localhost:3001/api/health/` responde pelo *proxy*
+- [x] `npm run dev:https` serve `https://<IP>:3001`, acessível de outro aparelho na rede
+- [x] Lint, formatação, testes (≥ 80%) e build passam no `vr-app`
+- [x] Nenhum limite de qualidade diferente do painel
+- [x] `bash scripts/validate.sh` passa e executa a etapa `vr-app`
+- [x] CI do `vr-app` roda no PR
+- [x] Documentação da seção 8 atualizada
 
 ## 10. Commits esperados
 
@@ -391,6 +391,51 @@ docs: documenta a fundacao do app do visitante e o teste em rede local
 4. **No celular:** peça ao agente para rodar `npm run dev:https` e dizer o IP da máquina.
    Com o celular no mesmo Wi-Fi, abra `https://<IP>:3001`, aceite o aviso de segurança e
    confira que a mesma página aparece.
+
+
+---
+
+## Registro de execução
+
+**Executado de 2026-11-17 a 2026-11-22 por Heitor Aquino.** Branch
+`plano/016-fundacao-app-visitante` no `vr-app` e no orquestrador.
+
+**O que foi feito**
+
+- `services/vr-app`: projeto Vite + React 19 + TS + Tailwind 4 + React Router 7 criado à
+  mão; `vite.config.ts` com *proxy* `/api` (sem o prefixo) e `/media`, `server.host: true`
+  e HTTPS só no `dev:https`; ESLint, Prettier, Vitest e `tsconfig` copiados do painel com
+  os mesmos limites; `apiClient` (`/api`, `REQUEST_TIMEOUT_MS`), `fetchApiHealth`,
+  `ROUTES`, `useApiHealth`; página inicial com o selo da API e página "não encontrada";
+  14 testes (cobertura 100%); `Dockerfile.dev`, `.dockerignore`, README e CI.
+- Orquestrador: serviço `vr-app` no `docker-compose.yml` (porta 3001,
+  `VITE_PROXY_TARGET=http://backend:8000`, volume `vr-app-node-modules`). `validate.sh` e o
+  workflow não precisaram mudar: a etapa `vr-app` passou a rodar sozinha.
+- Documentação da seção 8 atualizada, com a seção "Testar no celular e no Quest".
+
+**Desvios do plano**
+
+- `BrowserRouter` fica em `App.tsx` e `AppRoutes.tsx` só tem as `Routes`: o teste da rota
+  desconhecida usa `MemoryRouter`, e um roteador não pode ficar dentro de outro. É o mesmo
+  arranjo do painel.
+- `NotFoundPage` ficou em arquivo próprio (`src/routes/NotFoundPage.tsx`); `App.test.tsx`
+  foi acrescentado para cobrir `App.tsx`.
+- `tsconfig.json` inclui também `vite-env.d.ts` (o plano o coloca na raiz, fora de `src`)
+  e `vitest.config.ts`, como no painel.
+- `HealthStatus` declarado à mão: `GET /health/` não tem esquema de resposta no OpenAPI
+  (caminho previsto no passo 4).
+- No compose, o `vr-app` usa `CHOKIDAR_USEPOLLING` e `npm ci && npm run dev`, como o
+  `frontend`. `scripts/up.sh` passou a mostrar o endereço do app e `scripts/logs.sh` cita
+  o serviço no comentário de uso.
+
+**Validação.** `bash scripts/validate.sh` terminou com código 0: backend (171 testes),
+frontend (175), vr-app (14, cobertura 100%), duplicação e E2E (15 cenários). Com o compose
+no ar, `curl http://localhost:3001/api/health/` devolveu o JSON do backend e a página
+mostrou "API conectada"; com o backend parado, "API indisponível" (depois de até 10 s, o
+tempo-limite da chamada). `npm run dev:https` respondeu em `https://<IP>:3001` pelos IPs da
+rede local; o acesso de outro aparelho fica para a verificação do aluno.
+
+**Dívidas novas.** Nenhuma.
 
 ---
 

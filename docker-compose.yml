@@ -48,7 +48,26 @@ services:
       backend:
         condition: service_healthy
 
+  vr-app:
+    build:
+      context: ./services/vr-app
+      dockerfile: Dockerfile.dev
+    command: sh -c "npm ci && npm run dev"
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      # O proxy do Vite encaminha /api e /media para o backend pela rede do compose.
+      VITE_PROXY_TARGET: http://backend:8000
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./services/vr-app:/app
+      - vr-app-node-modules:/app/node_modules
+    depends_on:
+      backend:
+        condition: service_healthy
+
 volumes:
   mongo-data:
   media-data:
   frontend-node-modules:
+  vr-app-node-modules:
