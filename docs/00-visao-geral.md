@@ -46,7 +46,7 @@ produto — a experiência de realidade virtual — ainda não foi iniciado.
 | Cadastro de pontos no painel | ✅ Implementado (plano 012) — criar, editar, publicar, despublicar e excluir |
 | Geração de QR Codes | ✅ Implementada (plano 014) — `/qrcodes` no painel: um cartão por ponto publicado, folha A4 e PNG |
 | Health check e diagnóstico de banco | ✅ Implementado |
-| **App do visitante (AR e VR)** | 🟡 **Fundação criada** (plano 016) — projeto React + Vite em `services/vr-app`, *proxy* para a API, página inicial provisória em `http://localhost:3001`; telas do visitante nos planos 017 a 021 |
+| **App do visitante (AR e VR)** | 🟡 **App do visitante — modo AR: página do ponto funcionando** (plano 017) — `http://localhost:3001` lista os pontos publicados e `/p/<slug>` (endereço do QR Code) mostra nome, resumo, fotos e história, registrando a visita; leitor de QR e modo VR nos planos 018 a 021 |
 | **Modelo de domínio do campus** | 🟡 Parcial — pontos e visitas no backend (ADR-0007); cadastro de pontos no painel (plano 012); QR Codes no painel (plano 014); métricas no painel (plano 015) |
 | Pipeline de mídia 360° / storage | 🔴 Não existe |
 | Orquestração de ambiente (compose, scripts) | 🔴 Não existe |
@@ -62,7 +62,7 @@ Nenhuma tarefa de rotina do painel exige Swagger ou acesso direto ao banco.
 | Linhas de código de aplicação (backend `app/`) | 961 |
 | Linhas de código de teste (backend `tests/`) | 679 |
 | Linhas de código de aplicação (frontend `src/`) | 414 |
-| Linhas de código no `vr-app` (`src/`, sem testes) | 141 |
+| Linhas de código no `vr-app` (`src/`, sem testes) | 532 |
 | Testes automatizados | 24 (todos no backend) |
 | Endpoints REST expostos | 7 |
 

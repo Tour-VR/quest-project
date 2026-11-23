@@ -443,6 +443,8 @@ continua travado. Exige admin. Sem corpo.
 
 Lista os pontos **publicados**. Público, sem token. Rascunhos nunca aparecem.
 
+Consumido por: vr-app (página inicial `/`, `src/core/api/points.ts`).
+
 **200** — lista de `PointPublicSummary`:
 ```json
 [
@@ -466,6 +468,8 @@ Lista os pontos **publicados**. Público, sem token. Rascunhos nunca aparecem.
 ## `GET /public/points/{slug}`
 
 Conteúdo de um ponto publicado — é o que o QR Code (`/p/<slug>`) abre. Público, sem token.
+
+Consumido por: vr-app (página do ponto `/p/:slug`, `src/core/api/points.ts`).
 
 **200** — `PointPublicDetail` (sem `id`, `status` nem datas):
 ```json
@@ -495,6 +499,8 @@ Conteúdo de um ponto publicado — é o que o QR Code (`/p/<slug>`) abre. Públ
 
 Registra, de forma **anônima**, que um visitante abriu um ponto publicado — chamado pelo
 app do visitante no modo AR (plano 017) ou VR (plano 020). Público, sem token.
+
+Consumido por: vr-app (página do ponto `/p/:slug`, uma vez por abertura, `src/core/api/visits.ts`).
 
 **Body** — `VisitCreate`:
 ```json
