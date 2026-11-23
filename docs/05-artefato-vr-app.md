@@ -149,7 +149,7 @@ A página `/scan` lê o QR Code do local sem sair do app. A lógica fica no hook
 
 | Navegador | `BarcodeDetector` | Leitor | Verificado |
 |---|---|---|---|
-| Chrome no Android | sim | nativo | pendente — teste no celular do plano 018 |
+| Chrome no Android | sim | nativo | 2026-11-23, Redmi Note 15: QR do painel abre o ponto, QR de outro site mostra o aviso, câmera apaga ao voltar, visita contada no dashboard |
 | Safari no iOS | não | zxing | pendente — depende de iPhone na turma |
 | Firefox (qualquer) | não | zxing | não testado |
 | Chrome no Windows (desktop) | não | zxing | 2026-11-23: `BarcodeDetector` ausente; página inicial não baixa o zxing; sem permissão de câmera, `/scan` mostra a mensagem de acesso negado |
@@ -254,8 +254,8 @@ services/vr-app/src/
 
 ## Pendências
 
-- **Teste do leitor no celular** (plano 018) — confirmar no Chrome do Android e, se houver,
-  no Safari do iPhone, e preencher a tabela "Navegadores e leitor usado".
+- **Teste do leitor no iPhone** (plano 018) — Chrome no Android já foi verificado; falta
+  o Safari do iPhone (caminho do zxing), quando houver um aparelho na turma.
 
 - **Modelo de domínio** (ADR-0007, Fase 1) — o app não tem o que consumir enquanto
   `PontoDeInteresse` não existir no backend. Ver

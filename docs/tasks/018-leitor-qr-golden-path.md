@@ -322,7 +322,13 @@ Executado em 2026-11-23 por Heitor Aquino, com Claude Code.
 - No navegador do Claude Code (Chrome no Windows, sem `BarcodeDetector`): a página
   inicial não baixa o zxing; `/scan` com a câmera bloqueada mostra a mensagem de acesso
   negado e o lembrete da câmera do celular.
-- **Pendente:** o teste no celular da seção 12 (aparelho, navegador e leitor usado) fica
-  para o aluno, registrado no PR.
+- **Celular** (seção 12), feito por Heitor Aquino em 2026-11-23: Redmi Note 15, Chrome no
+  Android, leitor nativo (`BarcodeDetector`, presente no Chrome do Android; o aviso no
+  console não foi conferido). Painel gerando QR com `https://<IP>:3001` e app em
+  `npm run dev:https`. Funcionou: o QR do painel abriu a página do ponto, o QR de outro
+  site mostrou o aviso, a câmera apagou ao voltar, a câmera nativa do celular também abriu
+  a página e o dashboard contou a visita.
+- **iPhone:** não testado (sem aparelho nesta execução); o caminho do zxing fica coberto
+  pelos testes unitários.
 
 **Dívidas novas:** nenhuma.
