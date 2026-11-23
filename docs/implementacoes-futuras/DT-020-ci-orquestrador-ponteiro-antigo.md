@@ -78,3 +78,10 @@ Dockerfile.dev: no such file or directory"). O PR foi mergeado com a CI vermelha
 `main` do orquestrador ficou quebrada até o fechamento do plano atualizar o ponteiro.
 Mostra que o problema não é só de testes novos: qualquer serviço novo no compose quebra a
 `main` entre o merge e o fechamento.
+
+**Ocorrência (2026-11-23, plano 017).** PR Tour-VR/quest-project#19: os 2 cenários de
+`e2e/tests/visitor-point.spec.ts` falharam na CI porque o ponteiro do `vr-app` ainda era
+o do plano 016 (`b46edf9`), sem a rota `/p/:slug`. Aplicada a opção 1 da proposta: após
+o merge de Tour-VR/vr-app#2, o ponteiro foi atualizado na própria branch do plano
+(`bc4c20a`) e a CI ficou verde **antes** do merge do orquestrador, sem quebrar a `main`.
+O fechamento não precisou mexer em ponteiros.
