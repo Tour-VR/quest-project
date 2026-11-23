@@ -357,9 +357,26 @@ Executado por Heitor Aquino em 2026-11-23, com Claude Code (sessão de execuçã
    inicial ficava ilegível (critério "página legível").
 5. Testes extras além da tabela do passo 6: `errors.test.ts`, `usePublicPoints.test.tsx`
    e `PointComponents.test.tsx` (cabeçalho, história, carregando e erro).
+6. Ponteiro de `services/vr-app` atualizado já na branch do plano (de `b46edf9` para
+   `bc4c20a`, o merge de Tour-VR/vr-app#2 na `main`), e não no fechamento (Prompt 3). Sem
+   isso a CI do orquestrador testava o vr-app do plano 016 e os dois cenários E2E do
+   visitante falhavam ([DT-020](../implementacoes-futuras/DT-020-ci-orquestrador-ponteiro-antigo.md),
+   opção 1). No fechamento, o ponteiro do vr-app já estará em dia.
 
 **Dívidas novas registradas**
 
 - [DT-025](../implementacoes-futuras/DT-025-vite-vr-app-observa-coverage.md): o servidor do
   `vr-app` no Docker observa `coverage/` e parou de responder depois de
   `npm run test:coverage`; foi preciso `docker compose restart vr-app`.
+- [DT-026](../implementacoes-futuras/DT-026-e2e-dashboard-visita-total-global.md): o cenário
+  `@golden` do dashboard (plano 015) compara o total global de visitas e falha quando o
+  cenário do visitante roda ao mesmo tempo.
+
+**Correção após revisão (CI do PR)**
+
+- Ponteiro do `vr-app` atualizado na branch (desvio 6).
+- Cenário `@golden` do visitante deixou de comparar o total global de visitas com
+  "antes + 1": em paralelo outros cenários também registram visitas (esperado 17,
+  recebido 19). Agora confere que a página enviou **exatamente um** registro de visita
+  para o próprio ponto (resposta 201) e que o total AR subiu pelo menos 1. Slugs passam
+  a usar `uniqueSuffix()`.

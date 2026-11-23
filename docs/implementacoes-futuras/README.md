@@ -38,6 +38,7 @@ escolhe uma ou mais dívidas, e produz um plano em [`../tasks/`](../tasks/README
 | [DT-023](DT-023-midia-sem-redimensionamento.md) | Mídia servida sem redimensionamento nem miniatura | P3 | Médio | Backend, Frontend |
 | [DT-024](DT-024-e2e-email-repetido-em-paralelo.md) | E-mail de teste repetido quando cenários E2E rodam em paralelo | P2 | Baixo | Orquestrador |
 | [DT-025](DT-025-vite-vr-app-observa-coverage.md) | Servidor do `vr-app` no Docker observa `coverage/` e para de responder | P2 | Baixo | VR App |
+| [DT-026](DT-026-e2e-dashboard-visita-total-global.md) | E2E do dashboard falha quando outro teste registra visita ao mesmo tempo | P2 | Baixo | Orquestrador |
 
 **Prioridades:** `P0` bloqueia o avanço ou representa risco real · `P1` alta, resolver na
 fase corrente · `P2` média, planejar · `P3` baixa, oportunidade.
