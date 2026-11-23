@@ -1,27 +1,29 @@
 # 05 — Artefato: App do Visitante (`services/vr-app`)
 
 > Repositório: `github.com/Tour-VR/vr-app` · Commit fixado: `4e6f85f` (atualizado no fechamento do plano 016)
-> Última verificação contra o código: 2026-11-23 (plano 017)
+> Última verificação contra o código: 2026-11-23 (plano 018)
 
 > **Nome impreciso.** O submódulo chama-se `vr-app`, mas passa a abrigar também o modo AR
 > (celular), conforme a [ADR-0006](08-decisoes-arquiteturais.md). Renomear o repositório no
 > GitHub é opcional e está registrado como pendência na visão macro.
 
-## Status: 🟡 Em construção — modo AR com página do ponto
+## Status: 🟡 Em construção — modo AR completo, modo VR por fazer
 
 O plano 016 criou o projeto: React 19 + Vite 6 + TypeScript (strict) + Tailwind 4 +
 React Router 7 + Axios, com as mesmas regras de qualidade do painel (ESLint, Prettier,
 Vitest com cobertura mínima de 80%). O plano 017 entregou a visita presencial: a página
 inicial lista os pontos publicados e `/p/:slug` (endereço do QR Code) mostra nome, resumo,
-fotos e história do ponto, registrando a visita de forma anônima. Leitor de QR dentro do
-app e modo VR chegam nos planos 018 a 021.
+fotos e história do ponto, registrando a visita de forma anônima. O plano 018 trouxe o
+leitor de QR para dentro do app (`/scan`), fechando o tour AR presencial de ponta a ponta.
+O modo VR chega nos planos 019 a 021.
 
 ## Arquivos
 
 ```
 services/vr-app/
 ├── index.html                 lang="pt-BR", título "TourVR"
-├── package.json               "tourvr-visitor-app"; scripts na seção Comandos
+├── package.json               "tourvr-visitor-app"; scripts na seção Comandos;
+│                              @zxing/browser ^0.1.5 + @zxing/library ^0.21 (plano 018)
 ├── vite.config.ts             proxy /api e /media; HTTPS só com --mode https
 ├── vite-env.d.ts              tipagem de import.meta.env (VITE_PROXY_TARGET)
 ├── vitest.config.ts           jsdom, cobertura v8 com limite de 80%
@@ -44,22 +46,35 @@ services/vr-app/
     │   ├── media.ts           mediaSrc(url): endereço usado no src das imagens
     │   ├── text.ts            splitParagraphs(text): parágrafos por linha em branco
     │   ├── constants/http.ts  REQUEST_TIMEOUT_MS
+    │   ├── constants/points.ts SLUG_MIN_LENGTH (3), SLUG_MAX_LENGTH (60)
+    │   ├── constants/qr.ts    SCAN_INTERVAL_MS (250), INVALID_QR_NOTICE_MS (3000)
     │   ├── constants/routes.ts ROUTES: /, /p/:slug, /scan, /vr, /vr/:slug
     │   ├── hooks/useApiHealth.ts      estado loading | ok | error
     │   ├── hooks/useAsyncResource.ts  carregamento genérico → AsyncState + reload
     │   ├── hooks/usePublicPoints.ts   lista de pontos publicados
     │   ├── hooks/usePoint.ts          ponto por slug; recarrega quando o slug muda
     │   ├── hooks/useRegisterVisit.ts  registra uma visita por montagem
+    │   ├── qr/                leitura de QR, isolada e testável (ver "Leitor de QR")
+    │   │   ├── parseTourUrl.ts      texto lido → slug do ponto, ou null
+    │   │   ├── types.ts             interface QrScanner { start(video, onResult); stop() }
+    │   │   ├── nativeScanner.ts     BarcodeDetector do navegador, uma leitura a cada 250 ms
+    │   │   ├── zxingScanner.ts      @zxing/browser (BrowserQRCodeReader)
+    │   │   ├── createQrScanner.ts   escolhe o leitor; zxing por import() dinâmico
+    │   │   ├── camera.ts            openRearCamera, stopStream, cameraErrorMessage
+    │   │   └── barcode-detector.d.ts tipo mínimo do BarcodeDetector (fora do TS 5.8)
     │   ├── components/        PointHeader, PointContent, MediaGallery, PointCard,
     │   │                      LoadingState, ErrorState, ApiStatusFooter
     │   └── types/             api.d.ts (gerado, versionado), index.ts (aliases) e
     │                          async.ts (AsyncState)
     ├── modes/ar/
     │   ├── PointPage.tsx      página do ponto, rota /p/:slug
-    │   └── PointNotFound.tsx  "Este ponto não existe ou ainda não foi publicado."
+    │   ├── PointNotFound.tsx  "Este ponto não existe ou ainda não foi publicado."
+    │   ├── ScanPage.tsx       leitor de QR, rota /scan
+    │   └── useQrScan.ts       câmera + leitor + navegação; libera tudo ao sair
     ├── routes/
-    │   ├── AppRoutes.tsx      "/" → HomePage; "/p/:slug" → PointPage; outra → NotFoundPage
-    │   ├── HomePage.tsx       lista de pontos publicados
+    │   ├── AppRoutes.tsx      "/" → HomePage; "/p/:slug" → PointPage; "/scan" → ScanPage;
+    │   │                      outra → NotFoundPage
+    │   ├── HomePage.tsx       botão "Escanear QR Code" e lista de pontos publicados
     │   └── NotFoundPage.tsx   "Página não encontrada" com link para o início
     └── test/setup.ts          jest-dom no Vitest
 ```
@@ -70,8 +85,9 @@ A pasta `src/modes/vr` ainda não existe: nasce no plano 020.
 
 | Rota | Tela | Conteúdo |
 |---|---|---|
-| `/` | `routes/HomePage.tsx` | Título "TourVR · Tour do campus", a frase "Escaneie o QR Code de um local ou escolha um ponto abaixo." e um cartão (`PointCard`) por ponto publicado, com capa (`cover_url`) ou bloco cinza neutro, nome e resumo, levando a `/p/<slug>`. Lista vazia: "Nenhum ponto publicado ainda." |
+| `/` | `routes/HomePage.tsx` | Título "TourVR · Tour do campus", a frase "Escaneie o QR Code de um local ou escolha um ponto abaixo.", o botão principal **Escanear QR Code** (→ `/scan`) e um cartão (`PointCard`) por ponto publicado, com capa (`cover_url`) ou bloco cinza neutro, nome e resumo, levando a `/p/<slug>`. Lista vazia: "Nenhum ponto publicado ainda." |
 | `/p/:slug` | `modes/ar/PointPage.tsx` | Modo AR, isto é, a visita **presencial** guiada pelo QR Code. Ordem: `PointHeader` (nome em `h1` e resumo), `MediaGallery` (fotos), `PointContent` (seção "História") e o link "Conhecer outros pontos". O título da aba vira `<nome> · TourVR` |
+| `/scan` | `modes/ar/ScanPage.tsx` | Leitor de QR: título "Escanear QR Code", vídeo da câmera traseira com uma moldura quadrada como mira, o texto "Aponte para o QR Code do local" e o link "Voltar" (→ `/`). Detalhes em "Leitor de QR" |
 | qualquer outra | `routes/NotFoundPage.tsx` | "Página não encontrada" |
 
 **Estados de carregamento.** `usePoint` e `usePublicPoints` devolvem `{ state, reload }`,
@@ -95,6 +111,50 @@ explícito (`src/index.css`), para o texto não sumir em navegadores com tema es
 **Rodapé da API** (`ApiStatusFooter`, na página inicial). Só aparece quando
 `GET /api/health/` falha: "API indisponível no momento." Substitui o selo da API do
 plano 016.
+
+## Leitor de QR
+
+A página `/scan` lê o QR Code do local sem sair do app. A lógica fica no hook
+`useQrScan` (`src/modes/ar/useQrScan.ts`) e no módulo `src/core/qr/`:
+
+1. **Sem contexto seguro** (`!window.isSecureContext`, por exemplo `http://<IP>:3001`), a
+   página mostra "A câmera só funciona em endereço https." e nem pede a câmera.
+2. `openRearCamera()` pede a câmera traseira (`getUserMedia` com
+   `facingMode: 'environment'`) e liga o stream ao `<video playsInline muted autoPlay>`.
+3. `createQrScanner()` escolhe o leitor. Com `BarcodeDetector` no navegador, usa o
+   **nativo**; sem ele, carrega o **zxing** por `import('./zxingScanner')`. O build gera
+   o zxing num arquivo à parte (`dist/assets/zxingScanner-*.js`, ~108 kB gzip), que só é
+   baixado nesse caso. Em desenvolvimento, o console mostra `[qr] leitor: nativo` ou
+   `[qr] leitor: zxing`.
+4. A cada leitura, `parseTourUrl(texto)` aceita qualquer URL `http(s)` cujo caminho seja
+   `/p/<slug>`, **independentemente do domínio** (o IP muda entre redes), com o slug na
+   regra do backend: minúsculas, números e hífens simples, de 3 a 60 caracteres.
+   - Slug válido: para leitor e câmera e navega para `/p/<slug>` dentro do app.
+   - Outro QR: "Este QR Code não é de um ponto do tour." por 3 s, e a leitura continua.
+5. Ao sair da página (voltar, navegar, erro ou desmontagem), o leitor para e todas as
+   trilhas do stream são encerradas (`stopStream`): a luz da câmera apaga.
+
+**Mensagens de erro da câmera** (`cameraErrorMessage`), sempre acompanhadas do lembrete
+"Você também pode ler o QR Code com a câmera do próprio celular, sem o app.":
+
+| Erro | Mensagem |
+|---|---|
+| Contexto inseguro | A câmera só funciona em endereço https. |
+| `NotAllowedError`, `SecurityError` | O acesso à câmera foi negado. Libere a câmera para este site nas configurações do navegador e recarregue a página. |
+| `NotFoundError`, `OverconstrainedError` | Nenhuma câmera foi encontrada neste aparelho. |
+| `NotReadableError` | A câmera está sendo usada por outro aplicativo. Feche-o e tente de novo. |
+| outro | Não foi possível abrir a câmera. |
+
+**Navegadores e leitor usado**
+
+| Navegador | `BarcodeDetector` | Leitor | Verificado |
+|---|---|---|---|
+| Chrome no Android | sim | nativo | 2026-11-23, Redmi Note 15: QR do painel abre o ponto, QR de outro site mostra o aviso, câmera apaga ao voltar, visita contada no dashboard |
+| Safari no iOS | não | zxing | pendente — depende de iPhone na turma |
+| Firefox (qualquer) | não | zxing | não testado |
+| Chrome no Windows (desktop) | não | zxing | 2026-11-23: `BarcodeDetector` ausente; página inicial não baixa o zxing; sem permissão de câmera, `/scan` mostra a mensagem de acesso negado |
+
+O Quest 3 não lê QR no navegador (ADR-0006): lá o visitante usa o modo VR.
 
 ## Registro de visita
 
@@ -193,6 +253,9 @@ services/vr-app/src/
 ```
 
 ## Pendências
+
+- **Teste do leitor no iPhone** (plano 018) — Chrome no Android já foi verificado; falta
+  o Safari do iPhone (caminho do zxing), quando houver um aparelho na turma.
 
 - **Modelo de domínio** (ADR-0007, Fase 1) — o app não tem o que consumir enquanto
   `PontoDeInteresse` não existir no backend. Ver
