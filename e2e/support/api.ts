@@ -95,3 +95,31 @@ export async function publishPoint(
   });
   if (!response.ok()) throw new Error(`publicacao do ponto falhou: ${response.status()}`);
 }
+
+/** Cria um ponto e ja o publica, para os testes do app do visitante. */
+export async function createPublishedPoint(
+  request: APIRequestContext,
+  token: string,
+  overrides: PointOverrides = {},
+): Promise<{ id: string; slug: string; name: string }> {
+  const point = await createPoint(request, token, overrides);
+  await publishPoint(request, token, point.id);
+  return point;
+}
+
+export interface MetricsOverview {
+  visits_total: number;
+  visits_by_mode: { ar: number; vr: number };
+}
+
+/** Le o resumo de metricas via GET /admin/metrics/overview (exige admin). */
+export async function getMetrics(
+  request: APIRequestContext,
+  token: string,
+): Promise<MetricsOverview> {
+  const response = await request.get(`${URLS.api}/admin/metrics/overview`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok()) throw new Error(`leitura das metricas falhou: ${response.status()}`);
+  return (await response.json()) as MetricsOverview;
+}
