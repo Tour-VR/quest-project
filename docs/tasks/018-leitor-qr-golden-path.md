@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em revisão — Heitor Aquino |
+| **Status** | Concluído |
 | **Fase** | 3 — App do visitante, modo AR |
 | **Depende de** | 014, 017 |
 | **Dívidas atendidas** | DT-016 (parcial) |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | VR App · Orquestrador |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | 2026-11-23 por Heitor Aquino (sessão Claude Code) |
+| **Executado em** | 2026-11-23 por Heitor Aquino (sessão Claude Code) · PRs: [vr-app#3](https://github.com/Tour-VR/vr-app/pull/3), [quest-project#20](https://github.com/Tour-VR/quest-project/pull/20) |
 
 ---
 
