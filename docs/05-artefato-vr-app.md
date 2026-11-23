@@ -1,18 +1,20 @@
 # 05 — Artefato: App do Visitante (`services/vr-app`)
 
 > Repositório: `github.com/Tour-VR/vr-app` · Commit fixado: `4e6f85f` (atualizado no fechamento do plano 016)
-> Última verificação contra o código: 2026-11-17
+> Última verificação contra o código: 2026-11-23 (plano 017)
 
 > **Nome impreciso.** O submódulo chama-se `vr-app`, mas passa a abrigar também o modo AR
 > (celular), conforme a [ADR-0006](08-decisoes-arquiteturais.md). Renomear o repositório no
 > GitHub é opcional e está registrado como pendência na visão macro.
 
-## Status: 🟡 Em construção, fundação criada
+## Status: 🟡 Em construção — modo AR com página do ponto
 
 O plano 016 criou o projeto: React 19 + Vite 6 + TypeScript (strict) + Tailwind 4 +
 React Router 7 + Axios, com as mesmas regras de qualidade do painel (ESLint, Prettier,
-Vitest com cobertura mínima de 80%). Hoje o app mostra só uma página inicial provisória
-que confirma a conexão com a API. As telas do visitante chegam nos planos 017 a 021.
+Vitest com cobertura mínima de 80%). O plano 017 entregou a visita presencial: a página
+inicial lista os pontos publicados e `/p/:slug` (endereço do QR Code) mostra nome, resumo,
+fotos e história do ponto, registrando a visita de forma anônima. Leitor de QR dentro do
+app e modo VR chegam nos planos 018 a 021.
 
 ## Arquivos
 
@@ -32,32 +34,85 @@ services/vr-app/
 └── src/
     ├── main.tsx               monta <App /> em #root
     ├── App.tsx                BrowserRouter + AppRoutes
-    ├── index.css              @import 'tailwindcss'
+    ├── index.css              @import 'tailwindcss' e fundo branco explícito no body
     ├── core/                  núcleo compartilhado entre os modos AR e VR
     │   ├── api/client.ts      apiClient (Axios, baseURL '/api', timeout de 10 s)
     │   ├── api/health.ts      fetchApiHealth() → GET /health/
+    │   ├── api/points.ts      fetchPublicPoints(), fetchPublicPoint(slug)
+    │   ├── api/visits.ts      registerVisit(slug, mode) → POST /public/points/{slug}/visits
+    │   ├── api/errors.ts      isNotFound(error): resposta 404 do Axios
+    │   ├── media.ts           mediaSrc(url): endereço usado no src das imagens
+    │   ├── text.ts            splitParagraphs(text): parágrafos por linha em branco
     │   ├── constants/http.ts  REQUEST_TIMEOUT_MS
     │   ├── constants/routes.ts ROUTES: /, /p/:slug, /scan, /vr, /vr/:slug
-    │   ├── hooks/useApiHealth.ts  estado loading | ok | error
-    │   └── types/             api.d.ts (gerado, versionado) e index.ts (aliases)
+    │   ├── hooks/useApiHealth.ts      estado loading | ok | error
+    │   ├── hooks/useAsyncResource.ts  carregamento genérico → AsyncState + reload
+    │   ├── hooks/usePublicPoints.ts   lista de pontos publicados
+    │   ├── hooks/usePoint.ts          ponto por slug; recarrega quando o slug muda
+    │   ├── hooks/useRegisterVisit.ts  registra uma visita por montagem
+    │   ├── components/        PointHeader, PointContent, MediaGallery, PointCard,
+    │   │                      LoadingState, ErrorState, ApiStatusFooter
+    │   └── types/             api.d.ts (gerado, versionado), index.ts (aliases) e
+    │                          async.ts (AsyncState)
+    ├── modes/ar/
+    │   ├── PointPage.tsx      página do ponto, rota /p/:slug
+    │   └── PointNotFound.tsx  "Este ponto não existe ou ainda não foi publicado."
     ├── routes/
-    │   ├── AppRoutes.tsx      "/" → HomePage; qualquer outra → NotFoundPage
-    │   ├── HomePage.tsx       "TourVR", "Tour do campus" e o selo da API
+    │   ├── AppRoutes.tsx      "/" → HomePage; "/p/:slug" → PointPage; outra → NotFoundPage
+    │   ├── HomePage.tsx       lista de pontos publicados
     │   └── NotFoundPage.tsx   "Página não encontrada" com link para o início
     └── test/setup.ts          jest-dom no Vitest
 ```
 
-As pastas `src/modes/ar` e `src/modes/vr` ainda não existem: nascem nos planos 017 e 020.
+A pasta `src/modes/vr` ainda não existe: nasce no plano 020.
 
-**Selo da API** (`src/routes/HomePage.tsx`): "Verificando…" (cinza) enquanto
-`GET /api/health/` não responde; "API conectada" (verde) quando responde; "API
-indisponível" (vermelho) quando falha. Responder já basta para o verde, mesmo que o banco
-esteja fora do ar (`status: "degraded"`): o selo confirma o caminho navegador → *proxy* →
-backend.
+## Rotas e telas
+
+| Rota | Tela | Conteúdo |
+|---|---|---|
+| `/` | `routes/HomePage.tsx` | Título "TourVR · Tour do campus", a frase "Escaneie o QR Code de um local ou escolha um ponto abaixo." e um cartão (`PointCard`) por ponto publicado, com capa (`cover_url`) ou bloco cinza neutro, nome e resumo, levando a `/p/<slug>`. Lista vazia: "Nenhum ponto publicado ainda." |
+| `/p/:slug` | `modes/ar/PointPage.tsx` | Modo AR, isto é, a visita **presencial** guiada pelo QR Code. Ordem: `PointHeader` (nome em `h1` e resumo), `MediaGallery` (fotos), `PointContent` (seção "História") e o link "Conhecer outros pontos". O título da aba vira `<nome> · TourVR` |
+| qualquer outra | `routes/NotFoundPage.tsx` | "Página não encontrada" |
+
+**Estados de carregamento.** `usePoint` e `usePublicPoints` devolvem `{ state, reload }`,
+em que `state` é um `AsyncState` (`src/core/types/async.ts`): `loading` → `LoadingState`
+("Carregando…"); `success` → conteúdo; `not-found` (resposta 404) → `PointNotFound`, com
+o link "Ver todos os pontos"; `error` (rede, 5xx) → `ErrorState` com o botão "Tentar de
+novo", que chama `reload`. Resposta de um slug anterior é descartada.
+
+**Galeria de fotos** (`MediaGallery`). Só itens `kind === 'photo'` (panorama é do modo VR,
+plano 019), em coluna, `<img alt={alt_text} loading="lazy">` com largura total e legenda
+em `<figcaption>`. Sem fotos, nada é renderizado. O `src` passa por `mediaSrc(url)`: a URL
+relativa `/media/...` vai pelo *proxy* na mesma origem e a absoluta é usada como está.
+
+**História.** Texto simples, nunca interpretado como HTML ou Markdown (evita XSS):
+`splitParagraphs` separa por linha em branco e descarta trechos vazios.
+
+**Layout.** Coluna única `max-w-prose mx-auto px-4`, texto de no mínimo 16 px, sem
+largura fixa: legível em 360 px sem rolagem horizontal. O `body` tem fundo branco
+explícito (`src/index.css`), para o texto não sumir em navegadores com tema escuro.
+
+**Rodapé da API** (`ApiStatusFooter`, na página inicial). Só aparece quando
+`GET /api/health/` falha: "API indisponível no momento." Substitui o selo da API do
+plano 016.
+
+## Registro de visita
+
+`useRegisterVisit(slug, 'ar', ready)` (`src/core/hooks/useRegisterVisit.ts`) chama
+`POST /api/public/points/{slug}/visits` com `{ "mode": "ar" }`:
+
+- uma vez por montagem da página, **depois** que o ponto carregou com sucesso (visita só
+  conta se o visitante viu o conteúdo); 404 e erro não registram;
+- um `useRef` guarda o último slug registrado, para o `StrictMode` do React não contar em
+  dobro;
+- recarregar a página conta outra visita (nada é guardado no aparelho: o visitante é
+  anônimo);
+- falha no registro é silenciosa para o visitante: só `console.warn`.
 
 **Tipos.** `HealthStatus` está escrito à mão em `src/core/types/index.ts`, espelhando
 [06-contrato-api.md](06-contrato-api.md), porque `GET /health/` não declara esquema de
-resposta no OpenAPI. Os demais tipos virão de `npm run gen:types`.
+resposta no OpenAPI. Os demais são aliases dos tipos gerados por `npm run gen:types`:
+`PointSummary`, `PointDetail`, `MediaItem` e `VisitMode` (`'ar' | 'vr'`).
 
 ## Como o app chama a API
 

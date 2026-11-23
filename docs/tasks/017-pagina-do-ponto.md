@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em execução — Heitor Aquino — 2026-11-23 |
+| **Status** | Em revisão — Heitor Aquino |
 | **Fase** | 3 — App do visitante, modo AR |
 | **Depende de** | 010, 016 |
 | **Dívidas atendidas** | DT-016 (parcial) |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | VR App · Orquestrador |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | — |
+| **Executado em** | 2026-11-23 |
 
 ---
 
@@ -243,23 +243,23 @@ cd ../.. && bash scripts/validate.sh
 
 ## 8. Documentação a atualizar
 
-- [ ] `docs/05-artefato-vr-app.md`: rotas `/` e `/p/:slug`, componentes do núcleo,
+- [x] `docs/05-artefato-vr-app.md`: rotas `/` e `/p/:slug`, componentes do núcleo,
       regra de registro de visita
-- [ ] `docs/06-contrato-api.md`: na seção de cada endpoint público, linha "Consumido por:
+- [x] `docs/06-contrato-api.md`: na seção de cada endpoint público, linha "Consumido por:
       vr-app"
-- [ ] `docs/00-visao-geral.md`: tabela de estado, "App do visitante — modo AR: página do
+- [x] `docs/00-visao-geral.md`: tabela de estado, "App do visitante — modo AR: página do
       ponto funcionando"
 
 ## 9. Critérios de aceite
 
-- [ ] Ponto publicado abre em `/p/<slug>` com nome, resumo, história e fotos
-- [ ] Ponto em rascunho ou inexistente mostra a mensagem amigável, sem tela branca
-- [ ] Cada abertura da página registra exatamente uma visita `ar`
-- [ ] Página legível em 360 px de largura, sem rolagem horizontal
-- [ ] `/` lista os pontos publicados e leva à página de cada um
-- [ ] E2E `@golden` do visitante passando
-- [ ] `bash scripts/validate.sh` passando
-- [ ] Documentação da seção 8 atualizada
+- [x] Ponto publicado abre em `/p/<slug>` com nome, resumo, história e fotos
+- [x] Ponto em rascunho ou inexistente mostra a mensagem amigável, sem tela branca
+- [x] Cada abertura da página registra exatamente uma visita `ar`
+- [x] Página legível em 360 px de largura, sem rolagem horizontal
+- [x] `/` lista os pontos publicados e leva à página de cada um
+- [x] E2E `@golden` do visitante passando
+- [x] `bash scripts/validate.sh` passando
+- [x] Documentação da seção 8 atualizada
 
 ## 10. Commits esperados
 
@@ -317,3 +317,49 @@ Execute o plano docs/tasks/017-pagina-do-ponto.md.
 Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o "Prompt 1 — EXECUTAR" etapa por etapa.
 Meu nome, para registrar no plano: <SEU NOME>
 ```
+
+---
+
+## Registro de execução
+
+Executado por Heitor Aquino em 2026-11-23, com Claude Code (sessão de execução).
+
+**O que foi feito**
+
+- `services/vr-app`: chamadas `fetchPublicPoints`, `fetchPublicPoint`, `registerVisit`,
+  `isNotFound` e `mediaSrc`; aliases `PointSummary`, `PointDetail`, `MediaItem`,
+  `VisitMode` e o tipo `AsyncState`; hooks `usePublicPoints`, `usePoint`,
+  `useRegisterVisit`; componentes `PointHeader`, `PointContent`, `MediaGallery`,
+  `LoadingState`, `ErrorState`, `PointCard`, `ApiStatusFooter`; página do ponto
+  `/p/:slug` (`src/modes/ar/PointPage.tsx` e `PointNotFound.tsx`) e página inicial com a
+  lista. 47 testes unitários, cobertura de 100%.
+- `npm run gen:types` rodado contra o backend atual: `api.d.ts` já estava em dia (sem
+  diferença).
+- Orquestrador: `createPublishedPoint` e `getMetrics` em `e2e/support/api.ts`;
+  `e2e/tests/visitor-point.spec.ts` com o cenário `@golden` do visitante e o de ponto
+  inexistente.
+- Página conferida no navegador em 360 px de largura: sem rolagem horizontal, texto de
+  18 px.
+
+**Desvios do plano**
+
+1. `usePoint` e `usePublicPoints` devolvem `{ state, reload }` em vez de só o
+   `AsyncState`: o `reload` alimenta o botão "Tentar de novo" do `ErrorState`, que o
+   próprio plano pede. A lógica comum (flag `cancelled`, tradução do 404) ficou em
+   `src/core/hooks/useAsyncResource.ts`, para não duplicar código entre os dois hooks.
+2. Os helpers do E2E recebem `request` do Playwright, como os helpers já existentes
+   (`createPoint`, `publishPoint`); o login usa `createAdminUser` + `loginPelaApi` no
+   lugar do `loginAsAdmin` ilustrativo do plano; a URL do app vem de `URLS.visitante`.
+3. `mediaSrc` devolve a URL como está nos dois casos (relativa e absoluta), pois é isso
+   que a regra da seção 5 resulta; fica como ponto único para mudanças futuras.
+4. Fora da lista de arquivos do plano: `src/index.css` ganhou fundo branco explícito no
+   `body`. Sem ele, no navegador em tema escuro o fundo ficava preto e o título da página
+   inicial ficava ilegível (critério "página legível").
+5. Testes extras além da tabela do passo 6: `errors.test.ts`, `usePublicPoints.test.tsx`
+   e `PointComponents.test.tsx` (cabeçalho, história, carregando e erro).
+
+**Dívidas novas registradas**
+
+- [DT-025](../implementacoes-futuras/DT-025-vite-vr-app-observa-coverage.md): o servidor do
+  `vr-app` no Docker observa `coverage/` e parou de responder depois de
+  `npm run test:coverage`; foi preciso `docker compose restart vr-app`.
