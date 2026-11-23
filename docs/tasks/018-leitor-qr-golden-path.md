@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em execução — Heitor Aquino — 2026-11-23 |
+| **Status** | Em revisão — Heitor Aquino |
 | **Fase** | 3 — App do visitante, modo AR |
 | **Depende de** | 014, 017 |
 | **Dívidas atendidas** | DT-016 (parcial) |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | VR App · Orquestrador |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | — |
+| **Executado em** | 2026-11-23 por Heitor Aquino (sessão Claude Code) |
 
 ---
 
@@ -205,9 +205,9 @@ aparelho, navegador, e qual leitor foi usado (nativo ou zxing). Para saber, deix
 
 ## 8. Documentação a atualizar
 
-- [ ] `docs/05-artefato-vr-app.md`: rota `/scan`, módulo `core/qr`, navegadores
+- [x] `docs/05-artefato-vr-app.md`: rota `/scan`, módulo `core/qr`, navegadores
       testados e qual leitor cada um usa
-- [ ] `docs/00-visao-geral.md`: "Tour AR presencial: funcionando de ponta a ponta"
+- [x] `docs/00-visao-geral.md`: "Tour AR presencial: funcionando de ponta a ponta"
 - [ ] `docs/tasks/000-visao-macro-opcao-b.md`: nada a mudar além do status (feito no
       fechamento)
 
@@ -280,3 +280,49 @@ Execute o plano docs/tasks/018-leitor-qr-golden-path.md.
 Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o "Prompt 1 — EXECUTAR" etapa por etapa.
 Meu nome, para registrar no plano: <SEU NOME>
 ```
+
+---
+
+## Registro de execução
+
+Executado em 2026-11-23 por Heitor Aquino, com Claude Code.
+
+**O que foi feito**
+
+- `services/vr-app`, branch `plano/018-leitor-qr-golden-path`, quatro commits:
+  `parseTourUrl` com tabela de casos; leitores nativo (`BarcodeDetector`, uma leitura a
+  cada 250 ms) e zxing (carregado por `import()` dinâmico, em arquivo separado no build);
+  `camera.ts` com mensagens de erro em português; página `/scan` com o hook `useQrScan`;
+  botão **Escanear QR Code** na página inicial.
+- `@zxing/browser` `^0.1.5` + `@zxing/library` `^0.21.3`. O `peerDependencies` do
+  `@zxing/browser` pede `@zxing/library ^0.21.0`: sem conflito.
+- Orquestrador: `e2e/tests/golden-path-campus.spec.ts` (`@golden`). O admin cria e publica
+  o ponto pela interface, lê a URL exibida no cartão de `/qrcodes`, confere o caminho
+  `/p/<slug>` com a mesma regra do app, abre essa URL num contexto de navegador sem login
+  e vê o ponto; o dashboard mostra o total de visitas maior ou igual ao anterior + 1.
+- Testes do vr-app: 88 passando, cobertura de 99,56% das linhas e 95,65% dos ramos.
+  `bash scripts/validate.sh` terminou com código 0, com os 18 cenários E2E passando.
+
+**Desvios do plano**
+
+- Testes extras `nativeScanner.test.ts` e `zxingScanner.test.ts`, além da tabela do
+  passo 5, para manter a cobertura dos dois leitores.
+- `cameraErrorMessage` também traduz `SecurityError` (como permissão negada) e
+  `OverconstrainedError` (como câmera não encontrada), que o `getUserMedia` pode lançar
+  nos mesmos casos.
+- "Voltar" é um link estilizado como botão (`<Link to="/">`): é navegação, não ação.
+- O E2E usa `uniqueSuffix()` em vez de só `Date.now()` no slug, como os demais testes,
+  para não colidir com execuções em paralelo.
+- O ponteiro do submódulo `vr-app` **não** foi atualizado neste PR: a CI do orquestrador
+  exige ponteiros na `main` dos submódulos. Ele é atualizado no fechamento (Prompt 3). O
+  golden path novo não depende do código do `/scan`, então passa com o ponteiro atual.
+
+**Verificação manual**
+
+- No navegador do Claude Code (Chrome no Windows, sem `BarcodeDetector`): a página
+  inicial não baixa o zxing; `/scan` com a câmera bloqueada mostra a mensagem de acesso
+  negado e o lembrete da câmera do celular.
+- **Pendente:** o teste no celular da seção 12 (aparelho, navegador e leitor usado) fica
+  para o aluno, registrado no PR.
+
+**Dívidas novas:** nenhuma.
