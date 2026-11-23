@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Validado |
+| **Status** | Em execução — Heitor Aquino — 2026-11-23 |
 | **Fase** | 3 — App do visitante, modo AR |
 | **Depende de** | 010, 016 |
 | **Dívidas atendidas** | DT-016 (parcial) |
