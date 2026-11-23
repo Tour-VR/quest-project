@@ -109,7 +109,7 @@ reserva o plano com o seu nome antes de começar.
 | [015](015-metricas-perfil-usuarios.md) | Métricas, perfil e usuários no painel | 2 | 010, 011 | DT-011, DT-015 | Concluído |
 | [016](016-fundacao-app-visitante.md) | Fundação do app do visitante | 3 | 006 | — | Concluído |
 | [017](017-pagina-do-ponto.md) | Página do ponto (modo AR) | 3 | 010, 016 | — | Concluído |
-| [018](018-leitor-qr-golden-path.md) | Leitor de QR e golden path completo | 3 | 014, 017 | — | Validado |
+| [018](018-leitor-qr-golden-path.md) | Leitor de QR e golden path completo | 3 | 014, 017 | — | Em execução — Heitor Aquino |
 | [019](019-panoramas-e-conexoes.md) | Panoramas e conexões | 4 | 013, 017 | — | Validado |
 | [020](020-cena-vr-360.md) | Cena VR 360° | 4 | 019 | — | Validado |
 | [021](021-navegacao-vr-e-encerramento.md) | Navegação VR e encerramento | 4 | 018, 020 | DT-016 | Validado |
