@@ -111,7 +111,7 @@ reserva o plano com o seu nome antes de começar.
 | [017](017-pagina-do-ponto.md) | Página do ponto (modo AR) | 3 | 010, 016 | — | Concluído |
 | [018](018-leitor-qr-golden-path.md) | Leitor de QR e golden path completo | 3 | 014, 017 | — | Concluído |
 | [019](019-panoramas-e-conexoes.md) | Panoramas e conexões | 4 | 013, 017 | — | Concluído |
-| [020](020-cena-vr-360.md) | Cena VR 360° | 4 | 019 | — | Em execução — Heitor Aquino |
+| [020](020-cena-vr-360.md) | Cena VR 360° | 4 | 019 | — | Em revisão — Heitor Aquino |
 | [021](021-navegacao-vr-e-encerramento.md) | Navegação VR e encerramento | 4 | 018, 020 | DT-016 | Validado |
 | [022](022-padroes-visuais-do-painel.md) | Padrões visuais e de movimento do painel | 2 | 011 | — | Concluído |
 

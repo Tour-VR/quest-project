@@ -1,5 +1,6 @@
 import type { APIRequestContext } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
+import { createReadStream } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { URLS } from './urls';
 
@@ -122,4 +123,32 @@ export async function getMetrics(
   });
   if (!response.ok()) throw new Error(`leitura das metricas falhou: ${response.status()}`);
   return (await response.json()) as MetricsOverview;
+}
+
+/** Envia uma imagem via POST /admin/media (multipart, campo `file`) e devolve a URL relativa. */
+export async function uploadMedia(
+  request: APIRequestContext,
+  token: string,
+  filePath: string,
+): Promise<string> {
+  const response = await request.post(`${URLS.api}/admin/media`, {
+    multipart: { file: createReadStream(filePath) },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok()) throw new Error(`upload da midia falhou: ${response.status()}`);
+  return ((await response.json()) as { url: string }).url;
+}
+
+/** Grava o panorama 360 do ponto via PUT /admin/points/{id} (lista `media` com 1 panorama). */
+export async function addPanorama(
+  request: APIRequestContext,
+  token: string,
+  pointId: string,
+  url: string,
+): Promise<void> {
+  const response = await request.put(`${URLS.api}/admin/points/${pointId}`, {
+    data: { media: [{ kind: 'panorama', url, alt_text: 'Panorama 360 de teste' }] },
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!response.ok()) throw new Error(`gravacao do panorama falhou: ${response.status()}`);
 }
