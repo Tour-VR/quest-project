@@ -46,7 +46,7 @@ produto — a experiência de realidade virtual — ainda não foi iniciado.
 | Cadastro de pontos no painel | ✅ Implementado (plano 012) — criar, editar, publicar, despublicar e excluir |
 | Geração de QR Codes | ✅ Implementada (plano 014) — `/qrcodes` no painel: um cartão por ponto publicado, folha A4 e PNG |
 | Health check e diagnóstico de banco | ✅ Implementado |
-| **App do visitante (AR e VR)** | 🟡 **Tour AR presencial: funcionando de ponta a ponta** (plano 018) — `http://localhost:3001` lista os pontos publicados, `/scan` lê o QR Code do local com a câmera do celular e `/p/<slug>` (endereço do QR Code) mostra nome, resumo, fotos e história, registrando a visita que aparece no dashboard; modo VR nos planos 019 a 021 |
+| **App do visitante (AR e VR)** | 🟡 **Tour AR presencial: funcionando de ponta a ponta** (plano 018) — `http://localhost:3001` lista os pontos publicados, `/scan` lê o QR Code do local com a câmera do celular e `/p/<slug>` (endereço do QR Code) mostra nome, resumo, fotos e história, registrando a visita que aparece no dashboard. **Tour VR remoto: cena 360° funcionando** (plano 020) — `/vr` lista os pontos com panorama e `/vr/<slug>` mostra a foto 360° em volta do visitante (arrastar no computador e no celular; **Entrar em VR** no Quest 3), registrando a visita `vr`; navegação entre pontos no plano 021 |
 | **Modelo de domínio do campus** | 🟡 Parcial — pontos e visitas no backend (ADR-0007); cadastro de pontos no painel (plano 012); QR Codes no painel (plano 014); métricas no painel (plano 015) |
 | Pipeline de mídia 360° / storage | 🔴 Não existe |
 | Orquestração de ambiente (compose, scripts) | 🔴 Não existe |
@@ -62,7 +62,7 @@ Nenhuma tarefa de rotina do painel exige Swagger ou acesso direto ao banco.
 | Linhas de código de aplicação (backend `app/`) | 961 |
 | Linhas de código de teste (backend `tests/`) | 679 |
 | Linhas de código de aplicação (frontend `src/`) | 414 |
-| Linhas de código no `vr-app` (`src/`, sem testes) | 890 |
+| Linhas de código no `vr-app` (`src/`, sem testes nem `.d.ts`) | 1350 |
 | Testes automatizados | 24 (todos no backend) |
 | Endpoints REST expostos | 7 |
 

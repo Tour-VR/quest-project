@@ -10,7 +10,7 @@ sessões de planejamento e de execução.
 | **TourVR** | Nome do sistema como um todo — os quatro repositórios e o produto final. |
 | **OculosVR** | Nome herdado do MVP, ainda presente no código (`oculosvr_db`, `oculosvr-frontend`, `@OculosVR:token`, título do painel). É o **mesmo produto**; a renomeação para TourVR não foi concluída. |
 | **Painel administrativo** | O `frontend` web, usado por administradores para gerenciar o conteúdo — não é a experiência do visitante. |
-| **Aplicação VR** | O `vr-app`, executado no headset. É o produto entregue ao usuário final. Ainda não existe. |
+| **Aplicação VR** | O `vr-app` — app do visitante, com o modo AR (celular) e o modo VR (Quest 3, rotas `/vr`). Ver [05-artefato-vr-app.md](05-artefato-vr-app.md). |
 | **Ponto de interesse** | Lugar do campus com conteúdo próprio (biblioteca, auditório, cantina...): `slug`, nome, resumo, história e mídias embutidas. Entidade central do domínio (`PointOfInterest`, collection `points`), definida na [ADR-0007](08-decisoes-arquiteturais.md#adr-0007--modelo-de-domínio-do-campus). |
 | **Slug** | Identificador público e legível de um ponto (ex.: `biblioteca-central`): letras minúsculas, números e hifens, único. Vai no QR Code (`/p/<slug>`) e **não muda** depois da primeira publicação. |
 | **QR Code do ponto** | Código impresso e afixado no local, gerado pelo painel em `/qrcodes` (plano 014). Contém só a URL pública do ponto no app do visitante: `<VITE_VISITOR_APP_URL>/p/<slug>` ([ADR-0006](08-decisoes-arquiteturais.md)). Só pontos publicados têm QR Code. |
@@ -82,7 +82,10 @@ sessões de planejamento e de execução.
 | **RA / AR** | Realidade aumentada — informação virtual sobreposta ao mundo real. |
 | **Passthrough** | Recurso do Quest 3 que exibe o ambiente real através das câmeras; base para AR no dispositivo. |
 | **OpenXR** | Padrão aberto de API para RV/RA, suportado pelo Quest e pelos principais motores. |
-| **WebXR** | API que permite experiências de RV/RA dentro do navegador — alternativa a motores nativos. |
+| **WebXR** | API que permite experiências de RV/RA dentro do navegador — alternativa a motores nativos. No TourVR, o modo VR do `vr-app` usa WebXR pelo navegador do Quest 3 (plano 020); só funciona em HTTPS ou `localhost`. |
+| **Sessão imersiva** | Momento em que a página toma conta do headset e a imagem passa a acompanhar o movimento da cabeça (`immersive-vr`). Começa no botão **Entrar em VR** e termina no botão Meta do controle. Fora dela, a mesma cena aparece numa janela comum e se olha em volta arrastando. |
+| **React Three Fiber (R3F)** | Biblioteca que permite montar cenas 3D do three.js com componentes React (`<Canvas>`, `<mesh>`). Usada no modo VR junto com `@react-three/drei` (componentes prontos, como `OrbitControls` e `Text`) e `@react-three/xr` (sessão WebXR). |
+| **three.js** | Biblioteca JavaScript de gráficos 3D sobre WebGL, base do R3F. No `vr-app` é carregada só no modo VR, num arquivo à parte. |
 | **Vídeo 360°** | Vídeo esférico que permite olhar em qualquer direção a partir de um ponto fixo. |
 | **Fotogrametria** | Reconstrução de modelos 3D a partir de fotografias de um local real. |
 | **APK** | Pacote de aplicativo Android; formato de distribuição para o Quest 3. |
