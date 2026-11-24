@@ -203,7 +203,7 @@ que vira `400`.
 
 Em pontos, o mesmo padrão: `PointService` checa o slug antes (`find_by_slug`) e, se o
 índice recusar, `UniqueConstraintError` vira `PointConflictError` → `409`
-(`app/services/point_service.py:132-147` e `116-123`).
+(`app/services/point_service.py:203-220` e `187-194`).
 
 Se a criação falhar (por exemplo, base local já com e-mails repetidos), o backend registra
 `warning` "Nao foi possivel criar os indices" e **sobe sem o índice**. No ambiente local,
@@ -263,16 +263,30 @@ Exceções de domínio: `PointInputError` (→ `400`), `PointConflictError` (→
   `^[a-z0-9]+(?:-[a-z0-9]+)*$` ou dos limites (3–60) a validação responde `422`.
 - **Slug único:** checagem prévia + índice `points_slug_unique`; conflito responde `409`.
 - **Slug imutável depois da primeira publicação.** Se `published_at` está preenchido, um
-  `PUT` com slug diferente responde `400` (`app/services/point_service.py:165-170`) — os
+  `PUT` com slug diferente responde `400` (`app/services/point_service.py:245-251`) — os
   QR Codes impressos deixariam de funcionar. Vale mesmo depois de despublicar.
 - **Publicação explícita.** `status` só muda por `/publish` e `/unpublish`, nunca pelo
   `PUT`. Publicar preenche `published_at` só na primeira vez
-  (`app/services/point_service.py:176-182`); despublicar mantém a data.
+  (`app/services/point_service.py:260-266`); despublicar mantém a data.
 - **Rascunho é invisível ao visitante.** As rotas `/public/points` consultam só
   `status="published"` (`app/repositories/point_repository.py`, `list_published` e
   `find_published_by_slug`); rascunho responde `404`.
 - **`point_id` malformado** responde `404`, igual a inexistente; o repository nem consulta
   o banco.
+- **Modo VR (plano 019).** `_validate_vr_fields` (`app/services/point_service.py:160-178`)
+  roda na criação e na atualização e levanta `PointInputError` (`400`) para: mais de um
+  `panorama` em `media`; conexão para o próprio slug; destino repetido; destino inexistente
+  (uma consulta só, `find_slugs_in`, `app/repositories/point_repository.py:91`). Limites
+  de quantidade (8 conexões), rótulo (1–60) e ângulo (-180 a 180) ficam no schema (`422`).
+- **Limpeza de conexões.** `delete_point` carrega o ponto, exclui e chama
+  `remove_connections_to(slug)` (`$pull` em todos os pontos;
+  `app/services/point_service.py:252-258`). Trocar o slug de um rascunho chama
+  `rename_connection_target(old, new)` (`app/services/point_service.py:241-242`).
+- **Resposta pública com VR.** `get_published` busca os destinos publicados com
+  `find_published_by_slugs` e monta `connections` com `target_name`, na ordem cadastrada,
+  omitindo destinos em rascunho; `panorama_url` é a `url` do item `panorama`. A lista
+  pública traz `has_panorama` (`app/services/point_service.py:130-158`). Documentos antigos
+  sem `connections` são lidos como lista vazia.
 - **Atualização parcial:** campo ausente ou `null` não é alterado; corpo vazio responde
   `400`. A lista `media`, quando enviada, substitui a anterior inteira.
 - **Mídia:** itens sem `id` recebem um UUID gerado pelo servidor; apenas `kind="photo"`.

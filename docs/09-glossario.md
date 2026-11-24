@@ -15,7 +15,10 @@ sessões de planejamento e de execução.
 | **Slug** | Identificador público e legível de um ponto (ex.: `biblioteca-central`): letras minúsculas, números e hifens, único. Vai no QR Code (`/p/<slug>`) e **não muda** depois da primeira publicação. |
 | **QR Code do ponto** | Código impresso e afixado no local, gerado pelo painel em `/qrcodes` (plano 014). Contém só a URL pública do ponto no app do visitante: `<VITE_VISITOR_APP_URL>/p/<slug>` ([ADR-0006](08-decisoes-arquiteturais.md)). Só pontos publicados têm QR Code. |
 | **Rascunho / Publicado** | Os dois estados (`status`) de um ponto: `draft` (só o painel vê) e `published` (o visitante vê). Muda só pelas ações explícitas de publicar e despublicar. |
-| **Mídia (item)** | Foto embutida num ponto (`MediaItem`: `id`, `kind`, `url`, `caption`, `alt_text`), no máximo 20 por ponto. Hoje só `kind="photo"`; panoramas chegam no plano 019. |
+| **Mídia (item)** | Foto ou panorama embutido num ponto (`MediaItem`: `id`, `kind`, `url`, `caption`, `alt_text`), no máximo 20 por ponto. `kind` é `"photo"` ou `"panorama"` (plano 019). |
+| **Panorama equirretangular** | Foto 360° "desenrolada" num retângulo de proporção 2:1 (largura = 2 × altura), como um mapa-múndi. É o formato gerado por câmeras 360° e pelo modo "Photo Sphere" dos celulares. Cada ponto tem no máximo um (`kind="panorama"`); recomendado 4096×2048 em JPEG ([ADR-0008](08-decisoes-arquiteturais.md)). |
+| **Conexão** | Seta da cena VR que leva de um ponto a um vizinho (`connections[]`: `target_slug`, `label`, `yaw_degrees`), até 8 por ponto. O visitante só vê conexões para pontos publicados (plano 019). |
+| **Yaw** | Ângulo horizontal da conexão, em graus de -180 a 180: 0 = centro da foto panorâmica, positivo = para a direita, ±180 = bordas da imagem. |
 | **Roteiro** | Sequência curada de pontos que compõem uma visita. **Fora do escopo atual (ADR-0007).** |
 | **Visita** | Registro anônimo de que alguém abriu um ponto publicado no app do visitante, com modo `ar` (celular) ou `vr` (Quest). Guarda só `point_slug`, `mode` e `visited_at` (`Visit`, collection `visits`); alimenta o resumo de `GET /admin/metrics/overview` (plano 010). |
 | **Sessão de uso** | Registro de uso identificado por usuário. **Fora do escopo (ADR-0007)**: o sistema registra apenas [Visitas](#produto-e-domínio) anônimas. |

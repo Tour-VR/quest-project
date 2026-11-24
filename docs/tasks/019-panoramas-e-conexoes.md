@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em execução — Heitor Aquino — 2026-11-24 |
+| **Status** | Em revisão — Heitor Aquino |
 | **Fase** | 4 — App do visitante, modo VR |
 | **Depende de** | 013, 017 |
 | **Dívidas atendidas** | DT-016 (parcial) |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Backend · Frontend · VR App · Orquestrador |
 | **Planejado em** | 2026-11-05 |
 | **Validado em** | 2026-11-05 por Ciro Macedo |
-| **Executado em** | — |
+| **Executado em** | 2026-11-24 por Heitor Aquino |
 
 ---
 
@@ -344,6 +344,55 @@ docs: registra panorama e conexoes no contrato e nas ADRs 0007 e 0008
    `panorama_url` e a conexão com o nome "Cantina".
 6. Despublique a Cantina e recarregue: a conexão some da resposta pública, mas continua
    no painel.
+
+---
+
+## Registro de execução
+
+**Executado por:** Heitor Aquino (sessão de execução com Claude Code), em 2026-11-24.
+
+**O que foi feito**
+
+- Backend (`plano/019-panoramas-e-conexoes`): `MediaKind = "photo" | "panorama"`,
+  dataclass `PointConnection` e campo `connections` em `app/models/point.py`; constantes
+  `MAX_CONNECTIONS`, `MAX_PANORAMAS`, `CONNECTION_LABEL_MAX_LENGTH`, `YAW_MIN_DEGREES`,
+  `YAW_MAX_DEGREES` e schemas `PointConnectionSchema` / `PointPublicConnection` em
+  `app/schemas/point.py`; `_validate_vr_fields` no service; `panorama_url`, `connections`
+  (só destinos publicados, com `target_name`) e `has_panorama` nas respostas públicas;
+  repository com `find_slugs_in`, `find_published_by_slugs`, `remove_connections_to` e
+  `rename_connection_target`. Testes novos em `tests/test_point_connections.py` e
+  extensões em `test_public_points.py` / `test_admin_points.py` (197 testes, cobertura 95%).
+- Painel: tipos regenerados; seção **Modo VR** (`PointVrSection`, `PanoramaField`,
+  `ConnectionsEditor`, `ConnectionRow`, hooks `usePanoramaField` e
+  `useConnectionsEditor`, `utils/panorama.ts`); galeria de fotos ignora o panorama e o
+  preserva ao gravar (201 testes).
+- VR App: tipos regenerados, alias `PointConnection`, fixtures dos testes atualizadas
+  (89 testes; a galeria continua filtrando `kind === 'photo'`).
+- Orquestrador: `e2e/tests/vr-data.spec.ts` e documentação da seção 8.
+
+**Desvios do plano**
+
+1. **Nomes reais diferentes do plano:** o modelo se chama `PointModel` (não
+   `PointOfInterest`) e o schema de mídia `MediaItemInput` (não `MediaItemSchema`); o
+   `target_slug` reaproveita a normalização de slug existente (`_normalize_slug`) em vez de
+   `Field(pattern=...)`, porque `SLUG_PATTERN` é uma regex compilada.
+2. **Gravação no painel:** o formulário do ponto não envia `media` no PUT (padrão do
+   plano 013: a seção "Fotos" grava na hora). A seção "Modo VR" segue o mesmo padrão: o
+   panorama é gravado ao enviar/remover e as conexões têm o botão "Salvar conexões"; ambos
+   usam `PUT /admin/points/{id}`. A seção só aparece na edição, como "Fotos". O teste do
+   `PointForm` verifica que panorama e `connections` vão no corpo do PUT.
+3. **Hooks em `src/hooks/`** (e não ao lado do componente), seguindo `07-convencoes.md`.
+4. **Troca de slug:** o plano 009 permite trocar o slug de rascunho, então
+   `rename_connection_target` foi implementado.
+5. **`find_published`** (`list_published`) já devolve o documento inteiro; `has_panorama`
+   é calculado a partir de `media` sem mudar a consulta.
+6. **Exclusão** passou a carregar o ponto antes (para saber o slug) e então chamar
+   `remove_connections_to`.
+7. Extra: botão "Remover panorama" no painel.
+
+**Dívidas novas registradas:** nenhuma. Observação: as referências de linha de
+`docs/implementacoes-futuras/DT-022-midia-orfa-em-disco.md` para `point_service.py`
+deslocaram com este plano (o conteúdo da dívida continua válido).
 
 ---
 
