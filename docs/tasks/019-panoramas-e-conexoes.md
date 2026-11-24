@@ -389,6 +389,12 @@ docs: registra panorama e conexoes no contrato e nas ADRs 0007 e 0008
 6. **Exclusão** passou a carregar o ponto antes (para saber o slug) e então chamar
    `remove_connections_to`.
 7. Extra: botão "Remover panorama" no painel.
+8. **Ponteiros dos submódulos atualizados no PR do orquestrador** (e não só no
+   fechamento): o E2E `vr-data.spec.ts` depende do backend novo. A CI do orquestrador
+   exige ponteiros na `main` dos submódulos, então ela só fica verde depois do merge (com
+   merge commit) dos PRs do backend, do painel e do vr-app.
+9. O E2E não rodou na máquina do aluno (Docker Desktop parado); `validate.sh --skip-e2e`
+   passou e o E2E roda na CI.
 
 **Dívidas novas registradas:** nenhuma. Observação: as referências de linha de
 `docs/implementacoes-futuras/DT-022-midia-orfa-em-disco.md` para `point_service.py`
