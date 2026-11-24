@@ -252,7 +252,7 @@ Troca a senha do usuário autenticado. Requer Bearer.
 
 Entidade definida na [ADR-0007](08-decisoes-arquiteturais.md#adr-0007--modelo-de-domínio-do-campus).
 Rotas administrativas em `app/api/v1/routes/admin_points.py`; públicas em
-`app/api/v1/routes/public_points.py`. Limites em `app/schemas/point.py:22-34`.
+`app/api/v1/routes/public_points.py`. Limites em `app/schemas/point.py:29-42`.
 
 **Ponto de interesse (resposta administrativa — `PointAdminResponse`)**
 
@@ -271,7 +271,17 @@ Rotas administrativas em `app/api/v1/routes/admin_points.py`; públicas em
       "url": "https://exemplo.com/fachada.jpg",
       "caption": "Fachada principal",
       "alt_text": "Prédio de tijolos com duas portas de vidro"
+    },
+    {
+      "id": "5d1c8a2e-0f3b-4c7e-8a21-7b9d0e4f6a12",
+      "kind": "panorama",
+      "url": "/media/3f2a9c1e.jpg",
+      "caption": null,
+      "alt_text": "Panorama 360°"
     }
+  ],
+  "connections": [
+    { "target_slug": "cantina", "label": "Cantina", "yaw_degrees": 90 }
   ],
   "created_at": "2026-11-11T12:00:00Z",
   "updated_at": "2026-11-11T12:00:00Z",
@@ -289,10 +299,14 @@ Rotas administrativas em `app/api/v1/routes/admin_points.py`; públicas em
 | `history` | sim | 1–10000 caracteres |
 | `media` | não | lista com até 20 itens; padrão `[]` |
 | `media[].id` | não | se ausente, o servidor gera um UUID |
-| `media[].kind` | não | apenas `"photo"` (padrão) |
+| `media[].kind` | não | `"photo"` (padrão) ou `"panorama"` (foto 360° equirretangular 2:1; no máximo **1** por ponto) |
 | `media[].url` | sim | 1–500 caracteres; relativa (`/media/...`, devolvida por `POST /admin/media`) ou absoluta |
 | `media[].caption` | não | ≤ 200 caracteres |
 | `media[].alt_text` | sim | 1–200 caracteres |
+| `connections` | não | lista com até **8** conexões (setas da cena VR); padrão `[]` |
+| `connections[].target_slug` | sim | slug de outro ponto existente (qualquer status); mesmo formato e normalização do `slug` |
+| `connections[].label` | sim | 1–60 caracteres, após remover espaços das pontas |
+| `connections[].yaw_degrees` | sim | número de `-180` a `180`. 0 = centro da imagem panorâmica; positivo = à **direita**; ±180 = bordas |
 
 Slug fora do formato responde `422` com a mensagem
 `"Slug deve ter de 3 a 60 caracteres, apenas letras minusculas, numeros e hifens entre palavras (ex.: biblioteca-central)."`.
@@ -306,6 +320,12 @@ Slug fora do formato responde `422` com a mensagem
 - Depois da primeira publicação o `slug` não muda mais (os QR Codes impressos deixariam
   de funcionar).
 - Listas ordenadas por `name`, em ordem crescente. Sem paginação.
+- **Modo VR (plano 019)**, validado no service (`point_service.py:160`), resposta `400`:
+  dois panoramas; conexão para o próprio ponto; o mesmo destino duas vezes; destino
+  inexistente. Rascunho pode ligar a rascunho; o público só vê destinos publicados.
+- Excluir um ponto remove as conexões que apontavam para ele em todos os pontos; trocar o
+  slug de um rascunho atualiza essas conexões para o slug novo.
+- Documentos antigos sem `connections` são lidos como lista vazia.
 
 ---
 
@@ -347,8 +367,12 @@ Cria um ponto como **rascunho** (`status: "draft"`, `published_at: null`). Exige
 | Erro | Quando |
 |---|---|
 | `401` / `403` | ver [Papéis e autorização](#papéis-e-autorização) |
+| `400` | `"O ponto pode ter apenas um panorama."` |
+| `400` | `"Um ponto nao pode se conectar a si mesmo."` |
+| `400` | `"Conexao repetida para o mesmo ponto."` |
+| `400` | `"Ponto de destino nao encontrado: <slug>."` |
 | `409` | `"Ja existe um ponto com este slug."` — pela checagem prévia ou pelo índice único `points_slug_unique` (cadastros simultâneos) |
-| `422` | slug fora do padrão · campo fora dos limites · mais de 20 mídias |
+| `422` | slug fora do padrão · campo fora dos limites · mais de 20 mídias · mais de 8 conexões · `yaw_degrees` fora de -180 a 180 |
 | `503` | MongoDB indisponível |
 
 > Ao contrário de usuários (que mantêm `400` por compatibilidade), conflito de slug
@@ -375,7 +399,8 @@ Um ponto, rascunho ou publicado. Exige admin.
 Atualiza um ponto. Exige admin.
 
 **Request** — envie só os campos a alterar; campo ausente ou `null` não é alterado. Se
-`media` for enviada, **substitui a lista inteira** (o painel envia a lista completa).
+`media` ou `connections` forem enviadas, **substituem a lista inteira** (o painel envia a
+lista completa).
 ```json
 { "name": "Biblioteca Central Prof. Fulano" }
 ```
@@ -386,6 +411,7 @@ Atualiza um ponto. Exige admin.
 |---|---|
 | `400` | `"Nenhum campo valido para atualizacao."` — corpo vazio ou só com `null` |
 | `400` | `"O slug nao pode mudar depois da primeira publicacao, pois os QR Codes impressos deixariam de funcionar."` |
+| `400` | regras do modo VR — mesmas mensagens de `POST /admin/points` |
 | `401` / `403` | ver [Papéis e autorização](#papéis-e-autorização) |
 | `404` | `"Ponto de interesse nao encontrado."` |
 | `409` | `"Ja existe um ponto com este slug."` — novo slug já usado por outro ponto |
@@ -396,7 +422,8 @@ Atualiza um ponto. Exige admin.
 
 ## `DELETE /admin/points/{point_id}`
 
-Remove o ponto. Exige admin.
+Remove o ponto e, em seguida, as conexões de outros pontos que apontavam para ele.
+Exige admin.
 
 **204** — sem corpo.
 
@@ -452,12 +479,15 @@ Consumido por: vr-app (página inicial `/`, `src/core/api/points.ts`).
     "slug": "biblioteca-central",
     "name": "Biblioteca Central",
     "summary": "Onde ficam os livros e as salas de estudo.",
-    "cover_url": "https://exemplo.com/fachada.jpg"
+    "cover_url": "https://exemplo.com/fachada.jpg",
+    "has_panorama": true
   }
 ]
 ```
 
 `cover_url` é a `url` da primeira mídia do tipo `photo`, ou `null` se não houver.
+`has_panorama` indica se o ponto tem um item `panorama` (a lista `/vr` do plano 020 mostra
+só esses).
 
 | Erro | Quando |
 |---|---|
@@ -486,9 +516,24 @@ Consumido por: vr-app (página do ponto `/p/:slug`, `src/core/api/points.ts`).
       "caption": "Fachada principal",
       "alt_text": "Prédio de tijolos com duas portas de vidro"
     }
+  ],
+  "panorama_url": "/media/3f2a9c1e.jpg",
+  "connections": [
+    {
+      "target_slug": "cantina",
+      "target_name": "Cantina",
+      "label": "Cantina",
+      "yaw_degrees": 90
+    }
   ]
 }
 ```
+
+- `media` traz fotos **e** o panorama; a galeria do app filtra `kind === "photo"`.
+- `panorama_url` é a `url` do item `panorama`, ou `null`.
+- `connections` só inclui destinos **publicados**, na ordem cadastrada, com `target_name`
+  (nome do destino) para o rótulo da seta não depender de outra requisição. Destino
+  despublicado some daqui mas continua gravado; republicar restaura a seta.
 
 | Erro | Quando |
 |---|---|

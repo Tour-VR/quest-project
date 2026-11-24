@@ -70,7 +70,7 @@ services/frontend/
     │   ├── points/
     │   │   ├── PointsList.tsx  /pontos — PageHeader, filtro por status, DataTable e ações
     │   │   ├── PointForm.tsx   /pontos/novo e /pontos/:pointId — carrega o ponto, monta o PointEditor
-    │   │   │                   e, só na edição, a MediaSection
+    │   │   │                   e, só na edição, a MediaSection e a PointVrSection
     │   │   └── media/          seção "Fotos" da edição do ponto (plano 013)
     │   │       ├── MediaSection.tsx      título, erro, lista de fotos e botão de envio
     │   │       ├── MediaItemCard.tsx     miniatura 120 px, Legenda, Texto alternativo, ↑ ↓ Remover
@@ -98,6 +98,10 @@ services/frontend/
     │   │   ├── PointFields.tsx    Nome, Identificador, Resumo (x/280) e História (x/10000)
     │   │   ├── PointFormActions.tsx Salvar; na edição, Publicar/Despublicar, Excluir e, se publicado, QR Code
     │   │   ├── QrCodeLink.tsx     atalho "QR Code" → /qrcodes?slug=<slug> (lista e formulário)
+    │   │   ├── PointVrSection.tsx seção "Modo VR" da edição (plano 019): PanoramaField + ConnectionsEditor
+    │   │   ├── PanoramaField.tsx  panorama 360°: faixa 2:1, avisos amarelos, Enviar/Trocar/Remover
+    │   │   ├── ConnectionsEditor.tsx lista de conexões, "Adicionar conexão" (até 8), "Salvar conexões"
+    │   │   ├── ConnectionRow.tsx  Destino (select), Rótulo, Ângulo (-180 a 180, passo 5), Remover
     │   │   └── FormField.tsx      rótulo, dica, contador e erro de um campo; `type` text/email/password
     │   ├── ProtectedRoute.tsx   carregando → loader; sem sessão → /login; sem admin → AccessDenied
     │   ├── AccessDenied.tsx     "Acesso restrito a administradores." + botão "Sair"
@@ -122,6 +126,9 @@ services/frontend/
     │   ├── usePoint.ts     um ponto pelo id; sem id (criação) não chama a API
     │   ├── usePointForm.ts estado, validação e envio (cria ou atualiza; PUT sem `media`)
     │   ├── useMediaList.ts lista de fotos: add, update, move, remove; cada mudança grava `media`
+    │   │                   (só `kind: "photo"`; o panorama é devolvido intacto ao gravar)
+    │   ├── usePanoramaField.ts envia, troca e remove o único panorama; mede a imagem para os avisos
+    │   ├── useConnectionsEditor.ts destinos (GET /admin/points), linhas e gravação de `connections`
     │   ├── usePointActions.ts publicar, despublicar e excluir (com window.confirm)
     │   ├── useQrDataUrl.ts  gera o QR de um texto: { dataUrl, error }, ignora resposta após desmontar
     │   ├── useMetrics.ts    GET /admin/metrics/overview: { metrics, loading, error, reload }
@@ -258,6 +265,35 @@ A seção "Fotos" (`pages/points/media/MediaSection.tsx`) aparece só na ediçã
 - **Limite:** com 20 fotos o envio fica desabilitado, com a dica "Limite de 20 fotos".
 - **`mediaUrl`** (`utils/mediaUrl.ts`): URL que começa com `/` recebe o prefixo de
   `API_BASE_URL`; URL absoluta segue intocada.
+
+## Modo VR do ponto (plano 019)
+
+A seção "Modo VR" (`components/points/PointVrSection.tsx`) aparece só na edição, abaixo de
+"Fotos", fora do `<form>` do ponto. Segue o mesmo padrão das fotos: cada parte grava com
+`PUT /admin/points/{id}`.
+
+- **Panorama 360°** (`PanoramaField.tsx` + `hooks/usePanoramaField.ts`): texto de ajuda fixo
+  ("Use uma foto 360° equirretangular (proporção 2:1), de preferência 4096×2048 em JPEG..."),
+  pré-visualização em faixa larga (`aspect-[2/1] object-cover`) e botões "Enviar
+  panorama"/"Trocar panorama" e "Remover panorama". O arquivo vai por `uploadMedia`
+  (limite de 20 MB conferido antes); o item `kind: "panorama"` é criado ou **substituído**
+  e a lista `media` é gravada com as fotos intactas (`withPanorama`). Texto alternativo
+  gravado: "Panorama 360°".
+- **Avisos de tamanho** (`utils/panorama.ts`, `checkPanoramaSize`): ao carregar a
+  pré-visualização, lê `naturalWidth/naturalHeight` e mostra em amarelo, **sem bloquear**:
+  proporção fora de 2:1 ± 2%; largura acima de 4096 px ("o Quest 3 pode não exibir");
+  largura abaixo de 2048 px ("vai ficar borrada no óculos").
+- **Conexões** (`ConnectionsEditor.tsx` + `hooks/useConnectionsEditor.ts`): cada linha tem
+  Destino (outros pontos de `GET /admin/points`, com nome e status; o próprio ponto não
+  aparece; destinos já usados ficam desabilitados), Rótulo (pré-preenchido com o nome do
+  destino enquanto não for editado) e Ângulo (-180 a 180, passo 5, "0 = centro da foto;
+  positivo = à direita"). Destino em rascunho mostra o selo "rascunho — invisível ao
+  visitante". "Adicionar conexão" desabilita com 8 linhas. "Salvar conexões" envia a lista
+  inteira em `connections`; linha sem destino ou rótulo não é enviada.
+- A galeria "Fotos" ignora o panorama (`useMediaList` filtra `kind === "photo"`).
+- Constantes em `constants/points.ts` (`MAX_CONNECTIONS`, `YAW_MIN/MAX`,
+  `PANORAMA_RECOMMENDED_WIDTH`, `PANORAMA_ASPECT_RATIO`, `PANORAMA_ASPECT_TOLERANCE`,
+  `VR_MESSAGES`).
 
 ## QR Codes (plano 014)
 

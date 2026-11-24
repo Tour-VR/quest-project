@@ -252,6 +252,25 @@ impressos. Roteiros foram descartados até que um ponto funcione de ponta a pont
 - ➖ Mídia embutida limita o reaproveitamento de uma foto entre pontos (aceitável).
 - ➖ Documento cresce com a mídia; o limite de 20 itens mantém o tamanho sob controle.
 
+**Ampliação (plano 019 — modo VR).**
+
+- O **panorama 360°** é um `MediaItem` com `kind: "panorama"` na mesma lista `media`
+  (reaproveita upload, validação e armazenamento do plano 013); no máximo **1** por ponto
+  (um ponto = uma cena).
+- O ponto ganha `connections[]`: `{target_slug, label (1–60), yaw_degrees (-180 a 180)}`,
+  até **8** por ponto (mais que isso polui a cena).
+- **Significado do `yaw`:** 0° = centro da imagem panorâmica; positivo = para a direita;
+  ±180° = bordas. Regra para o administrador: "olhando o centro da foto, quantos graus à
+  direita está a porta?". Sem ângulo vertical: as setas ficam na altura do horizonte.
+- **Validação do destino:** precisa existir (qualquer status), não pode ser o próprio
+  ponto, sem destino repetido. Rascunho pode ligar a rascunho.
+- **Visibilidade:** a resposta pública só traz conexões para destinos publicados, com
+  `target_name`; destino despublicado continua gravado (republicar restaura a seta).
+- **Exclusão** de um ponto remove as conexões que apontavam para ele (`$pull` em todos os
+  pontos); troca de slug de um rascunho atualiza essas conexões.
+- A proporção 2:1 é conferida **no painel** (aviso, não bloqueio); o backend não abre a
+  imagem.
+
 ---
 
 ## ADR-0008 — Estratégia de mídia
@@ -279,6 +298,12 @@ e, via proxy, no app do visitante; persistência garantida pelo volume.
   `MediaStorage` e reescrever URLs.
 - ➖ Sem redimensionamento: a imagem é servida como enviada.
 - ➖ Arquivos retirados de um ponto ficam órfãos no disco (dívida registrada).
+
+**Recomendação para panoramas (plano 019).** Equirretangular 2:1, JPEG, **4096×2048**
+(qualidade 85 fica entre 1 e 3 MB). É o limite prático de textura do navegador do Quest 3:
+8192×4096 estoura a memória e falha em silêncio. O painel avisa (sem bloquear) quando a
+proporção foge de 2:1 ± 2%, quando a largura passa de 4096 px ou fica abaixo de 2048 px.
+Não há vídeo 360°.
 
 **Alteração em relação à visão macro.** Antecipada da Fase 4 para a Fase 2.
 
