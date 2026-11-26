@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Validado |
+| **Status** | Em execução — Ciro Macedo (agente na sessão do orientador) — 2026-11-26 |
 | **Fase** | 5 — Produção |
 | **Depende de** | 019 |
 | **Dívidas atendidas** | DT-014 (conclusão: imagem de produção do frontend) |
