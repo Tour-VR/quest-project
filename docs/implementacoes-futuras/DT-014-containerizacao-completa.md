@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Parcialmente resolvida — 2026-11-09 — [plano 002](../tasks/002-ambiente-docker-compose.md), commits `df8b4ba` (backend) e `509fc92` (frontend) |
+| **Status** | Resolvida — 2026-11-26 — [plano 002](../tasks/002-ambiente-docker-compose.md) (backend) e [plano 023](../tasks/023-implantacao-em-producao.md) (imagem de produção do painel e do app do visitante em `deploy/web.Dockerfile`) |
 | **Prioridade** | P2 |
 | **Esforço** | Baixo |
 | **Artefato** | Todos |

@@ -29,6 +29,7 @@ docs/
 ├── 07-convencoes.md               ← código, git, submódulos, documentação
 ├── 08-decisoes-arquiteturais.md   ← registro de decisões (ADR) e seus porquês
 ├── 09-glossario.md                ← vocabulário comum do domínio e da stack
+├── 11-implantacao.md              ← produção: implantar, atualizar, voltar versão
 │
 ├── guia-alunos/                   ← guia em PDF para os alunos executarem os planos com IA
 ├── implementacoes-futuras/        ← dívidas técnicas e frentes de trabalho futuras

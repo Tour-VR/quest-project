@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em execução — Ciro Macedo (agente na sessão do orientador) — 2026-11-26 |
+| **Status** | Em revisão — Ciro Macedo |
 | **Fase** | 5 — Produção |
 | **Depende de** | 019 |
 | **Dívidas atendidas** | DT-014 (conclusão: imagem de produção do frontend) |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Orquestrador |
 | **Planejado em** | 2026-11-26 |
 | **Validado em** | 2026-11-26 por Ciro Macedo |
-| **Executado em** | — |
+| **Executado em** | 2026-11-26 pelo agente na sessão do orientador — PR: [Tour-VR/quest-project#23](https://github.com/Tour-VR/quest-project/pull/23) |
 
 ---
 
@@ -468,3 +468,30 @@ Execute o plano docs/tasks/023-implantacao-em-producao.md.
 Antes de qualquer ação, leia docs/tasks/protocolo-execucao.md e siga o "Prompt 1 — EXECUTAR" etapa por etapa.
 Meu nome, para registrar no plano: <SEU NOME>
 ```
+
+---
+
+## Registro de execução
+
+Executado em 2026-11-26 pelo agente de planejamento, na sessão do orientador, a pedido dele,
+para colocar a primeira versão no ar com a turma presente.
+
+**Feito:** arquivos de `deploy/`, `.dockerignore` da raiz, `scripts/deploy.sh`,
+`docs/11-implantacao.md` (com a rotina de atualização e a volta de versão), ADR-0010,
+DT-027 (backup) e DT-014 resolvida. A Parte B foi executada na VM no mesmo dia, a partir da
+branch deste plano.
+
+**Desvios do plano:**
+
+1. `ACME_EMAIL` removido: o Caddy emite certificados sem e-mail, e evita-se registrar um
+   endereço pessoal na Let's Encrypt.
+2. `deploy.sh` não chama `setup.sh`: usa `git submodule update --init` para posicionar os
+   submódulos **nos commits fixados** pelo orquestrador, e não na `main` de cada um. Assim só
+   vai ao ar o que passou pelo fechamento do plano, e a volta de versão por
+   `git checkout <commit>` do orquestrador é exata.
+3. Teste local (passo 6) substituído pelo teste direto na VM de produção, com a turma
+   presente: `docker compose config` validado localmente; build, HTTPS e fluxo do painel ao
+   visitante conferidos na VM.
+4. `.gitignore`: acrescentado `!.env.prod.example` (o padrão `.env.*` ignorava o modelo);
+   `deploy/.env.prod` já era coberto por `.env.*`.
+

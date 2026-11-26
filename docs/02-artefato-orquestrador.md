@@ -27,6 +27,12 @@ quest-project/
 ├── CLAUDE.md              instruções de carga de contexto para agentes de IA
 ├── docker-compose.yml     ambiente local: mongo + backend + frontend + vr-app
 ├── .env.example           variáveis do ambiente local (copiar para .env)
+├── .dockerignore          exclui node_modules, dist, .env e docs do build da imagem web
+├── deploy/                produção (ADR-0010) — ver docs/11-implantacao.md
+│   ├── docker-compose.prod.yml  mongo (sem porta, com senha) + backend + web
+│   ├── web.Dockerfile           builds do painel e do app do visitante + Caddy
+│   ├── Caddyfile                HTTPS automático; api., painel. e tour.<domínio>
+│   └── .env.prod.example        modelo dos segredos (o .env.prod fica só na VM)
 ├── .jscpd.json            configuração da detecção de duplicação (limite 3%, 50 tokens)
 ├── docs/                  base de conhecimento (este diretório)
 ├── e2e/                   testes ponta a ponta com Playwright (pacote Node próprio)
@@ -41,6 +47,7 @@ quest-project/
 │   ├── down.sh                (19 linhas) — para o ambiente, preserva os dados
 │   ├── logs.sh                (19 linhas) — acompanha os logs
 │   ├── reset-db.sh            (26 linhas) — apaga o banco local, com confirmação
+│   ├── deploy.sh              sobe ou atualiza a produção (só na VM)
 │   ├── bash/ssh-setup.sh      (58 linhas) — alternativa SSH
 │   └── posh/ssh-setup.ps1     (80 linhas) — alternativa SSH no PowerShell
 └── services/
@@ -323,5 +330,5 @@ Felipe, lorenz.
 | `docker-compose.yml` e scripts `up`/`down`/`logs`/`reset-db` | ✅ Existem desde o plano 002 — ver [Ambiente local](#ambiente-local) |
 | Script único de testes/validação | ✅ `scripts/validate.sh` desde o plano 005 — ver [Validação](#validação) |
 | CI (`.github/workflows/ci.yml`) | ✅ Existe desde o plano 006 — ver [Integração contínua](#integração-contínua) |
-| Deploy automático (CD) | 🔴 Não existe |
+| Implantação em produção | ✅ Manual por `scripts/deploy.sh` desde o plano 023 — ver [11-implantacao.md](11-implantacao.md). Deploy automático pela CI descartado na ADR-0010 |
 | Versionamento/release do conjunto | 🔴 Não definido |
