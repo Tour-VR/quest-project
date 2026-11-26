@@ -1,0 +1,35 @@
+# Caddy de producao (ADR-0010). Certificados HTTPS sao emitidos e renovados automaticamente.
+# TOURVR_DOMAIN vem do ambiente do container (deploy/.env.prod).
+
+api.{$TOURVR_DOMAIN} {
+	encode gzip
+	# Folga sobre o limite de upload do backend (media_max_bytes = 20 MB).
+	request_body {
+		max_size 25MB
+	}
+	reverse_proxy backend:8000
+}
+
+painel.{$TOURVR_DOMAIN} {
+	encode gzip
+	root * /srv/painel
+	# Aplicacao de pagina unica: rotas desconhecidas caem no index.html.
+	try_files {path} /index.html
+	file_server
+}
+
+tour.{$TOURVR_DOMAIN} {
+	encode gzip
+	# Mesmo contrato do proxy do Vite em desenvolvimento: /api sem o prefixo, /media como esta.
+	handle_path /api/* {
+		reverse_proxy backend:8000
+	}
+	handle /media/* {
+		reverse_proxy backend:8000
+	}
+	handle {
+		root * /srv/tour
+		try_files {path} /index.html
+		file_server
+	}
+}
