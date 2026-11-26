@@ -114,8 +114,8 @@ reserva o plano com o seu nome antes de começar.
 | [020](020-cena-vr-360.md) | Cena VR 360° | 4 | 019 | — | Em revisão — Heitor Aquino |
 | [021](021-navegacao-vr-e-encerramento.md) | Navegação VR e encerramento | 4 | 018, 020 | DT-016 | Validado |
 | [022](022-padroes-visuais-do-painel.md) | Padrões visuais e de movimento do painel | 2 | 011 | — | Concluído |
-| [023](023-implantacao-em-producao.md) | Implantação em produção (VM única) | 5 | 019 | DT-014 | Em revisão — Ciro Macedo |
-| [024](024-edicao-de-usuarios.md) | Edição dos dados básicos de usuários | 5 | 015 | — | Em revisão — Ciro Macedo |
+| [023](023-implantacao-em-producao.md) | Implantação em produção (VM única) | 5 | 019 | DT-014 | Concluído |
+| [024](024-edicao-de-usuarios.md) | Edição dos dados básicos de usuários | 5 | 015 | — | Concluído |
 
 **Status possíveis:** `Rascunho` · `Aguardando validação` · `Validado` ·
 `Em execução — nome` · `Em revisão — nome` · `Concluído` · `Cancelado`

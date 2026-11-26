@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em revisão — Ciro Macedo |
+| **Status** | Concluído |
 | **Fase** | 5 — Produção |
 | **Depende de** | 015 |
 | **Dívidas atendidas** | nenhuma |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Backend · Frontend · Orquestrador (documentação) |
 | **Planejado em** | 2026-11-26 |
 | **Validado em** | 2026-11-26 por Ciro Macedo (pedido direto, em produção) |
-| **Executado em** | 2026-11-26 pelo agente na sessão do orientador |
+| **Executado em** | 2026-11-26 pelo agente na sessão do orientador — PRs: [Tour-VR/backend#11](https://github.com/Tour-VR/backend/pull/11), [Tour-VR/frontend#11](https://github.com/Tour-VR/frontend/pull/11), [Tour-VR/quest-project#24](https://github.com/Tour-VR/quest-project/pull/24) |
 
 ---
 

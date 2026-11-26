@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status** | Em revisão — Ciro Macedo |
+| **Status** | Concluído |
 | **Fase** | 5 — Produção |
 | **Depende de** | 019 |
 | **Dívidas atendidas** | DT-014 (conclusão: imagem de produção do frontend) |
@@ -10,7 +10,7 @@
 | **Artefatos afetados** | Orquestrador |
 | **Planejado em** | 2026-11-26 |
 | **Validado em** | 2026-11-26 por Ciro Macedo |
-| **Executado em** | 2026-11-26 pelo agente na sessão do orientador — PR: [Tour-VR/quest-project#23](https://github.com/Tour-VR/quest-project/pull/23) |
+| **Executado em** | 2026-11-26 pelo agente na sessão do orientador — PRs: [Tour-VR/quest-project#23](https://github.com/Tour-VR/quest-project/pull/23) |
 
 ---
 
