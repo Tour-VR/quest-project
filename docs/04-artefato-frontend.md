@@ -333,7 +333,9 @@ porque a URL daria 404 até a publicação.
   pelo `select`, depois de `window.confirm` ("A mudança vale no próximo login."); a situação
   muda pelo botão "Desativar"/"Reativar". Na linha do próprio admin (comparada pelo
   e-mail, pois `/users/me` não devolve `id`) o `select` e o botão ficam desabilitados com a
-  dica "Você"; o backend recusa a mesma ação com `400`. "Novo usuário" abre o formulário
+  dica "Você"; o backend recusa a mesma ação com `400`. O botão "Editar" (plano 024) abre a janela
+  `UserEditDialog` com e-mail, nome e username (`PATCH /admin/users/{id}`); vale também
+  para a própria linha, e mudar o próprio e-mail chama `signOut()`. "Novo usuário" abre o formulário
   (e-mail, nome, username, senha inicial) que chama `POST /auth/register`; o usuário nasce
   com papel `user`, a lista volta à página 1 e aparece "Usuário criado. Informe a senha
   inicial à pessoa.". Não há exclusão: desativar basta.

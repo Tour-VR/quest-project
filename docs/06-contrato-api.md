@@ -644,12 +644,17 @@ Lista os usuários do painel, do cadastro mais recente para o mais antigo, pagin
 
 ## `PATCH /admin/users/{user_id}`
 
-Ativa, desativa ou muda o papel de um usuário (plano 015). Exige papel `admin`.
+Edita os dados básicos (plano 024), ativa, desativa ou muda o papel de um usuário (plano
+015). Exige papel `admin`.
 
-**Request** — envie um ou os dois campos:
+**Request** — envie só os campos que mudam:
 ```json
-{ "is_active": false, "role": "admin" }
+{ "email": "nova@exemplo.com", "full_name": "Ana Lima", "username": "ana", "is_active": false, "role": "admin" }
 ```
+
+- `email`, `full_name` e `username` seguem as mesmas regras e normalizações do cadastro
+  (minúsculas, sem espaços nas pontas). `full_name` e `username` aceitam `null` ou texto
+  vazio para limpar o valor; `email`, `is_active` e `role` com `null` são ignorados.
 
 **200** — o usuário atualizado, na mesma forma de um item de `GET /admin/users`.
 
@@ -659,13 +664,16 @@ Ativa, desativa ou muda o papel de um usuário (plano 015). Exige papel `admin`.
   papel do banco a cada requisição, então um rebaixado perde o acesso admin na hora.
 - **Autoproteção:** o admin não pode desativar nem rebaixar a si mesmo — evita o painel
   ficar sem administrador.
+- **Mudar o e-mail** vale na hora, com a mesma senha. O token identifica o usuário pelo
+  e-mail (`sub`), então quem estava logado com o e-mail antigo recebe `401` e precisa entrar
+  de novo; o painel encerra a sessão do admin que muda o próprio e-mail.
 
 | Erro | Quando |
 |---|---|
-| `400` | corpo vazio (`"Nenhum campo valido para atualizacao."`) · admin tentando desativar ou rebaixar a si mesmo (`"Você não pode remover o próprio acesso de administrador."`) |
+| `400` | corpo vazio (`"Nenhum campo valido para atualizacao."`) · admin tentando desativar ou rebaixar a si mesmo (`"Você não pode remover o próprio acesso de administrador."`) · e-mail ou username de outro usuário (`"Ja existe um usuario com este email."` / `"... username."`) |
 | `401` / `403` | Sem token / papel diferente de `admin` |
 | `404` | `user_id` inválido ou inexistente (`"Usuário não encontrado."`) |
-| `422` | `role` diferente de `"admin"`/`"user"` · `is_active` não booleano |
+| `422` | `role` diferente de `"admin"`/`"user"` · `is_active` não booleano · e-mail inválido · username fora da regra |
 | `503` | MongoDB indisponível |
 
 Não há rota de exclusão: desativar preserva o histórico. A criação continua em
