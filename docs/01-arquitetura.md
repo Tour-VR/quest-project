@@ -31,6 +31,12 @@
 Não há gateway, fila, cache ou service mesh. A comunicação é direta, síncrona e
 exclusivamente HTTP/JSON.
 
+**Em produção** (ADR-0010, [11-implantacao.md](11-implantacao.md)) o Caddy fica na frente
+de tudo, com HTTPS: serve os builds estáticos do painel (`painel.<domínio>`) e do app do
+visitante (`tour.<domínio>`, que encaminha `/api` e `/media` ao backend, como o proxy do
+Vite faz em desenvolvimento) e encaminha `api.<domínio>` ao backend. O MongoDB não tem
+porta publicada.
+
 ## Estratégia de repositórios
 
 O `quest-project` é um repositório orquestrador que agrega três submódulos Git em

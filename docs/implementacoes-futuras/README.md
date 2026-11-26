@@ -24,7 +24,7 @@ escolhe uma ou mais dívidas, e produz um plano em [`../tasks/`](../tasks/README
 | [DT-011](DT-011-dashboard-dados-reais.md) | ~~Dashboard com métricas fictícias~~ ✅ Resolvida (plano 015) | P2 | Médio | Frontend, Backend |
 | [DT-012](DT-012-contrato-api-tipado.md) | ~~Contrato da API duplicado manualmente~~ ✅ Resolvida (plano 011) | P2 | Médio | Frontend, Backend |
 | [DT-013](DT-013-qualidade-codigo-frontend.md) | ~~Frontend sem testes, linter ou modo estrito~~ ✅ Resolvida (plano 004) | P2 | Médio | Frontend |
-| [DT-014](DT-014-containerizacao-completa.md) | Containerização parcial e sem `.dockerignore` — ⚠️ parcial (plano 002): falta imagem de produção do frontend | P2 | Baixo | Todos |
+| [DT-014](DT-014-containerizacao-completa.md) | ~~Containerização parcial~~ ✅ Resolvida (planos 002 e 023) | P2 | Baixo | Todos |
 | [DT-015](DT-015-gestao-usuarios-no-painel.md) | ~~Cadastro de usuários só via Swagger~~ ✅ Resolvida (plano 015); pendente só desabilitar `/docs` fora de desenvolvimento | P2 | Médio | Frontend, Backend |
 | [DT-016](DT-016-modelagem-dominio-turismo.md) | **Domínio de turismo não modelado** | **P0** | **Alto** | Backend, Frontend, VR |
 | [DT-017](DT-017-revisao-scripts-ssh.md) | ~~Comentários inadequados nos scripts~~ ✅ Resolvida (plano 001) | P3 | Baixo | Orquestrador |
@@ -39,6 +39,7 @@ escolhe uma ou mais dívidas, e produz um plano em [`../tasks/`](../tasks/README
 | [DT-024](DT-024-e2e-email-repetido-em-paralelo.md) | E-mail de teste repetido quando cenários E2E rodam em paralelo | P2 | Baixo | Orquestrador |
 | [DT-025](DT-025-vite-vr-app-observa-coverage.md) | Servidor do `vr-app` no Docker observa `coverage/` e para de responder | P2 | Baixo | VR App |
 | [DT-026](DT-026-e2e-dashboard-visita-total-global.md) | E2E do dashboard falha quando outro teste registra visita ao mesmo tempo | P2 | Baixo | Orquestrador |
+| [DT-027](DT-027-backup-producao.md) | Produção sem backup automático do banco e da mídia | P1 | Baixo | Orquestrador |
 
 **Prioridades:** `P0` bloqueia o avanço ou representa risco real · `P1` alta, resolver na
 fase corrente · `P2` média, planejar · `P3` baixa, oportunidade.

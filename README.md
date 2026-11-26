@@ -163,6 +163,12 @@ O que existe hoje é um MVP de painel administrativo com autenticação completa
 produto — a aplicação de realidade virtual — ainda não foi iniciado. Leitura honesta do
 estado em [`docs/00-visao-geral.md`](docs/00-visao-geral.md).
 
+## Produção
+
+O sistema está no ar em `https://painel.201-79-39-177.sslip.io` (painel) e
+`https://tour.201-79-39-177.sslip.io` (visitante). Implantação, atualização e volta de
+versão: [`docs/11-implantacao.md`](docs/11-implantacao.md).
+
 ## Licença
 
 [MIT](LICENSE)

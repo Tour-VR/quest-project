@@ -1,0 +1,80 @@
+# Pilha de producao (ADR-0010). Uso: bash scripts/deploy.sh
+# Diferente do docker-compose.yml da raiz (desenvolvimento): sem codigo montado, sem --reload,
+# banco com senha e sem porta publicada, HTTPS pelo Caddy.
+name: tourvr-prod
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  mongo:
+    image: mongo:7
+    # Limita o cache do WiredTiger: a VM tem 2 GB de RAM.
+    command: ["--wiredTigerCacheSizeGB", "0.25"]
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *logging
+    # Sem "ports": o banco so e acessivel pela rede interna do compose.
+
+  backend:
+    build: ../services/backend
+    # --proxy-headers: o IP real do cliente chega pelo Caddy (limitador de login).
+    # --forwarded-allow-ips=* so e seguro porque o backend nao publica porta. Nunca publique.
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000",
+              "--proxy-headers", "--forwarded-allow-ips=*"]
+    restart: unless-stopped
+    environment:
+      APP_NAME: TourVR API
+      APP_ENV: production
+      APP_DEBUG: "false"
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      MONGODB_URL: mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongo:27017/?authSource=admin
+      MONGODB_DB: ${MONGODB_DB}
+      APP_CORS_ORIGINS: https://painel.${TOURVR_DOMAIN}
+      MEDIA_DIR: media
+    volumes:
+      - media-data:/app/media
+    depends_on:
+      mongo:
+        condition: service_healthy
+    logging: *logging
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/web.Dockerfile
+      args:
+        VITE_API_URL: https://api.${TOURVR_DOMAIN}
+        VITE_VISITOR_APP_URL: https://tour.${TOURVR_DOMAIN}
+    restart: unless-stopped
+    environment:
+      TOURVR_DOMAIN: ${TOURVR_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+    logging: *logging
+
+volumes:
+  mongo-data:
+  media-data:
+  caddy-data:
+  caddy-config:

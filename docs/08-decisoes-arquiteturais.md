@@ -18,6 +18,7 @@ registrada aqui só é revertida por outra ADR que a supersede — nunca por edi
 | [0007](#adr-0007--modelo-de-domínio-do-campus) | Modelo de domínio do campus | Aceita |
 | [0008](#adr-0008--estratégia-de-mídia) | Estratégia de mídia | Aceita |
 | [0009](#adr-0009--autenticação-do-dispositivo-quest) | Autenticação do dispositivo Quest | Em aberto |
+| [0010](#adr-0010--implantação-em-vm-única-com-docker-compose-e-caddy) | Implantação em VM única com Docker Compose e Caddy | Aceita |
 
 ---
 
@@ -318,6 +319,39 @@ device code flow (código exibido no headset, confirmado no navegador), QR code,
 longa duração provisionado no pareamento, ou conta anônima por dispositivo. Impacta
 diretamente a ADR-0003 e a
 [DT-007](implementacoes-futuras/DT-007-hardening-autenticacao.md).
+
+---
+
+## ADR-0010 — Implantação em VM única com Docker Compose e Caddy
+
+**Data:** 2026-11-26 · **Estado:** Aceita
+
+**Contexto.** Primeira versão para testes reais no campus, enquanto a turma segue
+implementando melhorias. Há uma VM única (1 vCPU, 2 GB de RAM) com IP público e sem domínio
+próprio. A câmera do celular (leitor de QR) e o WebXR do Quest só funcionam em HTTPS, e uma
+página HTTPS não pode chamar uma API HTTP.
+
+**Decisão.** Compose de produção em `deploy/` com três serviços: `mongo` com senha e sem
+porta publicada, `backend` sem `--reload` atrás de proxy, e `web` — Caddy servindo os
+builds estáticos do painel e do app do visitante, com certificado automático e proxy da API.
+Nomes `api.`, `painel.` e `tour.` sobre `sslip.io`, parametrizados por `TOURVR_DOMAIN`.
+`scripts/deploy.sh` sobe e atualiza; produção usa os commits fixados nos ponteiros dos
+submódulos, de modo que só vai ao ar o que passou pelo fechamento do plano.
+
+**Justificativa.** Mesma ferramenta que os alunos já usam no desenvolvimento; HTTPS sem
+custo nem configuração de certificado; um comando para atualizar. Descartados: Kubernetes e
+serviços gerenciados (desproporcionais ao volume), deploy automático pela CI (exigiria
+credencial da VM no GitHub e tiraria do orientador o controle do que vai ao ar).
+
+**Consequências.**
+
+- ➕ Atualização em um comando, com volta de versão por `git checkout` do orquestrador.
+- ➕ Banco inacessível de fora; segredos só na VM.
+- ➖ Ponto único de falha; build na VM é lento (exige swap).
+- ➖ Sem backup automático ([DT-027](implementacoes-futuras/DT-027-backup-producao.md)).
+- ➖ `sslip.io` é serviço de terceiros; trocar de domínio muda a URL dos QR Codes impressos.
+
+**Roteiro.** [11-implantacao.md](11-implantacao.md).
 
 ---
 
